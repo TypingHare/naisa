@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="Tax API PMD rules" xmlns="http://pmd.sourceforge.net/ruleset/2.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.github.io/schema/ruleset_2_0_0.xsd">
+  <description>PMD rules for the Tax API.</description>
+  <rule ref="category/java/codestyle.xml">
+    <exclude name="ShortClassName"></exclude>
+    <exclude name="AtLeastOneConstructor"></exclude>
+    <exclude name="OnlyOneReturn"></exclude>
+    <exclude name="ShortVariable"></exclude>
+  </rule>
+</ruleset>
