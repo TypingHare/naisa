@@ -1,0 +1,14 @@
+# Developer local files
+.local/
+
+# macOS system files
+.DS_Store
+
+# VSCode configuration files
+.vscode/
+
+# JetBrains family (including IntelliJ IDEA) configuration files
+.idea/
+*.iws
+*.iml
+*.ipr
