@@ -19,7 +19,7 @@ Nothing has changed.
 **Computation**
 - Converts the location into geographic coordinates.
 - Filters stored venues by supported sport.
-- Computers the distance between the requested location and each candidate venue.
+- Computes the distance between the requested location and each candidate venue.
 - Filters venues by distance, operating hours, price, and availability.
 
 **Returns**
