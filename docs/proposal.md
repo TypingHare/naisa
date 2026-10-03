@@ -31,9 +31,75 @@ Nothing has changed.
     - relevant facility information
     - availability information
 
-<!-- TODO: findAlternatives - if nothing within findVenues fits, suggest alternatives  -->
-<!-- TODO: findGroupVenue - take multiple people's locations w/ sport, day, time, return set of options  -->
-<!-- TODO: getVenueInfo - input venue, return information venue (sports, hours, field type, etc.)  -->
+### Operation 2: Find Alternatives
+
+**Inputs**
+- `location: Location` - origin location for the search
+- `sport: Sport` - sport to search
+- `date: LocalDate` - date to search
+- `time: LocalTime` - time to search
+- `maxDistance: double` - radius distance from location to search within
+- `budget: double` - budget for venues that require payment (0 default)
+- `dateAvailable: Boolean` - set **False** if `date` in `findVenues()` did not work out
+- `timeAvailable: Boolean` - set **False** if `time` in `findVenues()` did not work out
+- `maxDistanceAvailable: Boolean` - set **False** if no venues within `maxDistance` in `findVenues()`
+- `budgetAvailable: Boolean` - set **False** if no venue is cheaper than `budget` in `findVenues()`
+
+**Computation**
+- Suggests new values for each variable with their corresponding boolean variable set to **False**
+  - For example, when the client calls `findVenues`, but there is no venue available on the `date` it requested,
+    findAlternatives will receive `dateAvailable` = **False**, so it will suggest venues avaible maybe the day after.
+- Calls findVenues() with the suggested parameters.
+
+**Returns**
+- a list of venue results, each containing the following entry results:
+    - venue identifier
+    - venue name
+    - distance
+    - estimated price
+    - relevant facility information
+    - availability information
+- if no venue for the sport is nearby, return an error message `There are no venues for this sport nearby`
+
+### Operation 3: Find Group Venues
+
+**Inputs**
+- `locations: List<Location>` - locations of participating group members
+- `sport: Sport` - sport to search
+- `date: LocalDate` - date to search
+- `time: LocalTime` - time to search
+- `distanceFromCenter: double` - radius distance from the center of all group members' locations to search within (optional)
+- `budget: double` - budget for venues that require payment (0 default)
+
+**Computation**
+- Converts the locations into geographic coordinates.
+- Filters stored venues by supported sport.
+- Computes the average distance between all members and each candidate venue and distance between each member and each venue.
+- Filters venues by distance, operating hours, price, and availability.
+
+**Returns**
+- a list of venue results, each containing the following entry results:
+    - venue identifier
+    - venue name
+    - average distance for all members
+    - distance from each member
+    - estimated price
+    - relevant facility information
+    - availability information
+
+### Operation 4: Get Venue Info
+
+**Inputs**
+- `venueId: String` - identifier of the queried venue
+- `venueName: String` - name of the queried venue
+
+**Computation**
+- Look up the venue identifier in the service's venue datastore and rejects
+  the request if more than one identifiers are given or the identifier is
+  unknown.
+
+**Returns**
+- a list of the queried venue's information, including sport types, hours, field types, location, etc.
 
 ### Operation 5: Compare Venues
 
