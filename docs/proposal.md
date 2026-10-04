@@ -23,13 +23,14 @@ Nothing has changed.
 - Filters venues by distance, operating hours, price, and availability.
 
 **Returns**
-- a list of venue results, each containing the following entry results:
+- a list of valid venue results, each containing the following entry results:
     - venue identifier
     - venue name
     - distance
     - estimated price
     - relevant facility information
     - availability information
+- if no valid venues exist, calls `findAlternatives`
 
 ### Operation 2: Find Alternatives
 
@@ -48,11 +49,11 @@ Nothing has changed.
 **Computation**
 - Suggests new values for each variable with their corresponding boolean variable set to **False**
   - For example, when the client calls `findVenues`, but there is no venue available on the `date` it requested,
-    findAlternatives will receive `dateAvailable` = **False**, so it will suggest venues avaible maybe the day after.
+    findAlternatives will receive `dateAvailable` = **False**, so it will suggest venues available maybe the day after.
 - Calls findVenues() with the suggested parameters.
 
 **Returns**
-- a list of venue results, each containing the following entry results:
+- a list of alternative venue results, each containing the following entry results:
     - venue identifier
     - venue name
     - distance
