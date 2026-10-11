@@ -31,6 +31,12 @@ public class GlobalExceptionHandler {
   public static final String ERROR_CODE_REQUEST_INVALID_BODY = "request.invalid_body";
   public static final String ERROR_CODE_REQUEST_VALIDATION_FAILED = "request.validation_failed";
 
+  /**
+   * Handles unexpected exception.
+   *
+   * @param exception the exception caught
+   * @return a response entity
+   */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<Capsule<Object>> handleUnexpectedException(final Exception exception) {
     LOGGER.error("Unexpected error while handling request", exception);
@@ -41,12 +47,24 @@ public class GlobalExceptionHandler {
                 "An internal server error occurred.", null, ERROR_CODE_SERVER_INTERNAL_ERROR));
   }
 
+  /**
+   * Handles service exception.
+   *
+   * @param exception the service exception caught
+   * @return a response entity
+   */
   @ExceptionHandler(ServiceException.class)
   public ResponseEntity<Capsule<Object>> handleServiceException(final ServiceException exception) {
     return ResponseEntity.status(exception.getStatus())
         .body(Capsule.fromServiceException(exception));
   }
 
+  /**
+   * Handles undreadable body.
+   *
+   * @param exception the exception caught
+   * @return a response entity
+   */
   @ExceptionHandler(HttpMessageNotReadableException.class)
   public ResponseEntity<Capsule<Object>> handleUnreadableBody(
       final HttpMessageNotReadableException exception) {
@@ -56,6 +74,12 @@ public class GlobalExceptionHandler {
                 "Request body is missing or invalid.", null, ERROR_CODE_REQUEST_INVALID_BODY));
   }
 
+  /**
+   * Handles validation failure.
+   *
+   * @param exception the exception caught
+   * @return a response entity
+   */
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<Capsule<Object>> handleValidationFailure(
       final MethodArgumentNotValidException exception) {

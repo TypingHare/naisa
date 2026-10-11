@@ -45,7 +45,6 @@ public class ServiceException extends RuntimeException implements Cloneable {
   }
 
   public ServiceException causedBy(final Throwable throwable) {
-    final ServiceException serviceException = new ServiceException(code, this.getMessage(), status);
-    return serviceException;
+    return new ServiceException(code, this.getMessage(), status, throwable);
   }
 }
