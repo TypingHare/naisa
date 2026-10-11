@@ -1,23 +1,27 @@
-HELP.md
+# Build artifacts
 target/
-.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# Maven wrapper JAR file
+.mvn/wrapper/maven-wrapper.jar
 
-### IntelliJ IDEA ###
+# IntelliJ IDEA (JetBrains products)
 .idea
 *.iws
 *.iml
 *.ipr
 
-### VS Code ###
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VS Code
 .vscode/
+
+# Other files
+HELP.md
+
+# Properties files with credential data
+src/main/resources/database.properties
