@@ -14,4 +14,19 @@ public final class ClientException extends ServiceException {
   protected ClientException(final String code, final String message, final HttpStatus status) {
     super(code, message, status);
   }
+
+  protected ClientException(
+      final String code, final String message, final HttpStatus status, final Throwable throwable) {
+    super(code, message, status, throwable);
+  }
+
+  @Override
+  public ClientException clone() {
+    return new ClientException(code, this.getMessage(), status);
+  }
+
+  @Override
+  public ClientException causedBy(final Throwable throwable) {
+    return new ClientException(code, this.getMessage(), status, throwable);
+  }
 }

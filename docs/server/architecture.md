@@ -48,7 +48,7 @@ public class Client {
     return id;
   }
 
-  public void setId(Long id) {
+  public void setId(final Long id) {
     this.id = id;
   }
 
@@ -56,7 +56,7 @@ public class Client {
     return apiKey;
   }
 
-  public void setApiKey(String apiKey) {
+  public void setApiKey(final String apiKey) {
     this.apiKey = apiKey;
   }
 }
@@ -115,8 +115,6 @@ Now that the table is set up, we need a way to manipulate its data.
 public interface ClientRepository extends JpaRepository<Client, Long> {
   @Nullable
   Client findClientByApiKey(String apiKey);
-
-  // other methods...
 }
 ```
 
@@ -142,7 +140,9 @@ document][jpa-query-keywords] lists all the supported keywords.
 However, some repository methods involve complex logic, making them difficult or
 impossible to define using the keywords supported by Spring Data JPA. In these
 cases, we can write the SQL ourselves. Below is an example of using the `@Query`
-annotation to specify a SQL statement.
+annotation to specify a SQL statement. This is a hypothetical example: the
+current codebase does not define `User`, `users`, `orders`, or this repository
+method.
 
 ```java
 @Query(value = """
@@ -191,11 +191,13 @@ public final class ClientService {
   public Client getClientByApiKey(final String apiKey) {
     final Client client = this.clientRepository.findClientByApiKey(apiKey);
     if (client == null) {
-      throw ClientException.INVALID_API_KEY;
+      throw ClientException.INVALID_API_KEY.clone();
     }
 
     return client;
   }
+
+  // other methods...
 }
 ```
 
@@ -206,8 +208,8 @@ In service methods, **service exceptions** are thrown in the situations where
 the data violate some business-logic rules. For example, in `getClientByApiKey`,
 the business logic expects a client associated with the given API key to exist.
 Therefore, when this rule is violated (i.e., client is null), we throw a service
-exception (in this case, `ClientException.INVALID_API_KEY`), which will be
-discussed in the upcoming sections.
+exception (in this case, `ClientException.INVALID_API_KEY.clone()`), which will
+be discussed in the upcoming sections.
 
 #### Controller Layer
 
@@ -226,6 +228,12 @@ treated as view names.
 @RestController
 @RequestMapping("/v1/clients")
 public class ClientController {
+  private final ClientService clientService;
+
+  public ClientController(final ClientService clientService) {
+    this.clientService = clientService;
+  }
+
   @PostMapping
   public ResponseEntity<Capsule<Client>> issueApiKey() {
     final Client createdClient = clientService.createClient();
@@ -255,12 +263,12 @@ Make sure that no patterns end with a slash (`/`).
 
 ##### Capsule
 
-Every controller method in this project should have a return type of
-`ResponseEntity<Capsule<?>>`. `ResponseEntity` is provided by Spring Framework.
-It serves as a utility wrapper that allows developers to neatly set the HTTP
-status code and response body. `Capsule` (presented in `com.naisa.common`) is a
-proposed Java bean that defines the structure of the JSON object in the response
-body.
+Controller methods in this project return `ResponseEntity<Capsule<T>>`, where
+`T` is the payload type (for example, `Client` or `Object`). `ResponseEntity` is
+provided by Spring Framework. It serves as a utility wrapper that allows
+developers to neatly set the HTTP status code and response body. `Capsule`
+(presented in `com.naisa.common`) is a proposed Java bean that defines the
+structure of the JSON object in the response body.
 
 The client should expect a consistent JSON structure in the response body, as
 follows:
@@ -277,6 +285,9 @@ follows:
 
 An **error response** must contain the `errorCode` field, while a **successful
 response** must not. The `data` field is optional for both response types.
+`Capsule` uses `@JsonInclude(JsonInclude.Include.NON_NULL)` to omit fields whose
+values are null. The health endpoint returns HTTP 204 (No Content), so clients
+should not expect a JSON body from it.
 
 #### Configurations
 
@@ -308,7 +319,7 @@ parameter:
 `ServiceException` implements `Cloneable`. Always use `clone()` to throw a new
 exception instance instead of throwing one of the shared static exception
 instances defined in other exception classes. If the service exception has a
-cause, use `causedBy()` to create a clone with the specified cause.
+cause, use `causedBy()` to create a new exception with the specified cause.
 
 #### Controller Advice
 
@@ -319,12 +330,15 @@ service layer but isn't caught in the controller layer, it will be handled by
 and uses the result of `Capsule.fromServiceException` as the response body
 object.
 
-Any exception other than a service exception that is thrown during request
-handling is unexpected, and the system treats it as an internal server error.
-These exceptions are handled by `handleUnexpectedException`.
+The `handleUnreadableBody` handler maps `HttpMessageNotReadableException` to
+HTTP 400 with error code `request.invalid_body`. The `handleValidationFailure`
+handler maps `MethodArgumentNotValidException` to HTTP 400 with error code
+`request.validation_failed`.
 
-The `handleUnreadableBody` and `handleValidationFailure` handlers handle
-exceptions caught before the controller method handles the request.
+Other exceptions reaching this advice are handled by
+`handleUnexpectedException`, which logs the exception and returns HTTP 500 with
+error code `server.internal_error`. This fallback currently also covers request
+errors for which no more specific handler has been defined.
 
 This class is very important, and it is worth reading its source code carefully.
 
@@ -341,7 +355,9 @@ The `LoggingInterceptor` creates INFO log entries before and after the request
 is handled by the controller method. In both entries, it includes the HTTP
 method and the request path. In the first entry, it also includes which
 controller method handles it; in the second entry, it also includes the response
-time (i.e., the total duration it takes to handle the request).
+time measured between `preHandle` and `postHandle`. The second log entry is
+produced only when `postHandle` runs; it is skipped when an interceptor stops
+the request or the handler throws an exception.
 
 The `AuthorizationInterceptor` verifies user authorization when required. It
 checks controller methods annotated with `@AuthorizationRequired` (defined in
@@ -393,7 +409,7 @@ Separate names in the tag with commas, for example:
 
 ```java
 /**
- * <Description of a class or a method.>
+ * Description of a class or method.
  *
  * @author James Chen, Andrew Hsu, Vincent Lai, Emily Wang
  */

@@ -16,8 +16,8 @@ import org.springframework.http.HttpStatus;
  * @author James Chen
  */
 public class ServiceException extends RuntimeException implements Cloneable {
-  private final String code;
-  private final HttpStatus status;
+  protected final String code;
+  protected final HttpStatus status;
 
   protected ServiceException(
       final String code, final String message, final HttpStatus status, final Throwable cause) {
