@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: server
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: naisa
+          POSTGRES_USER: naisa
+          POSTGRES_PASSWORD: ci_password
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v6
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: server/pom.xml
+
+      - name: Configure CI database
+        run: |
+          cat > src/main/resources/database.properties <<'EOF'
+          spring.datasource.url=jdbc:postgresql://localhost:5432/naisa
+          spring.datasource.username=naisa
+          spring.datasource.password=ci_password
+          spring.jpa.hibernate.ddl-auto=create-drop
+          spring.jpa.open-in-view=false
+          EOF
+
+      - name: Build and test
+        run: ./mvnw --batch-mode verify
+
+      - name: Linting
+        run: ./mvnw checkstyle:check && ./mvnw pmd:check -Dpmd.printFailingErrors=true
+
+      - name: Start Service
+        run: ./mvnw spring-boot:start && ./mvnw spring-boot:stop
