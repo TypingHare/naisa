@@ -6,8 +6,8 @@ all:
 	$(MVN) package
 
 lint:
-	$(MVN) pmd:check -Dpmd.printFailingErrors=true
 	$(MVN) checkstyle:check
+	$(MVN) pmd:check -Dpmd.printFailingErrors=true
 
 test:
 	$(MVN) test
