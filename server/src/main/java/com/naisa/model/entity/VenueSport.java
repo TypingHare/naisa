@@ -22,6 +22,12 @@ import lombok.Setter;
 /**
  * Represents a venue sport entity.
  *
+ * <p>The {@code venue_sports} table records the sports supported by each venue.
+ *
+ * <p>The {@code price} field is the price of playing the sport at the specified venue. We assume
+ * the price is the same every day of the week and remains constant throughout the day. The {@code
+ * is_indoor} field indicates whether the sport is played indoors.
+ *
  * @author James Chen, Vincent Lai
  */
 @JavaBean

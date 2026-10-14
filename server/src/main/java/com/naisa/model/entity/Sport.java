@@ -25,7 +25,11 @@ public class Sport {
   @Column(name = "id", nullable = false, updatable = false)
   private Long id;
 
-  @Column(name = "name", length = 32, nullable = false)
+  @Column(
+      name = "name",
+      length = 32,
+      nullable = false,
+      comment = "Name of the sport in title case. For example: Basketball, Table Tennis.")
   @Size(max = 32, message = "Sport name must not exceed 32 characters")
   private String name;
 }

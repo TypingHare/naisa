@@ -20,6 +20,12 @@ import org.hibernate.generator.EventType;
 /**
  * Represents a crowd report entity.
  *
+ * <p>The {@code crowd_reports} table stores reports indicating the crowd level at a venue at a
+ * specific moment.
+ *
+ * <p>Each report is submitted by an end user whose ID is provided by a validated client. This
+ * service does not maintain any user data.
+ *
  * @author James Chen, Vincent Lai
  */
 @JavaBean
@@ -34,7 +40,7 @@ public class CrowdReport {
   private Long id;
 
   @ManyToOne
-  @JoinColumn(name = "client_id", nullable = false)
+  @JoinColumn(name = "client_id", nullable = false, comment = "Client that provides the report.")
   private Client client;
 
   @Column(

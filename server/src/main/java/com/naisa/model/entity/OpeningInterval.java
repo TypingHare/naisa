@@ -17,6 +17,10 @@ import lombok.Setter;
 /**
  * Represents an opening interval entity.
  *
+ * <p>The {@code opening_intervals} table records the time intervals during which a venue is open.
+ * We allow a venue to have multiple opening intervals on the same day of the week. However, we
+ * assume that all sports at a given venue share the same opening intervals.
+ *
  * @author James Chen, Vincent Lai
  */
 @JavaBean

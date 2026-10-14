@@ -20,6 +20,14 @@ import lombok.Setter;
 /**
  * Represents a review entity.
  *
+ * <p>The {@value reviews} table records reviews from end users.
+ *
+ * <p>The {@code sport} field is optional; records having a missing sport are considered as reviews
+ * for the venue.
+ *
+ * <p>Each report is provided by the end user, ID of whom is provided a validated client. This
+ * service doesn't maintain any user data.
+ *
  * @author James Chen, Vincent Lai
  */
 @JavaBean
