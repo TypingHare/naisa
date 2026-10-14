@@ -18,8 +18,8 @@ public final class ClientService {
   /**
    * Retrieves a client by an API key.
    *
-   * <p>In this project, a valid API key is defined as an API key that exists in the database.
-   * This method only checks whether the key was issued by this service.
+   * <p>In this project, a valid API key is defined as an API key that exists in the database. This
+   * method only checks whether the key was issued by this service.
    *
    * @param apiKey the API key to look up
    * @return the retrieved client
