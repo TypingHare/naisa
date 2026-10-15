@@ -14,6 +14,7 @@ import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.beans.JavaBean;
 import java.math.BigDecimal;
 import lombok.Getter;
@@ -26,7 +27,8 @@ import lombok.Setter;
  *
  * <p>The {@code price} field is the price of playing the sport at the specified venue. We assume
  * the price is the same every day of the week and remains constant throughout the day. The {@code
- * is_indoor} field indicates whether the sport is played indoors.
+ * is_indoor} field indicates whether the sport is played indoors. The optional {@code surface_type}
+ * field names the type of field surface.
  *
  * @author James Chen, Vincent Lai
  */
@@ -63,4 +65,8 @@ public class VenueSport {
 
   @Column(name = "is_indoor", comment = "Whether the sport field is indoor.")
   private Boolean isIndoor;
+
+  @Size(max = 64)
+  @Column(name = "surface_type", length = 64, comment = "Type of field surface for this sport.")
+  private String surfaceType;
 }

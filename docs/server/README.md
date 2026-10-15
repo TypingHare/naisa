@@ -10,3 +10,6 @@ backend, which is a typical Spring Boot project. An application's architecture
 refers to the major design decisions regarding dependencies (e.g., third-party
 libraries and CLI tools), components (e.g., layers and utilities), communication
 (e.g., protocols between endpoints), and so on.
+
+In [venue-operations.md](./venue-operations.md), we describe the current venue
+routes and how they differ from the initial proposal.
