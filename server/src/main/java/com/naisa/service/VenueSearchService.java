@@ -25,7 +25,7 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 
 /**
- * Implements exact, alternative, and group searches through a replaceable data source.
+ * Runs proposal Operations 1 and 2 in one search and runs Operation 3 for groups.
  *
  * @author Andrew Hsu
  */
