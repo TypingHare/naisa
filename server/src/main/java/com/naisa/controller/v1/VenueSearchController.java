@@ -2,7 +2,6 @@ package com.naisa.controller.v1;
 
 import com.naisa.common.Capsule;
 import com.naisa.common.annotation.AuthorizationRequired;
-import com.naisa.model.dto.AlternativeSearchRequest;
 import com.naisa.model.dto.GroupSearchRequest;
 import com.naisa.model.dto.VenueSearchRequest;
 import com.naisa.model.vo.SearchResult;
@@ -15,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Exposes the three venue search operations.
+ * Exposes venue and group search operations.
  *
  * @author Andrew Hsu
  */
@@ -43,19 +42,6 @@ public class VenueSearchController {
   public ResponseEntity<Capsule<SearchResult>> findVenues(
       @Valid @RequestBody final VenueSearchRequest request) {
     return ResponseEntity.ok(new Capsule<>("Venue search completed.", service.findVenues(request)));
-  }
-
-  /**
-   * Finds alternatives while preserving fixed criteria.
-   *
-   * @author Andrew Hsu
-   */
-  @PostMapping("/alternatives")
-  @AuthorizationRequired
-  public ResponseEntity<Capsule<SearchResult>> findAlternatives(
-      @Valid @RequestBody final AlternativeSearchRequest request) {
-    return ResponseEntity.ok(
-        new Capsule<>("Alternative search completed.", service.findAlternatives(request)));
   }
 
   /**
