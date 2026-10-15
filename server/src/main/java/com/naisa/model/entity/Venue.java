@@ -1,6 +1,5 @@
 package com.naisa.model.entity;
 
-import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -37,40 +36,24 @@ public class Venue {
   private Long id;
 
   @Column(name = "name", length = 255, nullable = false)
-  @Size(max = 255, message = "Venue name must not exceed 255 characters")
+  @Size(max = 255, message = "Venue name must not exceed 255 characters.")
   private String name;
 
-  @Column(name = "address", nullable = false, comment = "USPS address of the venue.")
+  @Column(name = "address", length = 255, nullable = false)
+  @Size(max = 255, message = "Address must not exceed 255 characters.")
   private String address;
 
   @Min(-90)
   @Max(90)
-  @Column(
-      name = "latitude",
-      nullable = false,
-      comment = "Latitude of the venue location.",
-      check =
-          @CheckConstraint(
-              name = "venues_latitude_range",
-              constraint = "latitude BETWEEN -90 AND 90"))
+  @Column(name = "latitude", nullable = false)
   private Double latitude;
 
   @Min(-180)
   @Max(180)
-  @Column(
-      name = "longitude",
-      nullable = false,
-      comment = "Longitude of the venue location.",
-      check =
-          @CheckConstraint(
-              name = "venues_longitude_range",
-              constraint = "longitude BETWEEN -180 AND 180"))
+  @Column(name = "longitude", nullable = false)
   private Double longitude;
 
-  @Column(
-      name = "timezone",
-      length = 32,
-      nullable = false,
-      comment = "IANA time zone identifier of the venue.")
+  @Column(name = "timezone", length = 32, nullable = false)
+  @Size(max = 32, message = "Timezone must not exceed 32 characters.")
   private String timezone;
 }

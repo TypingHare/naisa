@@ -1,6 +1,5 @@
 package com.naisa.model.entity;
 
-import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,10 +11,13 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.beans.JavaBean;
 import java.time.Instant;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 /**
  * Represents a review entity.
@@ -42,14 +44,11 @@ public class Review {
   private Long id;
 
   @ManyToOne
-  @JoinColumn(name = "client_id", nullable = false, comment = "Client that provides the review.")
+  @JoinColumn(name = "client_id", nullable = false)
   private Client client;
 
-  @Column(
-      name = "external_user_id",
-      length = 128,
-      nullable = false,
-      comment = "ID of the end user provided by the client.")
+  @Column(name = "external_user_id", length = 128, nullable = false)
+  @Size(max = 128, message = "External user ID must not exceed 128 characters.")
   private String externalUserId;
 
   @ManyToOne
@@ -63,19 +62,17 @@ public class Review {
   @NotNull
   @Min(1)
   @Max(5)
-  @Column(
-      name = "rating",
-      nullable = false,
-      check =
-          @CheckConstraint(name = "reviews_rating_range", constraint = "rating BETWEEN 1 AND 5"))
-  private Integer rating;
+  @Column(name = "rating", nullable = false)
+  private Short rating;
 
-  @Column(name = "comment", columnDefinition = "text", comment = "Comment written by the end user.")
-  private String comment;
+  @Column(name = "comment_content", columnDefinition = "text")
+  private String commentContent;
 
-  @Column(name = "created_at", nullable = false)
+  @Generated(event = EventType.INSERT)
+  @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
+  @Generated(event = {EventType.INSERT, EventType.UPDATE})
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
 }

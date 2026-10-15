@@ -1,6 +1,5 @@
 package com.naisa.model.entity;
 
-import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 import java.beans.JavaBean;
 import java.time.Instant;
 import lombok.Getter;
@@ -40,14 +40,11 @@ public class CrowdReport {
   private Long id;
 
   @ManyToOne
-  @JoinColumn(name = "client_id", nullable = false, comment = "Client that provides the report.")
+  @JoinColumn(name = "client_id", nullable = false)
   private Client client;
 
-  @Column(
-      name = "external_user_id",
-      length = 128,
-      nullable = false,
-      comment = "ID of the end user provided by the client.")
+  @Column(name = "external_user_id", length = 128, nullable = false)
+  @Size(max = 128, message = "External user ID must not exceed 128 characters.")
   private String externalUserId;
 
   @ManyToOne
@@ -58,14 +55,8 @@ public class CrowdReport {
   @JoinColumn(name = "sport_id")
   private Sport sport;
 
-  @Column(
-      name = "crowd_level",
-      length = 20,
-      nullable = false,
-      check =
-          @CheckConstraint(
-              name = "crowd_reports_crowd_level",
-              constraint = "crowd_level IN ('EMPTY', 'LIGHT', 'MODERATE', 'BUSY', 'PACKED')"))
+  @Column(name = "crowd_level", length = 8, nullable = false)
+  @Size(max = 8, message = "Crowd level string must not exceed 8 characters.")
   private String crowdLevel;
 
   @Generated(event = EventType.INSERT)
