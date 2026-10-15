@@ -1,6 +1,6 @@
 MVN = ./mvnw
 
-.PHONY: all lint test coverage run
+.PHONY: all lint test coverage run run-test download-sources
 
 all:
 	$(MVN) package
@@ -17,3 +17,9 @@ coverage:
 
 run:
 	$(MVN) spring-boot:run
+
+run-test:
+	$(MVN) spring-boot:run -Dspring-boot.run.profiles=test
+
+download-sources:
+	$(MVN) dependency:sources

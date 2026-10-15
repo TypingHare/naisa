@@ -1,8 +1,9 @@
 package com.naisa.model.entity;
 
-import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -10,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.beans.JavaBean;
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,16 +40,9 @@ public class OpeningInterval {
   @JoinColumn(name = "venue_id", nullable = false)
   private Venue venue;
 
-  @Column(
-      name = "day_of_week",
-      nullable = false,
-      check =
-          @CheckConstraint(
-              name = "opening_intervals_day_of_week_enum",
-              constraint =
-                  "day_of_week IN ('MONDAY', 'TUESDAY', 'WEDNESDAY', "
-                      + "'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY')"))
-  private String dayOfWeek;
+  @Column(name = "day_of_week", length = 9, nullable = false)
+  @Enumerated(EnumType.STRING)
+  private DayOfWeek dayOfWeek;
 
   @Column(name = "opens_at", nullable = false)
   private LocalTime opensAt;

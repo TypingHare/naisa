@@ -25,3 +25,4 @@ HELP.md
 
 # Properties files with credential data
 src/main/resources/database.properties
+src/main/resources/database-test.properties

@@ -1,6 +1,5 @@
 package com.naisa.model.entity;
 
-import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -54,13 +53,9 @@ public class VenueSport {
   @NotNull
   @DecimalMin("0.00")
   @Digits(integer = 10, fraction = 2)
-  @Column(
-      name = "price",
-      comment = "General price of the sport in the venue in dollars.",
-      nullable = false,
-      check = @CheckConstraint(name = "venue_sports_price_range", constraint = "price >= 0"))
+  @Column(name = "price", nullable = false)
   private BigDecimal price;
 
-  @Column(name = "is_indoor", comment = "Whether the sport field is indoor.")
+  @Column(name = "is_indoor", nullable = false)
   private Boolean isIndoor;
 }

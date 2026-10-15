@@ -3,6 +3,8 @@ package com.naisa.common;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.naisa.exception.ServiceException;
 import java.beans.JavaBean;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Represents a capsule, which defines the structure of the JSON object in the HTTP response body.
@@ -17,6 +19,8 @@ import java.beans.JavaBean;
  */
 @JavaBean
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
+@Setter
 public class Capsule<T> {
   /** A brief message to help clients understand the result of the request. */
   private String message;
@@ -48,30 +52,6 @@ public class Capsule<T> {
    */
   public Capsule(final String message, final T data) {
     this(message, data, null);
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public void setMessage(final String message) {
-    this.message = message;
-  }
-
-  public T getData() {
-    return data;
-  }
-
-  public void setData(final T data) {
-    this.data = data;
-  }
-
-  public String getErrorCode() {
-    return errorCode;
-  }
-
-  public void setErrorCode(final String errorCode) {
-    this.errorCode = errorCode;
   }
 
   /**

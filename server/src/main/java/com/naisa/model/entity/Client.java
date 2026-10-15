@@ -38,6 +38,6 @@ public class Client {
   @Generated(event = EventType.INSERT)
   @ColumnDefault("gen_random_uuid()::text")
   @Column(name = "api_key", length = 36, nullable = false, unique = true)
-  @Size(max = 36, message = "API key must not exceed 36 characters")
+  @Size(max = 36, message = "API key must not exceed 36 characters.")
   private String apiKey;
 }
