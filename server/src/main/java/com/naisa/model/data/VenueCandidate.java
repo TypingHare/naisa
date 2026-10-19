@@ -25,6 +25,8 @@ public class VenueCandidate {
 
   private BigDecimal price;
 
+  private String currency;
+
   private String priceUnit;
 
   private FacilityInfo facility;
@@ -77,6 +79,14 @@ public class VenueCandidate {
 
   public void setPrice(final BigDecimal price) {
     this.price = price;
+  }
+
+  public String getCurrency() {
+    return currency;
+  }
+
+  public void setCurrency(final String currency) {
+    this.currency = currency;
   }
 
   public String getPriceUnit() {

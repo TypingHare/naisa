@@ -4,25 +4,15 @@ import java.beans.JavaBean;
 import java.util.List;
 
 /**
- * Reports whether the data adapter is ready and whether the sport exists.
+ * Reports whether the sport exists and carries its stored venue candidates.
  *
  * @author Andrew Hsu, Codex
  */
 @JavaBean
 public class VenueSearchData {
-  private Boolean implemented = false;
-
   private Boolean sportFound = false;
 
   private List<VenueCandidate> venues = List.of();
-
-  public Boolean isImplemented() {
-    return implemented;
-  }
-
-  public void setImplemented(final Boolean implemented) {
-    this.implemented = implemented;
-  }
 
   public Boolean isSportFound() {
     return sportFound;

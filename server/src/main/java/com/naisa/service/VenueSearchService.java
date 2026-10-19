@@ -20,7 +20,9 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
 
@@ -88,15 +90,12 @@ public final class VenueSearchService {
   }
 
   /**
-   * Distinguishes an unfinished adapter from unknown sports and empty stored data.
+   * Distinguishes unknown sports from sports that have no stored venues.
    *
    * @author Andrew Hsu
    */
   private List<VenueCandidate> load(final String sport) {
     final VenueSearchData data = repository.findBySportName(sport);
-    if (!Boolean.TRUE.equals(data.isImplemented())) {
-      throw VenueSearchException.DATA_SOURCE_NOT_IMPLEMENTED.clone();
-    }
     if (!Boolean.TRUE.equals(data.isSportFound())) {
       throw VenueSearchException.UNKNOWN_SPORT.clone();
     }
@@ -130,13 +129,13 @@ public final class VenueSearchService {
   }
 
   /**
-   * Applies all checks together and sorts before rounding response values.
+   * Applies all checks, sorts results, and keeps one eligible offer per venue.
    *
    * @author Andrew Hsu
    */
   private List<VenueResult> match(
       final List<LocatedVenue> candidates, final SearchCriteria criteria, final Double radius) {
-    return candidates.stream()
+    final List<LocatedVenue> ordered = candidates.stream()
         .filter(candidate -> radius == null || candidate.distance() <= radius)
         .filter(candidate -> comparablePrice(candidate.venue()))
         .filter(candidate -> candidate.venue().getPrice().compareTo(criteria.getBudget()) <= 0)
@@ -145,18 +144,24 @@ public final class VenueSearchService {
             Comparator.comparingDouble(LocatedVenue::average)
                 .thenComparing(candidate -> candidate.venue().getPrice())
                 .thenComparing(candidate -> candidate.venue().getVenueId()))
-        .map(candidate -> venueResult(candidate, criteria))
         .toList();
+    final Map<Long, VenueResult> results = new LinkedHashMap<>();
+    for (final LocatedVenue candidate : ordered) {
+      results.computeIfAbsent(
+          candidate.venue().getVenueId(), identifier -> venueResult(candidate, criteria));
+    }
+    return List.copyOf(results.values());
   }
 
   /**
-   * Excludes unknown prices and incompatible units rather than treating them as free.
+   * Accepts only known USD prices for one court hour, including zero prices.
    *
    * @author Andrew Hsu
    */
   private boolean comparablePrice(final VenueCandidate venue) {
     return venue.getPrice() != null
         && venue.getPrice().signum() >= 0
+        && "USD".equals(venue.getCurrency())
         && "PER_COURT_HOUR".equals(venue.getPriceUnit());
   }
 
@@ -244,6 +249,8 @@ public final class VenueSearchService {
     }
     final PriceEstimate price = new PriceEstimate();
     price.setAmount(venue.getPrice());
+    price.setCurrency(venue.getCurrency());
+    price.setPriceUnit(venue.getPriceUnit());
     result.setEstimatedPrice(price);
     result.setFacility(venue.getFacility());
     final AvailabilityInfo availability = new AvailabilityInfo();

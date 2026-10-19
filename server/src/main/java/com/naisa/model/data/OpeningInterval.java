@@ -4,7 +4,7 @@ import java.beans.JavaBean;
 import java.time.LocalTime;
 
 /**
- * Contains an opening_hours row for a venue and sport.
+ * Contains a venue's weekly opening period with ISO day numbers from 1 to 7.
  *
  * @author Andrew Hsu, Codex
  */

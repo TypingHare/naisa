@@ -53,6 +53,7 @@ public final class VenueSearchTestData {
     venue.setLocation(location(0, longitude));
     venue.setTimezone("UTC");
     venue.setPrice(new BigDecimal(price));
+    venue.setCurrency("USD");
     venue.setPriceUnit("PER_COURT_HOUR");
     final List<OpeningInterval> intervals = new ArrayList<>();
     for (int weekday = 1; weekday <= 7; weekday++) {
@@ -64,7 +65,6 @@ public final class VenueSearchTestData {
 
   public static VenueSearchData data(final VenueCandidate... venues) {
     final VenueSearchData data = new VenueSearchData();
-    data.setImplemented(true);
     data.setSportFound(true);
     data.setVenues(List.of(venues));
     return data;

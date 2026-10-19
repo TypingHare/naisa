@@ -21,7 +21,6 @@ import com.naisa.model.dto.Location;
 import com.naisa.model.dto.VenueSearchRequest;
 import com.naisa.model.vo.SearchResult;
 import com.naisa.model.vo.VenueResult;
-import com.naisa.repository.PlaceholderVenueSearchRepository;
 import com.naisa.repository.VenueSearchRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -148,12 +147,12 @@ class VenueSearchServiceTest {
   }
 
   /**
-   * Unknown prices, units, hours, and zones are not matches.
+   * Unknown prices, currencies, units, hours, and zones are not matches.
    *
    * @author Andrew Hsu
    */
   @Test
-  void unknownPricesUnitsHoursAndZonesAreNotMatches() {
+  void unknownPricesCurrenciesUnitsHoursAndZonesAreNotMatches() {
     final VenueCandidate unknownPrice = venue(1, 0, "0");
     unknownPrice.setPrice(null);
     final VenueCandidate otherUnit = venue(2, 0, "0");
@@ -162,8 +161,16 @@ class VenueSearchServiceTest {
     unknownHours.setOpeningHours(List.of());
     final VenueCandidate unknownZone = venue(4, 0, "0");
     unknownZone.setTimezone("Invalid/Zone");
+    final VenueCandidate unknownCurrency = venue(5, 0, "0");
+    unknownCurrency.setCurrency(null);
+    final VenueCandidate otherCurrency = venue(6, 0, "0");
+    otherCurrency.setCurrency("EUR");
+    final VenueCandidate unknownUnit = venue(7, 0, "0");
+    unknownUnit.setPriceUnit(null);
     when(repository.findBySportName("basketball"))
-        .thenReturn(data(unknownPrice, otherUnit, unknownHours, unknownZone));
+        .thenReturn(
+            data(unknownPrice, otherUnit, unknownHours, unknownZone,
+                unknownCurrency, otherCurrency, unknownUnit));
     assertEquals("NONE", service.findVenues(request()).getMatchType());
   }
 
@@ -243,21 +250,6 @@ class VenueSearchServiceTest {
     assertEquals(
         "search.unknown_sport",
         assertThrows(VenueSearchException.class, () -> service.findVenues(request())).getCode());
-  }
-
-  /**
-   * Placeholder does not claim that the database has no venues.
-   *
-   * @author Andrew Hsu
-   */
-  @Test
-  void placeholderDoesNotClaimThatTheDatabaseHasNoVenues() {
-    final VenueSearchService placeholder =
-        new VenueSearchService(new PlaceholderVenueSearchRepository());
-    assertEquals(
-        "search.data_source_not_implemented",
-        assertThrows(VenueSearchException.class, () -> placeholder.findVenues(request()))
-            .getCode());
   }
 
   /**

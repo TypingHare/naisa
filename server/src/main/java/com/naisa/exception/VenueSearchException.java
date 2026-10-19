@@ -8,11 +8,6 @@ import org.springframework.http.HttpStatus;
  * @author Andrew Hsu
  */
 public final class VenueSearchException extends ServiceException {
-  public static final VenueSearchException DATA_SOURCE_NOT_IMPLEMENTED =
-      new VenueSearchException(
-          "search.data_source_not_implemented",
-          "The venue data source is not implemented.",
-          HttpStatus.NOT_IMPLEMENTED);
   public static final VenueSearchException UNKNOWN_SPORT =
       new VenueSearchException(
           "search.unknown_sport", "The sport is not stored.", HttpStatus.UNPROCESSABLE_CONTENT);

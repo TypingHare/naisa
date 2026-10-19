@@ -312,25 +312,6 @@ class VenueSearchControllerTest {
   }
 
   /**
-   * Unfinished data source is not an empty search.
-   *
-   * @author Andrew Hsu
-   */
-  @ParameterizedTest
-  @ValueSource(strings = {"/search", "/group-search"})
-  void unfinishedDataSourceIsNotAnEmptySearch(final String path) throws Exception {
-    when(repository.findBySportName("basketball")).thenReturn(new VenueSearchData());
-    final String body = "/group-search".equals(path) ? GROUP_BODY : SEARCH_BODY;
-    mvc.perform(
-            post("/v1/venues" + path)
-                .header("Authorization", "Bearer test-key")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body))
-        .andExpect(status().isNotImplemented())
-        .andExpect(jsonPath("$.errorCode").value("search.data_source_not_implemented"));
-  }
-
-  /**
    * Unknown sports cause an error, while a search with no venues returns no matches.
    *
    * @author Andrew Hsu

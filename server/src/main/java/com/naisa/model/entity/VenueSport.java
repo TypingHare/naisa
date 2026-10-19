@@ -27,9 +27,11 @@ import lombok.Setter;
  * <p>The {@code price} field is the price of playing the sport at the specified venue. We assume
  * the price is the same every day of the week and remains constant throughout the day. The {@code
  * is_indoor} field indicates whether the sport is played indoors. The optional {@code surface_type}
- * field names the type of field surface.
+ * field names the type of field surface. The optional {@code currency} and {@code price_unit}
+ * fields describe how to compare prices. Missing metadata means that the price cannot be used in
+ * search results.
  *
- * @author James Chen, Vincent Lai
+ * @author James Chen, Vincent Lai, Andrew Hsu, Codex
  */
 @JavaBean
 @Entity
@@ -57,6 +59,14 @@ public class VenueSport {
   @Digits(integer = 10, fraction = 2)
   @Column(name = "price", nullable = false)
   private BigDecimal price;
+
+  @Size(max = 3)
+  @Column(name = "currency", length = 3)
+  private String currency;
+
+  @Size(max = 32)
+  @Column(name = "price_unit", length = 32)
+  private String priceUnit;
 
   @Column(name = "is_indoor", nullable = false)
   private Boolean isIndoor;
