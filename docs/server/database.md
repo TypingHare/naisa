@@ -17,12 +17,23 @@ the steps below to set it up:
 4. Set `spring.datasource.username` in both newly created properties files to
    your username, which you can obtain by running
    `psql -d naisa -Atc 'SELECT current_user;'`.
+5. Set `spring.datasource.url` in `database-test.properties` to
+   `jdbc:postgresql://localhost:5432/naisa_test`. Keep the development config
+   pointed at `naisa`. Add `spring.datasource.password` to each private config
+   if your PostgreSQL setup requires a password.
 
 In the `server` workspace, run `make run` (which uses the configuration in
 `database.properties`) and `make run-test` (which uses the configuration in
 `database-test.properties`). If the service starts successfully, the setup is
 complete. If the service fails to start, the setup may still be complete. Check
 the logs to see whether the error is related to the database.
+
+Run automated tests against the test database with
+`SPRING_PROFILES_ACTIVE=test make test`. Flyway applies the SQL migrations at
+startup, and `ddl-auto=validate` checks that the entities match the schema.
+Keep that setting in both configs. Integration tests roll back their records.
+Migration tests create and drop their own temporary schemas, so the test user
+must be allowed to create schemas in `naisa_test`.
 
 #### Drop a Database
 

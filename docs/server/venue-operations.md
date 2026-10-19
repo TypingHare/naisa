@@ -6,8 +6,10 @@ guide describes the current code.
 
 ## Venue routes
 
-All three routes require an API key and accept JSON. The search routes return a
-`Capsule<SearchResult>`. The info route returns a `Capsule<VenueInfo>`.
+All three routes accept JSON with `Content-Type: application/json` and require
+an `Authorization: Bearer <api-key>` header. Create a key with
+`POST /v1/clients`; the key is returned in `data.apiKey`. The search routes
+return a `Capsule<SearchResult>`. The info route returns a `Capsule<VenueInfo>`.
 
 The proposal lists Find Venues and Find Alternatives as Operations 1 and 2.
 This server combines them in `POST /v1/venues/search`. The route tries the
@@ -31,21 +33,56 @@ venue info is Operation 4.
   is the string returned in search results. Name lookup ignores letter case and
   extra space at the start or end. The route returns one venue with its address,
   coordinates, time zone, sports, stored prices, field data, and weekly opening
-  hours. The response labels prices as USD. If a name matches more than one
-  venue, use an ID instead.
+  hours. A sport's `priceUsd` field is included only when its stored currency
+  is `USD`. If a name matches more than one venue, use an ID instead.
 
-For example, the individual search body is:
+## Request examples
+
+Individual search (`POST /v1/venues/search`):
 
 ```json
 {
   "location": {"latitude": 40.81, "longitude": -73.96},
   "sport": "basketball",
-  "date": "2026-10-17",
+  "date": "2026-10-24",
   "time": "18:00",
   "maxDistance": 5,
   "budget": 0
 }
 ```
+
+Group search (`POST /v1/venues/group-search`):
+
+```json
+{
+  "locations": [
+    {"latitude": 40.81, "longitude": -73.96},
+    {"latitude": 40.82, "longitude": -73.95}
+  ],
+  "sport": "basketball",
+  "date": "2026-10-24",
+  "time": "18:00",
+  "budget": 20,
+  "distanceFromCenter": 5
+}
+```
+
+Venue info (`POST /v1/venues/info`), using an ID from a search result:
+
+```json
+{"venueId": "42"}
+```
+
+To look up a venue by name, send this body instead:
+
+```json
+{"venueName": "Riverside Park"}
+```
+
+Send exactly one selector. Name lookup matches the full name, without regard
+to letter case or space at the start or end. It is not a partial-name search.
+
+## Search rules
 
 `budget` defaults to zero. A result shows the requested criteria, the criteria
 that matched, the changed fields, and the venues. An exact result has
@@ -88,13 +125,14 @@ produce empty results. The API key check reads the configured client table.
 If catalog rows share a sport name, search returns each venue once with its
 lowest eligible price.
 
-The info route reads the current PostgreSQL venue tables through JPA. It does
-not use the search placeholder. Its `surfaceType` value comes from the optional
+The info route reads the current PostgreSQL venue tables through JPA.
+Its `surfaceType` value comes from the optional
 `venue_sports.surface_type` column. Existing rows can leave this value empty.
 Flyway migration V2 adds this column. Hibernate checks the schema at startup.
-The info route maps each stored dollar price to `priceUsd`. This uses the
-assumption that the stored dollars are USD. The info response keeps this
-existing field; search uses the explicit currency and price unit instead.
+The info route maps the stored price to `priceUsd` only when `currency` is
+`USD`. That field is omitted when currency is unknown or different; the sport
+and facility details are still returned. The info route does not convert
+currencies or claim a time unit for this price.
 The route returns stored weekly hours; it does not report current opening or
 booking status. A missing venue returns HTTP 404. A name used by more than one
 venue returns HTTP 409. An invalid selector returns HTTP 400.
@@ -106,10 +144,20 @@ From `server/`, run `make run` to start the server. In another terminal, run
 the Maven wrapper. The full test run needs PostgreSQL and
 `src/main/resources/database.properties`; see [database setup](./database.md).
 
-Use a dedicated PostgreSQL 18 test database. Set `SPRING_DATASOURCE_URL` to its
-JDBC URL when running `make test`, and use `ddl-auto=validate` as in the example
-config. Repository tests roll back their records. Migration tests create and
-drop their own temporary schemas, so the test database user must be able to
-create schemas. They check both an empty schema and an upgrade from V1.
+Use a dedicated PostgreSQL 18 test database. With `database-test.properties`
+configured as described in the setup guide, run:
+
+```bash
+SPRING_PROFILES_ACTIVE=test make test
+make lint
+```
+
+You can also set `SPRING_DATASOURCE_URL` to the test database's JDBC URL. Use
+`ddl-auto=validate` as in the example config. Flyway applies the migrations;
+Hibernate validates the resulting schema. CI uses the same PostgreSQL version
+and schema validation. Repository tests roll back their records. Migration
+tests create and drop their own temporary schemas, so the test database user
+must be able to create schemas. They check both an empty schema and an upgrade
+from V1.
 V1 stays unchanged. A database created before Flyway that has no migration
 history needs a separate migration plan; do not enable automatic baselining.

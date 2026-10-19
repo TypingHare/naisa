@@ -6,6 +6,12 @@ Nothing has changed.
 
 ## Part 2: Service Functionality
 
+**Implementation note:** Operations 1 and 2 are combined in
+`POST /v1/venues/search`. The implementation raises distance and budget limits
+when no exact venue matches; the date and time stay fixed. The descriptions
+below record the original proposal. See [venue operations](./server/venue-operations.md)
+for the current routes, examples, and limits.
+
 ### Operation 1: Find Venues
 
 **Inputs**
