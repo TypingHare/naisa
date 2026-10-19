@@ -16,13 +16,18 @@ jobs:
 
     services:
       postgres:
-        image: postgres:17
+        image: postgres:18-alpine
         env:
           POSTGRES_DB: naisa
           POSTGRES_USER: naisa
           POSTGRES_PASSWORD: ci_password
         ports:
           - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U naisa -d naisa"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Check out the code
@@ -42,7 +47,7 @@ jobs:
           spring.datasource.url=jdbc:postgresql://localhost:5432/naisa
           spring.datasource.username=naisa
           spring.datasource.password=ci_password
-          spring.jpa.hibernate.ddl-auto=create-drop
+          spring.jpa.hibernate.ddl-auto=validate
           spring.jpa.open-in-view=false
           EOF
 
