@@ -41,6 +41,7 @@ public final class VenueSearchService {
   /**
    * Connects the search rules to their data source.
    *
+   * @param repository reads the sport and stored venue candidates
    * @author Andrew Hsu
    */
   public VenueSearchService(final VenueSearchRepository repository) {
@@ -50,6 +51,9 @@ public final class VenueSearchService {
   /**
    * Finds exact venues, then raises the distance and budget limits in bounded steps.
    *
+   * @param request the location and search criteria
+   * @return the exact matches, the first matching alternatives, or an empty result
+   * @throws VenueSearchException if the sport is not stored
    * @author Andrew Hsu
    */
   public SearchResult findVenues(final VenueSearchRequest request) {
@@ -72,6 +76,9 @@ public final class VenueSearchService {
   /**
    * Searches around a spherical group center and returns each member's distance.
    *
+   * @param request the member locations and search criteria
+   * @return the matching venues ranked by average member distance
+   * @throws VenueSearchException if the sport is not stored or the group center is undefined
    * @author Andrew Hsu
    */
   public SearchResult findGroupVenues(final GroupSearchRequest request) {
@@ -135,16 +142,17 @@ public final class VenueSearchService {
    */
   private List<VenueResult> match(
       final List<LocatedVenue> candidates, final SearchCriteria criteria, final Double radius) {
-    final List<LocatedVenue> ordered = candidates.stream()
-        .filter(candidate -> radius == null || candidate.distance() <= radius)
-        .filter(candidate -> comparablePrice(candidate.venue()))
-        .filter(candidate -> candidate.venue().getPrice().compareTo(criteria.getBudget()) <= 0)
-        .filter(candidate -> isOpen(candidate.venue(), criteria))
-        .sorted(
-            Comparator.comparingDouble(LocatedVenue::average)
-                .thenComparing(candidate -> candidate.venue().getPrice())
-                .thenComparing(candidate -> candidate.venue().getVenueId()))
-        .toList();
+    final List<LocatedVenue> ordered =
+        candidates.stream()
+            .filter(candidate -> radius == null || candidate.distance() <= radius)
+            .filter(candidate -> comparablePrice(candidate.venue()))
+            .filter(candidate -> candidate.venue().getPrice().compareTo(criteria.getBudget()) <= 0)
+            .filter(candidate -> isOpen(candidate.venue(), criteria))
+            .sorted(
+                Comparator.comparingDouble(LocatedVenue::average)
+                    .thenComparing(candidate -> candidate.venue().getPrice())
+                    .thenComparing(candidate -> candidate.venue().getVenueId()))
+            .toList();
     final Map<Long, VenueResult> results = new LinkedHashMap<>();
     for (final LocatedVenue candidate : ordered) {
       results.computeIfAbsent(

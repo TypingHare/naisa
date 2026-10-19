@@ -5,7 +5,7 @@ import java.beans.JavaBean;
 import java.math.BigDecimal;
 
 /**
- * Contains one sport and its stored price and field data.
+ * Contains one sport, its field data, and its price when the currency is confirmed as USD.
  *
  * @author Andrew Hsu
  */

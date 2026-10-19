@@ -16,6 +16,8 @@ public interface VenueInfoSportRepository extends JpaRepository<VenueSport, Long
   /**
    * Reads sports with their names in one query.
    *
+   * @param venueId the stored venue ID
+   * @return the venue's sports, or an empty list when none are stored
    * @author Andrew Hsu
    */
   @EntityGraph(attributePaths = "sport")

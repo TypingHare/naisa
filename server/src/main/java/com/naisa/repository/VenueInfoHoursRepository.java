@@ -15,6 +15,8 @@ public interface VenueInfoHoursRepository extends JpaRepository<OpeningInterval,
   /**
    * Reads all weekly opening periods for one venue.
    *
+   * @param venueId the stored venue ID
+   * @return the opening periods, or an empty list when none are stored
    * @author Andrew Hsu
    */
   List<OpeningInterval> findByVenueId(Long venueId);

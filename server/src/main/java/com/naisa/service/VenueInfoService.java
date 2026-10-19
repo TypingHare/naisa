@@ -136,7 +136,9 @@ public class VenueInfoService {
   private VenueSportInfo sportInfo(final VenueSport row) {
     final VenueSportInfo info = new VenueSportInfo();
     info.setSport(row.getSport().getName());
-    info.setPriceUsd(row.getPrice());
+    if ("USD".equals(row.getCurrency())) {
+      info.setPriceUsd(row.getPrice());
+    }
     if (row.getIsIndoor() != null || row.getSurfaceType() != null) {
       final FacilityInfo facility = new FacilityInfo();
       facility.setIsIndoor(row.getIsIndoor());

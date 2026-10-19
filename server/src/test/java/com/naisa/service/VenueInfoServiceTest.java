@@ -1,6 +1,7 @@
 package com.naisa.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -24,6 +25,9 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -107,6 +111,29 @@ class VenueInfoServiceTest {
     assertEquals(List.of(), result.getSports());
     assertEquals(List.of(), result.getOpeningHours());
     verify(venueRepository).findByNameIgnoreCase("Riverside Park");
+  }
+
+  /**
+   * Does not label an unknown or foreign-currency amount as USD.
+   *
+   * @param currency the stored currency, or null when unknown
+   * @author Andrew Hsu, Codex
+   */
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(strings = "EUR")
+  void omitsPricesThatAreNotConfirmedUsd(final String currency) {
+    final Venue venue = venue(42, "Riverside Park");
+    final VenueSport row = sport(venue, "Tennis", "20.00", false, null);
+    row.setCurrency(currency);
+    when(venueRepository.findById(42L)).thenReturn(Optional.of(venue));
+    when(sportRepository.findByVenueId(42L)).thenReturn(List.of(row));
+    when(hoursRepository.findByVenueId(42L)).thenReturn(List.of());
+
+    final VenueInfo result = service.getVenueInfo(request("42", null));
+
+    assertEquals("Tennis", result.getSports().getFirst().getSport());
+    assertNull(result.getSports().getFirst().getPriceUsd());
   }
 
   /**
@@ -217,6 +244,7 @@ class VenueInfoServiceTest {
     row.setVenue(venue);
     row.setSport(sport);
     row.setPrice(new BigDecimal(price));
+    row.setCurrency("USD");
     row.setIsIndoor(isIndoor);
     row.setSurfaceType(surfaceType);
     return row;

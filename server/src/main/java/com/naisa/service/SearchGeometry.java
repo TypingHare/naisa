@@ -18,6 +18,9 @@ public final class SearchGeometry {
   /**
    * Computes great-circle distance in kilometers.
    *
+   * @param origin the starting coordinates
+   * @param destination the ending coordinates
+   * @return the distance in kilometers before rounding
    * @author Andrew Hsu
    */
   public static double distance(final Location origin, final Location destination) {
@@ -37,6 +40,9 @@ public final class SearchGeometry {
   /**
    * Computes a spherical center while preserving duplicate members' weights.
    *
+   * @param locations the validated member coordinates
+   * @return the group center
+   * @throws VenueSearchException if the locations do not define a stable center
    * @author Andrew Hsu
    */
   public static Location center(final List<Location> locations) {
