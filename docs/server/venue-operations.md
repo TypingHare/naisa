@@ -85,8 +85,7 @@ configured client database table.
 The info route reads the current PostgreSQL venue tables through JPA. It does
 not use the search placeholder. Its `surfaceType` value comes from the optional
 `venue_sports.surface_type` column. Existing rows can leave this value empty.
-With the current `ddl-auto=update` setting, Hibernate adds this column to an
-existing database at startup.
+Flyway migration V2 adds this column. Hibernate checks the schema at startup.
 The info route maps each stored dollar price to `priceUsd`. This uses the
 assumption that the stored dollars are USD; the schema has no currency field.
 The route returns stored weekly hours; it does not report current opening or
@@ -95,7 +94,7 @@ venue returns HTTP 409. An invalid selector returns HTTP 400.
 
 ## Checks
 
-From `server/`, run `make run` to start the server, and in another terminal
-run `make test` for tests and `make lint` for Checkstyle and PMD. 
-These targets run the Maven wrapper. The full test run needs PostgreSQL
-and `src/main/resources/database.properties`; see
+From `server/`, run `make run` to start the server. In another terminal, run
+`make test` for tests and `make lint` for Checkstyle and PMD. These targets run
+the Maven wrapper. The full test run needs PostgreSQL and
+`src/main/resources/database.properties`; see [database setup](./database.md).

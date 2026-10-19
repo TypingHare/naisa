@@ -13,7 +13,6 @@ import com.naisa.model.vo.VenueSportInfo;
 import com.naisa.repository.VenueInfoHoursRepository;
 import com.naisa.repository.VenueInfoSportRepository;
 import com.naisa.repository.VenueInfoVenueRepository;
-import java.time.DayOfWeek;
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -25,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @author Andrew Hsu, Codex
  */
 @Service
-public final class VenueInfoService {
+public class VenueInfoService {
   private final VenueInfoVenueRepository venueRepository;
   private final VenueInfoSportRepository sportRepository;
   private final VenueInfoHoursRepository hoursRepository;
@@ -33,6 +32,9 @@ public final class VenueInfoService {
   /**
    * Connects the venue info operation to its data sources.
    *
+   * @param venueRepository reads venue records
+   * @param sportRepository reads sports offered at a venue
+   * @param hoursRepository reads a venue's opening periods
    * @author Andrew Hsu
    */
   public VenueInfoService(
@@ -45,8 +47,12 @@ public final class VenueInfoService {
   }
 
   /**
-   * Gets one venue by ID or exact name.
+   * Gets one venue by ID or full name. Name lookup ignores letter case.
    *
+   * @param request selects one venue by ID or name
+   * @return the venue details
+   * @throws VenueInfoException if the selector is invalid, the venue is missing, or the name is
+   *     ambiguous
    * @author Andrew Hsu
    */
   @Transactional(readOnly = true)
@@ -70,7 +76,7 @@ public final class VenueInfoService {
         hoursRepository.findByVenueId(venue.getId()).stream()
             .sorted(
                 Comparator.comparingInt(
-                        (OpeningInterval row) -> DayOfWeek.valueOf(row.getDayOfWeek()).getValue())
+                        (OpeningInterval row) -> row.getDayOfWeek().getValue())
                     .thenComparing(OpeningInterval::getOpensAt)
                     .thenComparing(OpeningInterval::getClosesAt))
             .map(this::openingHours)
@@ -81,6 +87,10 @@ public final class VenueInfoService {
   /**
    * Checks that one selector is present and finds the venue.
    *
+   * @param request selects one venue by ID or name
+   * @return the matching venue record
+   * @throws VenueInfoException if the selector is invalid, the venue is missing, or the name is
+   *     ambiguous
    * @author Andrew Hsu
    */
   private Venue findVenue(final VenueInfoRequest request) {
@@ -119,6 +129,8 @@ public final class VenueInfoService {
   /**
    * Maps one stored sport to a response item.
    *
+   * @param row the stored venue sport
+   * @return the sport response item
    * @author Andrew Hsu
    */
   private VenueSportInfo sportInfo(final VenueSport row) {
@@ -137,11 +149,13 @@ public final class VenueInfoService {
   /**
    * Maps one stored opening period to a response item.
    *
+   * @param row the stored opening period
+   * @return the opening hours response item
    * @author Andrew Hsu
    */
   private VenueOpeningHours openingHours(final OpeningInterval row) {
     final VenueOpeningHours hours = new VenueOpeningHours();
-    hours.setDayOfWeek(row.getDayOfWeek());
+    hours.setDayOfWeek(row.getDayOfWeek().name());
     hours.setOpensAt(row.getOpensAt());
     hours.setClosesAt(row.getClosesAt());
     return hours;

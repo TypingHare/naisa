@@ -17,6 +17,7 @@ import com.naisa.repository.VenueInfoHoursRepository;
 import com.naisa.repository.VenueInfoSportRepository;
 import com.naisa.repository.VenueInfoVenueRepository;
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /**
  * Checks venue info lookup and mapping rules.
  *
- * @author Andrew Hsu
+ * @author Andrew Hsu, Codex
  */
 @ExtendWith(MockitoExtension.class)
 class VenueInfoServiceTest {
@@ -41,7 +42,7 @@ class VenueInfoServiceTest {
   /**
    * Sets up the service.
    *
-   * @author Andrew Hsu
+   * @author Andrew Hsu, Codex
    */
   @BeforeEach
   void setUp() {
@@ -51,7 +52,7 @@ class VenueInfoServiceTest {
   /**
    * Returns stored values in a stable order for an ID lookup.
    *
-   * @author Andrew Hsu
+   * @author Andrew Hsu, Codex
    */
   @Test
   void idLookupReturnsStoredDetailsInOrder() {
@@ -89,7 +90,7 @@ class VenueInfoServiceTest {
   /**
    * Finds one venue by its trimmed name without changing the request.
    *
-   * @author Andrew Hsu
+   * @author Andrew Hsu, Codex
    */
   @Test
   void nameLookupUsesTrimmedExactName() {
@@ -111,7 +112,7 @@ class VenueInfoServiceTest {
   /**
    * Rejects missing, double, blank, and bad selectors before any data read.
    *
-   * @author Andrew Hsu
+   * @author Andrew Hsu, Codex
    */
   @Test
   void rejectsInvalidSelectors() {
@@ -135,7 +136,7 @@ class VenueInfoServiceTest {
   /**
    * Reports unknown IDs and names.
    *
-   * @author Andrew Hsu
+   * @author Andrew Hsu, Codex
    */
   @Test
   void reportsUnknownVenues() {
@@ -158,7 +159,7 @@ class VenueInfoServiceTest {
   /**
    * Reports an ambiguous name and reads no detail rows.
    *
-   * @author Andrew Hsu
+   * @author Andrew Hsu, Codex
    */
   @Test
   void reportsAmbiguousNames() {
@@ -174,7 +175,7 @@ class VenueInfoServiceTest {
   /**
    * Makes a venue info request for a test.
    *
-   * @author Andrew Hsu
+   * @author Andrew Hsu, Codex
    */
   private VenueInfoRequest request(final String id, final String name) {
     final VenueInfoRequest request = new VenueInfoRequest();
@@ -186,7 +187,7 @@ class VenueInfoServiceTest {
   /**
    * Makes a venue with stored details for a test.
    *
-   * @author Andrew Hsu
+   * @author Andrew Hsu, Codex
    */
   private Venue venue(final long id, final String name) {
     final Venue venue = new Venue();
@@ -202,7 +203,7 @@ class VenueInfoServiceTest {
   /**
    * Makes a venue sport with a price and facility values for a test.
    *
-   * @author Andrew Hsu
+   * @author Andrew Hsu, Codex
    */
   private VenueSport sport(
       final Venue venue,
@@ -224,13 +225,13 @@ class VenueInfoServiceTest {
   /**
    * Makes one stored opening period for a test.
    *
-   * @author Andrew Hsu
+   * @author Andrew Hsu, Codex
    */
   private OpeningInterval hours(
       final Venue venue, final String day, final String opens, final String closes) {
     final OpeningInterval row = new OpeningInterval();
     row.setVenue(venue);
-    row.setDayOfWeek(day);
+    row.setDayOfWeek(DayOfWeek.valueOf(day));
     row.setOpensAt(LocalTime.parse(opens));
     row.setClosesAt(LocalTime.parse(closes));
     return row;
