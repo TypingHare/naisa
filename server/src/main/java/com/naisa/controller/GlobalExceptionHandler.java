@@ -10,6 +10,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
  * This global exception handler handles exceptions caught during request handling.
@@ -87,5 +88,24 @@ public class GlobalExceptionHandler {
         .body(
             new Capsule<>(
                 "Request validation failed.", null, ERROR_CODE_REQUEST_VALIDATION_FAILED));
+  }
+
+  /**
+   * Reports request parameters that cannot be converted to their declared Java types.
+   *
+   * <p>For example, a nonnumeric venue identifier in a request path is invalid client input.
+   * Handling it explicitly prevents it from reaching the generic internal-error response.
+   *
+   * @param exception parameter conversion failure raised during request binding
+   * @return HTTP 400 with a stable invalid-parameter error code
+   * @author Vincent Lai, Codex
+   */
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<Capsule<Object>> handleInvalidParameter(
+      final MethodArgumentTypeMismatchException exception) {
+    return ResponseEntity.badRequest()
+        .body(
+            new Capsule<>(
+                "A request parameter has an invalid format.", null, "request.invalid_parameter"));
   }
 }
