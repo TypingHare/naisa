@@ -69,9 +69,11 @@ We first check that all venue IDs are distinct and that each venue offers the
 requested sport. Duplicate IDs or unsupported sports are rejected.
 
 For each venue, we return its name, distance, price, indoor status, opening
-status, and crowd level. We use the venue's local time and opening hours to
-determine `openNow`. If the opening status cannot be determined, we return
-`null`.
+status, and crowd level. The crowd level is determined using the requested sport
+and the fallback behavior described in Operation 7.
+
+We use the venue's local time and opening hours to determine `openNow`. If the
+opening status cannot be determined, we return `null`.
 
 The venues are sorted by distance, nearest first. The `best` object contains the
 venue IDs with the shortest distance, lowest price, and lowest crowd level. Ties
@@ -200,9 +202,14 @@ HTTP 200:
 We use reports submitted within the past two hours to determine the current
 crowd level.
 
-If `sportId` is provided, we only include reports for that sport. Otherwise, we
-include all reports for the venue, including venue-wide reports. If a sport is
-specified, the venue must offer it.
+If `sportId` is provided, we first use recent reports for that sport. If none
+are available, we use all recent reports for the venue instead.
+
+If `sportId` is omitted, we also use all recent reports for the venue. If a
+sport is specified, the venue must offer it.
+
+The crowd level, report count, and latest report time are calculated from the
+selected reports.
 
 The crowd level is the most frequently reported level. If multiple levels have
 the same count, we use the level from the most recent report among them.
