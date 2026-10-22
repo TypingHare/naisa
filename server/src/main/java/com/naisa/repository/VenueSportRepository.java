@@ -26,5 +26,5 @@ public interface VenueSportRepository extends JpaRepository<VenueSport, Long> {
    * @return the matching offering, or an empty result if the combination is absent
    * @author Vincent Lai, Codex
    */
-  Optional<VenueSport> findByVenue_IdAndSport_Id(Long venueId, Long sportId);
+  Optional<VenueSport> findByVenueIdAndSportId(Long venueId, Long sportId);
 }

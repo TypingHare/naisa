@@ -66,8 +66,7 @@ public class VenueService {
    * @author Vincent Lai, Codex
    */
   @Transactional
-  public ResourceIdResponse addVenue(
-      final Client client, final AddVenueRequest request) {
+  public ResourceIdResponse addVenue(final Client client, final AddVenueRequest request) {
     final String timezone = request.getTimezone().strip();
 
     if (!ZoneId.getAvailableZoneIds().contains(timezone)) {
@@ -81,7 +80,6 @@ public class VenueService {
     venue.setLongitude(request.getLongitude().doubleValue());
     venue.setTimezone(timezone);
     venue.setCreatedByClient(client);
-    venue.setCreatedByExternalUserId(request.getExternalUserId());
 
     final Venue savedVenue = venueRepository.saveAndFlush(venue);
     return new ResourceIdResponse(savedVenue.getId());
@@ -111,13 +109,9 @@ public class VenueService {
    */
   @Transactional(isolation = Isolation.READ_COMMITTED)
   public ResourceIdResponse rateVenue(
-      final Client client,
-      final Long venueId,
-      final RateVenueRequest request) {
+      final Client client, final Long venueId, final RateVenueRequest request) {
     final Venue venue =
-        venueRepository
-            .findByIdForUpdate(venueId)
-            .orElseThrow(() -> VenueException.NOT_FOUND.clone());
+        venueRepository.findByIdForUpdate(venueId).orElseThrow(VenueException.NOT_FOUND::clone);
 
     final Sport sport;
     if (request.getSportId() == null) {
@@ -125,18 +119,15 @@ public class VenueService {
     } else {
       final VenueSport offering =
           venueSportRepository
-              .findByVenue_IdAndSport_Id(venueId, request.getSportId())
-              .orElseThrow(() -> VenueException.SPORT_NOT_OFFERED.clone());
+              .findByVenueIdAndSportId(venueId, request.getSportId())
+              .orElseThrow(VenueException.SPORT_NOT_OFFERED::clone);
       sport = offering.getSport();
     }
 
     final Review review =
         reviewRepository
             .findExistingReview(
-                client.getId(),
-                request.getExternalUserId(),
-                venueId,
-                request.getSportId())
+                client.getId(), request.getExternalUserId(), venueId, request.getSportId())
             .orElseGet(Review::new);
 
     review.setClient(client);
