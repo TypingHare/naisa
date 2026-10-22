@@ -59,13 +59,10 @@ public class VenueController {
   @AuthorizationRequired
   @PostMapping
   public ResponseEntity<Capsule<ResourceIdResponse>> addVenue(
-      @RequestAttribute(AuthorizationInterceptor.AUTHENTICATED_CLIENT_ATTRIBUTE)
-          final Client client,
+      @RequestAttribute(AuthorizationInterceptor.REQUEST_ATTRIBUTE_CLIENT) final Client client,
       @Valid @RequestBody final AddVenueRequest request) {
     final ResourceIdResponse result = venueService.addVenue(client, request);
-
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(new Capsule<>("Venue created.", result));
+    return ResponseEntity.status(HttpStatus.CREATED).body(new Capsule<>("Venue created.", result));
   }
 
   /**
@@ -85,13 +82,10 @@ public class VenueController {
   @AuthorizationRequired
   @PostMapping("/{venueId}/reviews")
   public ResponseEntity<Capsule<ResourceIdResponse>> rateVenue(
-      @RequestAttribute(AuthorizationInterceptor.AUTHENTICATED_CLIENT_ATTRIBUTE)
-          final Client client,
+      @RequestAttribute(AuthorizationInterceptor.REQUEST_ATTRIBUTE_CLIENT) final Client client,
       @PathVariable("venueId") final Long venueId,
       @Valid @RequestBody final RateVenueRequest request) {
-    final ResourceIdResponse result =
-        venueService.rateVenue(client, venueId, request);
-
+    final ResourceIdResponse result = venueService.rateVenue(client, venueId, request);
     return ResponseEntity.ok(new Capsule<>("Review saved.", result));
   }
 }

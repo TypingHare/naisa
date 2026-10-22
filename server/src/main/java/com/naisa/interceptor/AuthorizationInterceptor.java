@@ -3,6 +3,7 @@ package com.naisa.interceptor;
 import com.naisa.common.Capsule;
 import com.naisa.common.annotation.AuthorizationRequired;
 import com.naisa.exception.ClientException;
+import com.naisa.model.entity.Client;
 import com.naisa.service.ClientService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,6 +42,8 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
   public static final String ERROR_CODE_NO_API_KEY_PROVIDED = "authorization.no_api_key_provided";
 
   private static final String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
+
+  public static final String REQUEST_ATTRIBUTE_CLIENT = "client";
 
   private AuthorizationInterceptor(final ClientService clientService) {
     this.clientService = clientService;
@@ -91,7 +94,8 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
         final String apiKey =
             authorizationHeader.substring(AUTHORIZATION_HEADER_PREFIX.length()).trim();
         try {
-          clientService.getClientByApiKey(apiKey);
+          final Client client = clientService.getClientByApiKey(apiKey);
+          request.setAttribute(REQUEST_ATTRIBUTE_CLIENT, client);
         } catch (ClientException e) {
           buildResponse(response, Capsule.fromServiceException(e));
           return false;
