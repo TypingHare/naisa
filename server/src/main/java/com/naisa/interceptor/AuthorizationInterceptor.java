@@ -46,6 +46,22 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
     this.clientService = clientService;
   }
 
+  /**
+   * Authenticates requests whose handler requires a client API key.
+   *
+   * <p>A successfully authenticated client is attached to the request so that endpoint handlers can
+   * attribute submitted data without accepting a client identifier from the request body. Requests
+   * with missing or invalid credentials receive an unauthorized response and do not reach the
+   * handler. Handlers without the authorization annotation are allowed to proceed.
+   *
+   * @param request incoming request containing the authorization header
+   * @param response response used to report an authentication failure
+   * @param handler selected request handler
+   * @return {@code true} when processing may continue; {@code false} after an authentication
+   *     failure
+   * @throws Exception if response writing or subsequent interceptor processing fails
+   * @author James Chen, Vincent Lai, Codex
+   */
   @Override
   public boolean preHandle(
       final HttpServletRequest request, final HttpServletResponse response, final Object handler)
