@@ -1,6 +1,5 @@
 package com.naisa.model.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -27,11 +26,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AddVenueRequest {
-  @JsonProperty("externalUserID")
-  @NotBlank
-  @Size(max = 128)
-  private String externalUserId;
-
   @NotBlank
   @Size(max = 255)
   private String name;
