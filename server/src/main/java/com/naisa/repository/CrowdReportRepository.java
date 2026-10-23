@@ -4,6 +4,7 @@ import com.naisa.model.entity.CrowdReport;
 import java.time.Instant;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -45,4 +46,27 @@ public interface CrowdReportRepository extends JpaRepository<CrowdReport, Long> 
       @Param("venueId") Long venueId,
       @Param("sportId") Long sportId,
       @Param("cutoff") Instant cutoff);
+
+  /**
+   * Updates an existing crowd report and refreshes its timestamp.
+   *
+   * @param reportId identifier of the report to update
+   * @param crowdLevel new crowd level
+   * @param updatedAt new report timestamp
+   * @return number of updated rows
+   * @author Emily Wang, Codex
+   */
+  @Modifying
+  @Query(
+      value = """
+          UPDATE crowd_reports
+          SET crowd_level = :crowdLevel,
+              created_at = :updatedAt
+          WHERE id = :reportId
+          """,
+      nativeQuery = true)
+  int updateReport(
+      @Param("reportId") Long reportId,
+      @Param("crowdLevel") String crowdLevel,
+      @Param("updatedAt") Instant updatedAt);
 }

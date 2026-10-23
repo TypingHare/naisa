@@ -139,7 +139,8 @@ The `replaced` field is `true` if an existing report was updated.
 ##### Behavior
 
 We validate the venue, crowd level, and optional sport before saving the report.
-If `sportId` is provided, the venue must offer that sport.
+If `sportId` is provided, the venue must offer that sport. An unknown sport ID
+is treated as not offered.
 
 A reporter is identified by the authenticated client and `externalUserId`. If
 the same reporter has submitted a report for the same venue and sport within the
@@ -160,7 +161,6 @@ If `sportId` is omitted, the report applies to the venue as a whole.
 | 401    | `authorization.invalid_authorization_header` | Invalid Bearer header          |
 | 401    | `client.invalid_api_key`                     | Unknown API key                |
 | 404    | `venue.not_found`                            | Venue does not exist           |
-| 404    | `sport.not_found`                            | Sport does not exist           |
 
 #### Operation 7: Get Venue Status
 
