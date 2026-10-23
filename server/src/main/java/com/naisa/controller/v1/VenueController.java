@@ -7,14 +7,19 @@ import com.naisa.interceptor.AuthorizationInterceptor;
 import com.naisa.model.dto.AddVenueRequest;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.dto.ReportCrowdRequest;
+import com.naisa.model.dto.VenueComparisonRequest;
 import com.naisa.model.entity.Client;
 import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.model.vo.ResourceIdResponse;
+import com.naisa.model.vo.VenueComparisonResponse;
 import com.naisa.service.CrowdReportService;
+import com.naisa.service.VenueComparisonService;
 import com.naisa.service.VenueService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -36,18 +41,23 @@ import org.springframework.web.bind.annotation.RestController;
 public class VenueController {
   private final VenueService venueService;
   private final CrowdReportService crowdReportService;
+  private final VenueComparisonService venueComparisonService;
 
   /**
    * Creates the controller with its services.
    *
    * @param venueService service responsible for venue creation and reviews
    * @param crowdReportService service responsible for crowd reports
-   * @author Vincent Lai, Emily Wang, Codex
+   * @param venueComparisonService service responsible for venue comparison
+   * @author Vincent Lai, Codex, Emily Wang, Codex, Claude Code
    */
   public VenueController(
-      final VenueService venueService, final CrowdReportService crowdReportService) {
+      final VenueService venueService,
+      final CrowdReportService crowdReportService,
+      final VenueComparisonService venueComparisonService) {
     this.venueService = venueService;
     this.crowdReportService = crowdReportService;
+    this.venueComparisonService = venueComparisonService;
   }
 
   /**
@@ -117,5 +127,25 @@ public class VenueController {
     final ReportCrowdResponse response = crowdReportService.reportCrowd(client, venueId, request);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(new Capsule<>("Crowd report saved.", response));
+  }
+
+  /**
+   * Compares 2 to 5 venues for a sport based on the user's location.
+   *
+   * <p>Parameters are read from the query string, for example {@code
+   * ?venueIds=1,2&sportId=1&latitude=40.81&longitude=-73.96}.
+   *
+   * @param request validated comparison parameters
+   * @return HTTP 200 with the comparison results
+   * @throws VenueException if the IDs are duplicated, the sport or a venue does not exist, or a
+   *     venue does not offer the sport
+   * @author Emily Wang, Codex
+   */
+  @AuthorizationRequired
+  @GetMapping("/comparison")
+  public ResponseEntity<Capsule<VenueComparisonResponse>> getVenueComparison(
+      @Valid @ModelAttribute final VenueComparisonRequest request) {
+    final VenueComparisonResponse result = venueComparisonService.compare(request);
+    return ResponseEntity.ok(new Capsule<>("Venues compared.", result));
   }
 }

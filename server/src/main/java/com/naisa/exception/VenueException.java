@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
  * <p>The static instances define reusable error descriptions. Callers must throw a fresh copy using
  * {@link #clone()} or {@link #causedBy(Throwable)} rather than throwing a shared instance.
  *
- * @author Vincent Lai, Emily Wang, Codex
+ * @author Vincent Lai, Codex, Emily Wang, Codex
  */
 public final class VenueException extends ServiceException {
   public static final VenueException NOT_FOUND =
@@ -31,7 +31,7 @@ public final class VenueException extends ServiceException {
           "The requested sport is not registered at this venue.",
           HttpStatus.BAD_REQUEST,
           null);
-  
+
   public static final VenueException DUPLICATE_IDS =
       new VenueException(
           "request.validation_failed",

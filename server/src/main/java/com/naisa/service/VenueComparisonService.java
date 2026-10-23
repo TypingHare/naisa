@@ -1,13 +1,12 @@
 package com.naisa.service;
 
 import com.naisa.exception.VenueException;
-import com.naisa.model.dto.CompareVenuesRequest;
+import com.naisa.model.dto.VenueComparisonRequest;
 import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
-import com.naisa.model.vo.CompareVenuesResponse;
-import com.naisa.model.vo.CompareVenuesResponse.BestVenues;
-import com.naisa.model.vo.CompareVenuesResponse.VenueComparison;
+import com.naisa.model.vo.VenueComparisonItem;
+import com.naisa.model.vo.VenueComparisonResponse;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.SportRepository;
 import com.naisa.repository.VenueRepository;
@@ -26,14 +25,13 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Compares venues offering the same sport using location, price, and opening hours.
  *
- * <p>Results are sorted by distance from the user. Crowd status will be included
- * when the venue status service becomes available.
+ * <p>Results are sorted by distance from the user. Crowd levels are not included yet; they will be
+ * added together with Get Venue Status (Operation 7).
  *
  * @author Emily Wang, Codex
  */
 @Service
-public class CompareVenuesService {
-
+public class VenueComparisonService {
   private static final double EARTH_RADIUS_KM = 6371.0;
 
   private final VenueRepository venueRepository;
@@ -44,9 +42,13 @@ public class CompareVenuesService {
   /**
    * Creates the service with the repositories required for venue comparison.
    *
+   * @param venueRepository repository for venues
+   * @param venueSportRepository repository for sports offered at venues
+   * @param sportRepository repository for sports
+   * @param openingIntervalRepository repository for venue opening hours
    * @author Emily Wang, Codex
    */
-  public CompareVenuesService(
+  public VenueComparisonService(
       final VenueRepository venueRepository,
       final VenueSportRepository venueSportRepository,
       final SportRepository sportRepository,
@@ -58,16 +60,17 @@ public class CompareVenuesService {
   }
 
   /**
-   * Compares the requested venues and identifies the nearest and cheapest options.
+   * Compares the requested venues and identifies the nearest and cheapest ones.
    *
    * @param request validated comparison parameters
-   * @return venue comparison results sorted by distance
+   * @return comparison results sorted by distance
+   * @throws VenueException if the IDs are duplicated, the sport or a venue does not exist, or a
+   *     venue does not offer the sport
    * @author Emily Wang, Codex
    */
   @Transactional(readOnly = true)
-  public CompareVenuesResponse compareVenues(final CompareVenuesRequest request) {
+  public VenueComparisonResponse compare(final VenueComparisonRequest request) {
     final List<Long> venueIds = request.getVenueIds();
-
     if (new HashSet<>(venueIds).size() != venueIds.size()) {
       throw VenueException.DUPLICATE_IDS.clone();
     }
@@ -76,8 +79,7 @@ public class CompareVenuesService {
       throw VenueException.SPORT_NOT_FOUND.clone();
     }
 
-    final List<VenueComparison> comparisons = new ArrayList<>();
-
+    final List<VenueComparisonItem> items = new ArrayList<>();
     for (final Long venueId : venueIds) {
       final Venue venue =
           venueRepository.findById(venueId).orElseThrow(VenueException.NOT_FOUND::clone);
@@ -87,41 +89,38 @@ public class CompareVenuesService {
               .findByVenueIdAndSportId(venueId, request.getSportId())
               .orElseThrow(VenueException.SPORT_NOT_OFFERED::clone);
 
-      final double distanceKm =
+      final VenueComparisonItem item = new VenueComparisonItem();
+      item.setVenueId(venueId);
+      item.setName(venue.getName());
+      item.setDistanceKm(
           calculateDistance(
               request.getLatitude().doubleValue(),
               request.getLongitude().doubleValue(),
               venue.getLatitude(),
-              venue.getLongitude());
-
-      comparisons.add(
-          new VenueComparison(
-              venueId,
-              venue.getName(),
-              distanceKm,
-              offering.getPrice(),
-              offering.getIsIndoor(),
-              isOpenNow(venue),
-              null));
+              venue.getLongitude()));
+      item.setHourlyPrice(offering.getPrice());
+      item.setIsIndoor(offering.getIsIndoor());
+      item.setOpenNow(isOpenNow(venue));
+      items.add(item);
     }
 
-    comparisons.sort(
-        Comparator.comparingDouble(VenueComparison::distanceKm)
-            .thenComparing(VenueComparison::venueId));
+    items.sort(
+        Comparator.comparingDouble(VenueComparisonItem::getDistanceKm)
+            .thenComparing(VenueComparisonItem::getVenueId));
 
-    final Long nearest = comparisons.get(0).venueId();
-
-    final Long cheapest =
-        comparisons.stream()
+    final Long cheapestVenueId =
+        items.stream()
             .min(
-                Comparator.comparing(VenueComparison::hourlyPrice)
-                    .thenComparing(VenueComparison::venueId))
+                Comparator.comparing(VenueComparisonItem::getHourlyPrice)
+                    .thenComparing(VenueComparisonItem::getVenueId))
             .orElseThrow()
-            .venueId();
+            .getVenueId();
 
-    return new CompareVenuesResponse(
-        comparisons,
-        new BestVenues(nearest, cheapest, null));
+    final VenueComparisonResponse response = new VenueComparisonResponse();
+    response.setVenues(items);
+    response.setNearestVenueId(items.get(0).getVenueId());
+    response.setCheapestVenueId(cheapestVenueId);
+    return response;
   }
 
   private double calculateDistance(
@@ -161,9 +160,7 @@ public class CompareVenuesService {
       final boolean overnight = closesAt.isBefore(opensAt);
 
       if (interval.getDayOfWeek() == today) {
-        if (!overnight
-            && !currentTime.isBefore(opensAt)
-            && currentTime.isBefore(closesAt)) {
+        if (!overnight && !currentTime.isBefore(opensAt) && currentTime.isBefore(closesAt)) {
           return true;
         }
 
@@ -172,9 +169,7 @@ public class CompareVenuesService {
         }
       }
 
-      if (interval.getDayOfWeek() == yesterday
-          && overnight
-          && currentTime.isBefore(closesAt)) {
+      if (interval.getDayOfWeek() == yesterday && overnight && currentTime.isBefore(closesAt)) {
         return true;
       }
     }

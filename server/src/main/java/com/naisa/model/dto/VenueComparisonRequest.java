@@ -13,15 +13,14 @@ import lombok.Setter;
 /**
  * Request parameters for comparing venues that offer the same sport.
  *
- * <p>Includes the venue IDs, requested sport, and user's location.
- * The venue IDs must be distinct and contain between two and five entries.
+ * <p>Includes the venue IDs, requested sport, and user's location. The venue IDs must be distinct
+ * and contain between two and five entries.
  *
  * @author Emily Wang, Codex
  */
 @Getter
 @Setter
-public class CompareVenuesRequest {
-
+public class VenueComparisonRequest {
   @NotNull
   @Size(min = 2, max = 5)
   private List<@NotNull @Positive Long> venueIds;
