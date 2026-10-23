@@ -17,8 +17,8 @@ The following query parameters are required:
 - `latitude`: The user's latitude, between -90 and 90
 - `longitude`: The user's longitude, between -180 and 180
 - `sportID`: The ID of the requested sport
-- `date`: The desired date, as []
-- `time`: The desired time, as []
+- `date`: The desired date in YYYY-MM-DD format, for example 2026-10-23.
+- `time`: The desired time in 24-hour HH:mm format, from 00:00 to 23:59.
 - `maxDistance`: Confine the search within maxDistance radius around the latitude and longitude.
 
 The following query parameter is optional:
@@ -64,7 +64,10 @@ If no venues match, return HTTP 200 with an empty list:
 Validate the search parameters and check that the requested sport exists.
 The sport ID must be a positive integer. Coordinates must be within their
 specified ranges. `maxDistance` and `budget` must be finite and nonnegative.
-Past dates are permitted.
+ Since all venues are in New York City, we interpret the requested date and time 
+ in `America/New_York`. Reject the request with HTTP 400 and 
+ `request.validation_failed` if its combined date and time is earlier than the 
+ current date and time. This includes an earlier time today.
 
 Select venues that offer the requested sport. Calculate direct geographic
 distance from the supplied coordinates with the Haversine formula. Include
@@ -74,8 +77,8 @@ Use the stored price for the requested sport as `hourlyPrice`. Include venues
 whose hourly price is less than or equal to `budget`. If `budget` is omitted,
 use 0, which includes only free offerings.
 
-Interpret the requested date and time in each venue's local time zone. Check
-the venue's weekly opening intervals for that date and time:
+Use New York local time to check the venue's weekly opening intervals for the
+requested date and time:
 
 - Include the opening time and exclude the closing time.
 - If the closing time is earlier than the opening time, the interval continues
@@ -105,8 +108,8 @@ Return an empty list when no venues satisfy all filters. Do not call
 | 404    | `sport.not_found`                            | Sport does not exist          |
 
 Example invalid parameters: invalid dates, times outside the 24-hour HH:mm
-format, out-of-range coordinates, nonpositive sport IDs, and negative or
-nonfinite distance or budget values.
+format, a requested date and time in the past, out-of-range coordinates,
+nonpositive sport IDs, and negative or nonfinite distance or budget values.
 
 #### Deferred Behavior/Edge Case
 
