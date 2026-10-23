@@ -8,10 +8,9 @@ import lombok.Setter;
 /**
  * Describes one venue returned by a venue search.
  *
- * <p>
- * Distance is measured from the search origin in km. Indoor status applies to
- * that sport's facility. Availability indicates whether the venue is open at
- * the requested date and time. The search excludes closed venues, so every 
+ * <p>Distance is measured from the search origin in km. Indoor status applies 
+ * to that sport's facility. Availability indicates whether the venue is open 
+ * at the requested date and time. The search excludes closed venues, so every 
  * returned result has availability set to true.
  *
  * @author Andrew Hsu, Codex
