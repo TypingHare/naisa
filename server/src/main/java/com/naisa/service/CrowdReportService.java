@@ -11,21 +11,17 @@ import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.repository.CrowdReportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Handles crowd reports submitted by clients.
  *
- * <p>We allow users to report the crowd level of a venue or a specific sport. If the same user
- * submits another report within two hours, we update the existing report instead of creating
- * a new one.
+ * <p>Users can report the crowd level of a venue or a specific sport. Every submission is stored
+ * as a new report so that historical data is kept. Get Venue Status counts only each reporter's
+ * most recent report when estimating crowdedness.
  *
- * @author Emily Wang
+ * @author Emily Wang, Codex
  */
 @Service
 public class CrowdReportService {
@@ -39,7 +35,7 @@ public class CrowdReportService {
    * @param crowdReportRepository repository for crowd reports
    * @param venueRepository repository for venues
    * @param venueSportRepository repository for venue sports
-   * @author Emily Wang
+   * @author Emily Wang, Codex
    */
   public CrowdReportService(
       final CrowdReportRepository crowdReportRepository,
@@ -51,26 +47,23 @@ public class CrowdReportService {
   }
 
   /**
-   * Saves a crowd report for a venue.
+   * Saves a new crowd report for a venue.
    *
-   * <p>We first check whether the venue exists and offers the requested sport. If we find a report
-   * from the same client and user within the past two hours, we update its crowd level and
-   * timestamp. Otherwise, we create a new report.
-   *
-   * <p>We lock the venue row so concurrent submissions cannot create duplicate reports.
+   * <p>We first check whether the venue exists and offers the requested sport. Then we store the
+   * report with the current server time.
    *
    * @param client the client submitting the report
    * @param venueId the venue ID
    * @param request the crowd report request
    * @return the saved report
    * @throws VenueException if the venue does not exist or does not offer the sport
-   * @author Emily Wang
+   * @author Emily Wang, Codex
    */
-  @Transactional(isolation = Isolation.READ_COMMITTED)
+  @Transactional
   public ReportCrowdResponse reportCrowd(
       final Client client, final Long venueId, final ReportCrowdRequest request) {
     final Venue venue =
-        venueRepository.findByIdForUpdate(venueId).orElseThrow(VenueException.NOT_FOUND::clone);
+        venueRepository.findById(venueId).orElseThrow(VenueException.NOT_FOUND::clone);
 
     final Sport sport;
     if (request.getSportId() == null) {
@@ -83,23 +76,6 @@ public class CrowdReportService {
       sport = offering.getSport();
     }
 
-    final Instant now = Instant.now();
-    final Instant cutoff = now.minus(2, ChronoUnit.HOURS);
-
-    final Optional<CrowdReport> existingReport =
-        crowdReportRepository.findRecentReport(
-            client.getId(),
-            request.getExternalUserId(),
-            venueId,
-            request.getSportId(),
-            cutoff);
-
-    if (existingReport.isPresent()) {
-      final Long reportId = existingReport.get().getId();
-      crowdReportRepository.updateReport(reportId, request.getCrowdLevel(), now);
-      return new ReportCrowdResponse(reportId, request.getCrowdLevel(), now, true);
-    }
-
     final CrowdReport report = new CrowdReport();
     report.setClient(client);
     report.setExternalUserId(request.getExternalUserId());
@@ -109,7 +85,10 @@ public class CrowdReportService {
 
     final CrowdReport savedReport = crowdReportRepository.saveAndFlush(report);
 
-    return new ReportCrowdResponse(
-        savedReport.getId(), savedReport.getCrowdLevel(), savedReport.getCreatedAt(), false);
+    final ReportCrowdResponse response = new ReportCrowdResponse();
+    response.setReportId(savedReport.getId());
+    response.setCrowdLevel(savedReport.getCrowdLevel());
+    response.setCreatedAt(savedReport.getCreatedAt());
+    return response;
   }
 }

@@ -99,12 +99,12 @@ public class VenueController {
   /**
    * Accepts a crowd report for a venue or an optional sport.
    *
-   * <p>We create a new report or replace a report from the same user within two hours.
+   * <p>Every submission creates a new report.
    *
    * @param client authenticated client attached by the authorization interceptor
    * @param venueId identifier of the venue
    * @param request validated crowd report request
-   * @return HTTP 201 for a new report or HTTP 200 for a replaced report
+   * @return HTTP 201 with the created report
    * @throws VenueException if the venue does not exist or does not offer the sport
    * @author Emily Wang, Codex
    */
@@ -115,7 +115,7 @@ public class VenueController {
       @PathVariable("venueId") final Long venueId,
       @Valid @RequestBody final ReportCrowdRequest request) {
     final ReportCrowdResponse response = crowdReportService.reportCrowd(client, venueId, request);
-    final HttpStatus status = response.isReplaced() ? HttpStatus.OK : HttpStatus.CREATED;
-    return ResponseEntity.status(status).body(new Capsule<>("Crowd report saved.", response));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(new Capsule<>("Crowd report saved.", response));
   }
 }

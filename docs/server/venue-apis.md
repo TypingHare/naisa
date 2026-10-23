@@ -120,7 +120,7 @@ The supported crowd levels are `EMPTY`, `LIGHT`, `MODERATE`, `BUSY`, and
 
 ##### Response
 
-A new report returns HTTP 201. Updating an existing report returns HTTP 200.
+HTTP 201:
 
 ```json
 {
@@ -128,13 +128,10 @@ A new report returns HTTP 201. Updating an existing report returns HTTP 200.
     "data": {
         "reportId": 1,
         "crowdLevel": "BUSY",
-        "createdAt": "2026-10-20T18:30:00Z",
-        "replaced": false
+        "createdAt": "2026-10-20T18:30:00Z"
     }
 }
 ```
-
-The `replaced` field is `true` if an existing report was updated.
 
 ##### Behavior
 
@@ -142,12 +139,10 @@ We validate the venue, crowd level, and optional sport before saving the report.
 If `sportId` is provided, the venue must offer that sport. An unknown sport ID
 is treated as not offered.
 
-A reporter is identified by the authenticated client and `externalUserId`. If
-the same reporter has submitted a report for the same venue and sport within the
-past two hours, we update that report instead of creating another one.
-
-An update replaces the crowd level and resets the timestamp to the current
-server time. New reports also use the server time.
+A reporter is identified by the authenticated client and `externalUserId`. Every
+submission creates a new report with the current server time, and earlier
+reports are kept. When estimating crowd status, Operation 7 counts only each
+reporter's most recent report.
 
 If `sportId` is omitted, the report applies to the venue as a whole.
 
@@ -201,6 +196,9 @@ HTTP 200:
 
 We use reports submitted within the past two hours to determine the current
 crowd level.
+
+Each reporter (identified by the client and `externalUserId`) is counted once,
+using their most recent report within this window.
 
 If `sportId` is provided, we first use recent reports for that sport. If none
 are available, we use all recent reports for the venue instead.
