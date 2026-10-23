@@ -204,7 +204,8 @@ If `sportId` is provided, we first use recent reports for that sport. If none
 are available, we use all recent reports for the venue instead.
 
 If `sportId` is omitted, we also use all recent reports for the venue. If a
-sport is specified, the venue must offer it.
+sport is specified, the venue must offer it. An unknown sport ID is treated as
+not offered.
 
 The crowd level, report count, and latest report time are calculated from the
 selected reports.
@@ -220,12 +221,11 @@ Historical estimates are not included in the first iteration.
 
 ##### Errors
 
-| Status | `errorCode`                                  | When                           |
-| ------ | -------------------------------------------- | ------------------------------ |
-| 400    | `request.validation_failed`                  | Invalid parameters             |
-| 400    | `venue.sport_not_offered`                    | Venue does not offer the sport |
-| 401    | `authorization.no_api_key_provided`          | Missing authorization header   |
-| 401    | `authorization.invalid_authorization_header` | Invalid Bearer header          |
-| 401    | `client.invalid_api_key`                     | Unknown API key                |
-| 404    | `venue.not_found`                            | Venue does not exist           |
-| 404    | `sport.not_found`                            | Sport does not exist           |
+| Status | `errorCode`                                  | When                               |
+| ------ | -------------------------------------------- | ---------------------------------- |
+| 400    | `request.invalid_parameter`                  | Non-numeric `venueId` or `sportId` |
+| 400    | `venue.sport_not_offered`                    | Venue does not offer the sport     |
+| 401    | `authorization.no_api_key_provided`          | Missing authorization header       |
+| 401    | `authorization.invalid_authorization_header` | Invalid Bearer header              |
+| 401    | `client.invalid_api_key`                     | Unknown API key                    |
+| 404    | `venue.not_found`                            | Venue does not exist               |

@@ -8,6 +8,7 @@ import com.naisa.model.dto.AddVenueRequest;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.dto.ReportCrowdRequest;
 import com.naisa.model.entity.Client;
+import com.naisa.model.vo.CrowdStatusResponse;
 import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.model.vo.ResourceIdResponse;
 import com.naisa.service.CrowdReportService;
@@ -15,11 +16,13 @@ import com.naisa.service.VenueService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -117,5 +120,23 @@ public class VenueController {
     final ReportCrowdResponse response = crowdReportService.reportCrowd(client, venueId, request);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(new Capsule<>("Crowd report saved.", response));
+  }
+
+  /**
+   * Returns the current crowd status of a venue or one of its sports.
+   *
+   * @param venueId identifier of the venue
+   * @param sportId optional identifier of the sport
+   * @return HTTP 200 with the crowd status
+   * @throws VenueException if the venue does not exist or does not offer the sport
+   * @author Emily Wang, Claude Code
+   */
+  @AuthorizationRequired
+  @GetMapping("/{venueId}/crowd-status")
+  public ResponseEntity<Capsule<CrowdStatusResponse>> getCrowdStatus(
+      @PathVariable("venueId") final Long venueId,
+      @RequestParam(value = "sportId", required = false) final Long sportId) {
+    final CrowdStatusResponse response = crowdReportService.getCrowdStatus(venueId, sportId);
+    return ResponseEntity.ok(new Capsule<>("Crowd status retrieved.", response));
   }
 }
