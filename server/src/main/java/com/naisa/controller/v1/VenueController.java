@@ -6,8 +6,11 @@ import com.naisa.exception.VenueException;
 import com.naisa.interceptor.AuthorizationInterceptor;
 import com.naisa.model.dto.AddVenueRequest;
 import com.naisa.model.dto.RateVenueRequest;
+import com.naisa.model.dto.ReportCrowdRequest;
 import com.naisa.model.entity.Client;
+import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.model.vo.ResourceIdResponse;
+import com.naisa.service.CrowdReportService;
 import com.naisa.service.VenueService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -32,15 +35,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/venues")
 public class VenueController {
   private final VenueService venueService;
+  private final CrowdReportService crowdReportService;
 
   /**
-   * Creates the controller with its venue service.
+   * Creates the controller with its services.
    *
    * @param venueService service responsible for venue creation and reviews
-   * @author Vincent Lai, Codex
+   * @param crowdReportService service responsible for crowd reports
+   * @author Vincent Lai, Emily Wang, Codex
    */
-  public VenueController(final VenueService venueService) {
+  public VenueController(
+      final VenueService venueService, final CrowdReportService crowdReportService) {
     this.venueService = venueService;
+    this.crowdReportService = crowdReportService;
   }
 
   /**
@@ -87,5 +94,28 @@ public class VenueController {
       @Valid @RequestBody final RateVenueRequest request) {
     final ResourceIdResponse result = venueService.rateVenue(client, venueId, request);
     return ResponseEntity.ok(new Capsule<>("Review saved.", result));
+  }
+
+  /**
+   * Accepts a crowd report for a venue or an optional sport.
+   *
+   * <p>Every submission creates a new report.
+   *
+   * @param client authenticated client attached by the authorization interceptor
+   * @param venueId identifier of the venue
+   * @param request validated crowd report request
+   * @return HTTP 201 with the created report
+   * @throws VenueException if the venue does not exist or does not offer the sport
+   * @author Emily Wang, Codex
+   */
+  @AuthorizationRequired
+  @PostMapping("/{venueId}/crowd-reports")
+  public ResponseEntity<Capsule<ReportCrowdResponse>> reportCrowd(
+      @RequestAttribute(AuthorizationInterceptor.REQUEST_ATTRIBUTE_CLIENT) final Client client,
+      @PathVariable("venueId") final Long venueId,
+      @Valid @RequestBody final ReportCrowdRequest request) {
+    final ReportCrowdResponse response = crowdReportService.reportCrowd(client, venueId, request);
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(new Capsule<>("Crowd report saved.", response));
   }
 }
