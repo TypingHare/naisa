@@ -20,8 +20,8 @@ Separate names in the tag with commas, for example:
 ```
 
 If generative AI tools or agents are used to generate all or part of a method or
-class, authors must include their names along with the names of the tools or
-agents they used, separated by commas:
+class, authors must include their full names along with the names of the tools
+or agents they used, separated by commas:
 
 ```java
 /**
@@ -32,7 +32,16 @@ agents they used, separated by commas:
 ```
 
 The name of each tool or agent must appear immediately after the name of the
-author who used it.
+author who used it. If two developers use the same AI agent (e.g., Codex), then
+the agent's name can appear twice in the `@author` tag. For example:
+
+```java
+/**
+ * Description of a class or method.
+ *
+ * @author James Chen, Codex, Vincent Lai, Claude Code, Andrew Hsu, Codex
+ */
+```
 
 #### Makefile Recipes
 
