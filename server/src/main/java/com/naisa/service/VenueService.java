@@ -443,6 +443,9 @@ public class VenueService {
    *
    * <p>If the sport isn't offered by the Venue, it throws {@code VenueException.SPORT_NOT_OFFERED}.
    *
+   * @param venueId the ID of the venue to search for
+   * @param sportId the ID of the sport to search for
+   * @return the sport instance that matches both given IDs; result must not be {@code null}
    * @author James Chen.
    */
   public Sport getVenueSport(final Long venueId, final Long sportId) {

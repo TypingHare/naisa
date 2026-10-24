@@ -2,6 +2,7 @@ package com.naisa.util;
 
 import java.beans.JavaBean;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.function.Consumer;
 
 /**
@@ -17,7 +18,10 @@ public final class Beans {
    * JavaBean}.
    *
    * <p>This function passes the created instance to {@code initializer} before returning the
-   * instance. It captures all possible exceptions and wraps them with a {@code RuntimeException}.
+   * instance. It catches all reflection-related exceptions and wraps them with a {@code
+   * RuntimeException}, but it doesn't catch runtime exceptions.
+   *
+   * <p>This function should be used to create JavaBean instances throughout the codebase.
    *
    * @param clazz the JavaBean class to create an instance from
    * @param initializer a function that takes the created instance as an argument
@@ -35,11 +39,14 @@ public final class Beans {
       final Constructor<T> constructor = clazz.getConstructor();
       final T instance = constructor.newInstance();
       initializer.accept(instance);
-
       return instance;
     } catch (NoSuchMethodException e) {
       throw new RuntimeException("Public constructor does not exist in " + clazz.getName(), e);
-    } catch (Exception e) {
+    } catch (IllegalAccessException
+        | IllegalArgumentException
+        | InstantiationException
+        | InvocationTargetException
+        | ExceptionInInitializerError e) {
       throw new RuntimeException(
           "Beans.create() failed to create an object for " + clazz.getName(), e);
     }
