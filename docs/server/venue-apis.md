@@ -168,11 +168,9 @@ HTTP 200:
                 "crowdLevel": "BUSY"
             }
         ],
-        "best": {
-            "nearest": 1,
-            "cheapest": 2,
-            "leastCrowded": 1
-        }
+        "nearestVenueId": 1,
+        "cheapestVenueId": 2,
+        "leastCrowdedVenueId": 1
     }
 }
 ```
@@ -189,10 +187,11 @@ and the fallback behavior described in Operation 7.
 We use the venue's local time and opening hours to determine `openNow`. If the
 opening status cannot be determined, we return `null`.
 
-The venues are sorted by distance, nearest first. The `best` object contains the
-venue IDs with the shortest distance, lowest price, and lowest crowd level. Ties
-are broken by the lowest venue ID. If no recent crowd reports are available,
-`crowdLevel` and `best.leastCrowded` are `null`.
+The venues are sorted by distance, nearest first. `nearestVenueId`,
+`cheapestVenueId`, and `leastCrowdedVenueId` identify the venues with the
+shortest distance, lowest price, and lowest crowd level. Ties are broken by the
+lowest venue ID. If no recent crowd reports are available, `crowdLevel` and
+`leastCrowdedVenueId` are `null`.
 
 For the first iteration, we compare these values separately instead of
 calculating an overall weighted score. The user's coordinates are required.
