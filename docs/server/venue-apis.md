@@ -1,6 +1,6 @@
 ### Venue APIs
 
-This document describes the API contracts for Operations 1, 5, 6, and 7. All
+This document describes the API contracts for Operations 1, 2, 5, 6, and 7. All
 endpoints require authorization and use the standard `Capsule` response format.
 See [architecture.md](./architecture.md) for details.
 
@@ -119,6 +119,140 @@ nonpositive sport IDs, and negative or nonfinite distance or budget values.
   close, future behavior should include a warning.
     - Current behavior: no warning
     - Design decisions: warning threshold and response decision
+
+### Operation 2: Find Alternatives
+
+`GET /v1/venues/alternatives`
+
+This endpoint suggests venues by changing only the search values permitted by
+the client. Operation 1 continues to return an empty list when no venues match;
+it does not call this endpoint automatically.
+
+#### Request
+
+Use the same search query parameters, formats, and validation rules as
+operation 1:
+
+- Required: `latitude`, `longitude`, `sportId`, `date`, `time`, and
+  `maxDistance`.
+- Optional: `budget`, which defaults to 0 dollars per hour.
+
+The additional required query parameter is:
+
+- `allowedChanges`: A nonempty, comma-separated set of `DATE`, `TIME`,
+  `MAX_DISTANCE`, or `BUDGET`. Values are case-sensitive. Repeated values
+  represent the same permission. Values not listed must remain unchanged.
+
+The original requested date and time must not be in the past in
+`America/New_York`. Seconds and fractional seconds are accepted, as in
+operation 1.
+
+Example:
+
+```http
+GET /v1/venues/alternatives?latitude=40.81&longitude=-73.96&sportId=1&date=2026-11-01&time=18:30&maxDistance=2&budget=10&allowedChanges=TIME,MAX_DISTANCE
+```
+
+#### Response
+
+HTTP 200:
+
+```json
+{
+    "message": "Alternatives found.",
+    "data": [
+        {
+            "venue": {
+                "venueId": 1,
+                "name": "Venue A",
+                "distanceKm": 3.5,
+                "hourlyPrice": 8.00,
+                "isIndoor": true,
+                "available": true
+            },
+            "date": "2026-11-01",
+            "time": "19:30:00",
+            "maxDistance": 3.5,
+            "budget": 10.00
+        }
+    ]
+}
+```
+
+Each entry contains the existing operation 1 venue result under `venue`, plus
+its suggested date, time, radius, and hourly budget. A venue may appear more
+than once with different dates or times. Return at most 10 entries.
+
+If nearby offerings exist but no permitted alternative qualifies, return
+HTTP 200:
+
+```json
+{
+    "message": "No alternatives match the permitted changes.",
+    "data": []
+}
+```
+
+#### Behaviors
+
+Apply each of the following rules only when its constraint is listed in
+`allowedChanges`:
+
+- `DATE`: Check up to 3 calendar days before or after the requested date,
+  including the requested date.
+- `TIME`: Check the requested time and offsets of -2, -1, +1, and +2 hours
+  on each permitted date. Preserve minutes, seconds, and fractional seconds.
+- `MAX_DISTANCE`: Permit up to 5 additional kilometers beyond the original
+  radius.
+- `BUDGET`: Permit up to 20 additional dollars per hour beyond the original
+  hourly budget.
+
+Discard all suggested dates and times that are in the past. Time changes may
+cross midnight only if `DATE` is also permitted and the resulting date stays
+within the 3-day limit. Apply operation 1's opening-hour rules, including
+opening and closing boundaries, overnight intervals, and 24-hour intervals.
+
+Keep the original radius and budget unless an increase is necessary. When an
+increase is needed, suggest only the calculated venue distance or stored
+hourly price required to include that venue, within the permitted limits.
+
+Include venues that satisfy the original request without changes. Remove
+duplicate venue/date/time combinations. Sort by:
+
+1. Number of changed constraints, fewest first.
+2. Absolute difference from the original requested date and time, smallest
+   first.
+3. Suggested date and time, earlier first.
+4. Distance, shortest first.
+5. Hourly price, lowest first.
+6. Venue ID, lowest first.
+
+Count actual changes rather than the number of permissions. Return the first
+10 entries after sorting.
+
+Determine whether a nearby offering exists before applying budget and
+opening-hour filters. If no offering for the sport is within the permitted
+radius, return the no-nearby-venues error. If a nearby offering exists but no
+alternative passes the remaining filters, return an empty list.
+
+#### Errors
+
+| Status | `errorCode`                                  | When                                 |
+| ------ | -------------------------------------------- | ------------------------------------ |
+| 400    | `request.validation_failed`                  | Missing or invalid parameters        |
+| 401    | `authorization.no_api_key_provided`          | Missing authorization header         |
+| 401    | `authorization.invalid_authorization_header` | Invalid Bearer header                |
+| 401    | `client.invalid_api_key`                     | Unknown API key                      |
+| 404    | `sport.not_found`                            | Sport does not exist                 |
+| 404    | `venue.no_nearby_venues`                      | No sport offering within the radius  |
+
+Invalid parameters include an empty or unknown `allowedChanges` value and the
+invalid search values listed for operation 1. A past original date and time
+is rejected even when `DATE` or `TIME` changes are permitted.
+
+The `venue.no_nearby_venues` message is:
+
+> There are no venues for this sport nearby
 
 ### Operation 5: Compare Venues
 
