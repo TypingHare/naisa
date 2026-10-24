@@ -19,7 +19,8 @@ The following query parameters are required:
 - `sportID`: The ID of the requested sport
 - `date`: The desired date in YYYY-MM-DD format, for example 2026-10-23.
 - `time`: The desired time in 24-hour HH:mm format, from 00:00 to 23:59.
-- `maxDistance`: Confine the search within maxDistance radius around the latitude and longitude.
+- `maxDistance`: Confine the search within maxDistance radius around the
+  latitude and longitude.
 
 The following query parameter is optional:
 
@@ -37,7 +38,7 @@ HTTP 200:
             "venueId": 1,
             "name": "Venue A",
             "distanceKm": 0.5,
-            "hourlyPrice": 20.00,
+            "hourlyPrice": 20.0,
             "isIndoor": true,
             "available": true
         }
@@ -47,7 +48,7 @@ HTTP 200:
 
 Each result contains the venue ID, venue name, distance from the search origin
 in kilometers, hourly price in dollars, indoor status for the requested sport,
-and availability at the requested date and time. Results sorted by distance 
+and availability at the requested date and time. Results sorted by distance
 ascending.
 
 If no venues match, return HTTP 200 with an empty list:
@@ -61,13 +62,13 @@ If no venues match, return HTTP 200 with an empty list:
 
 #### Behaviors
 
-Validate the search parameters and check that the requested sport exists.
-The sport ID must be a positive integer. Coordinates must be within their
-specified ranges. `maxDistance` and `budget` must be finite and nonnegative.
- Since all venues are in New York City, we interpret the requested date and time 
- in `America/New_York`. Reject the request with HTTP 400 and 
- `request.validation_failed` if its combined date and time is earlier than the 
- current date and time. This includes an earlier time today.
+Validate the search parameters and check that the requested sport exists. The
+sport ID must be a positive integer. Coordinates must be within their specified
+ranges. `maxDistance` and `budget` must be finite and nonnegative. Since all
+venues are in New York City, we interpret the requested date and time in
+`America/New_York`. Reject the request with HTTP 400 and
+`request.validation_failed` if its combined date and time is earlier than the
+current date and time. This includes an earlier time today.
 
 Select venues that offer the requested sport. Calculate direct geographic
 distance from the supplied coordinates with the Haversine formula. Include
@@ -85,14 +86,14 @@ requested date and time:
   into the next day. For example, Monday 22:00–02:00 includes Tuesday 01:00.
 - Equal opening and closing times represent a 24-hour interval that starts at
   the opening time on the specified weekday.
-- Multiple intervals on the same day are permitted. A match with any interval
-  is sufficient.
+- Multiple intervals on the same day are permitted. A match with any interval is
+  sufficient.
 - Exclude venues with no opening intervals.
 
 Availability means that the venue is open at the requested date and time.
 Booking availability and crowd levels are not checked. The search does not
-require the venue to remain open for an activity duration. Closing-soon
-warnings are deferred.
+require the venue to remain open for an activity duration. Closing-soon warnings
+are deferred.
 
 Return an empty list when no venues satisfy all filters. Do not call
 `findAlternatives` in this iteration.
@@ -113,8 +114,8 @@ nonpositive sport IDs, and negative or nonfinite distance or budget values.
 
 #### Deferred Behavior/Edge Case
 
-- DEFERRED - Closing soon warning: for times that are within 1 hour of venue close,
-future behavior should include a warning.
+- DEFERRED - Closing soon warning: for times that are within 1 hour of venue
+  close, future behavior should include a warning.
     - Current behavior: no warning
     - Design decisions: warning threshold and response decision
 
@@ -190,8 +191,11 @@ opening status cannot be determined, we return `null`.
 The venues are sorted by distance, nearest first. `nearestVenueId`,
 `cheapestVenueId`, and `leastCrowdedVenueId` identify the venues with the
 shortest distance, lowest price, and lowest crowd level. Ties are broken by the
-lowest venue ID. If no recent crowd reports are available, `crowdLevel` and
-`leastCrowdedVenueId` are `null`.
+lowest venue ID.
+
+A venue without recent crowd reports has `crowdLevel: null` and is not
+considered for `leastCrowdedVenueId`. If no venue has recent crowd reports,
+`leastCrowdedVenueId` is `null`.
 
 For the first iteration, we compare these values separately instead of
 calculating an overall weighted score. The user's coordinates are required.
