@@ -17,12 +17,13 @@ import org.springframework.format.annotation.DateTimeFormat;
  *
  * <p>Coordinates identify the search origin. Maximum distance is in kilometers, and budget
  * is the maximum hourly budget. An omitted budget defaults to zero (free venues only).
- * Decimal values follow the existing request model and rejects NaN or infinity.
+ * Decimal values follow the existing request model and cannot represent NaN or infinity.
  *
- * <p>The date uses YYYY-MM-DD format, parsed with the Java pattern uuuu-MM-dd. The time uses the
- * 24-hour HH:mm format. Assumes America/New_York time zone since all venues are in NYC. 
- * After field validation succeeds, the service must reject a combined date and time that is in 
- * the past and check that the sport exists.
+ * <p>The date uses YYYY-MM-DD format, parsed with the Java pattern uuuu-MM-dd. The time uses a
+ * 24-hour clock. The standard parser accepts HH:mm and ISO local times with seconds and fractional
+ * seconds. All venues are in New York City, so date and time use America/New_York. After field
+ * validation succeeds, the service must reject a combined date and time that is in the past and
+ * check that the sport exists.
  *
  * @author Andrew Hsu, Codex
  */

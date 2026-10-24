@@ -6,7 +6,7 @@ See [architecture.md](./architecture.md) for details.
 
 ### Operation 1: Find Venues
 
-`GET /v1/venues/`
+`GET /v1/venues`
 
 This endpoint finds venues within the request parameters.
 
@@ -16,11 +16,12 @@ The following query parameters are required:
 
 - `latitude`: The user's latitude, between -90 and 90
 - `longitude`: The user's longitude, between -180 and 180
-- `sportID`: The ID of the requested sport
+- `sportId`: The ID of the requested sport
 - `date`: The desired date in YYYY-MM-DD format, for example 2026-10-23.
-- `time`: The desired time in 24-hour HH:mm format, from 00:00 to 23:59.
-- `maxDistance`: Confine the search within maxDistance radius around the
-  latitude and longitude.
+- `time`: The desired time on a 24-hour clock. Accept HH:mm, HH:mm:ss, or
+  HH:mm:ss with 1–9 fractional second digits. Examples: 14:30, 14:30:45, and
+  14:30:45.123. Hours range from 00 to 23. Time-zone offsets are not accepted.
+- `maxDistance`: Maximum distance in kilometers from the supplied coordinates.
 
 The following query parameter is optional:
 
@@ -108,8 +109,8 @@ Return an empty list when no venues satisfy all filters. Do not call
 | 401    | `client.invalid_api_key`                     | Unknown API key               |
 | 404    | `sport.not_found`                            | Sport does not exist          |
 
-Example invalid parameters: invalid dates, times outside the 24-hour HH:mm
-format, a requested date and time in the past, out-of-range coordinates,
+Example invalid parameters: invalid dates, times outside the accepted 24-hour
+formats, a requested date and time in the past, out-of-range coordinates,
 nonpositive sport IDs, and negative or nonfinite distance or budget values.
 
 #### Deferred Behavior/Edge Case

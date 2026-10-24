@@ -1,52 +1,160 @@
 package com.naisa.service;
 
+import com.naisa.common.VenueDistance;
 import com.naisa.exception.VenueException;
 import com.naisa.model.dto.AddVenueRequest;
+import com.naisa.model.dto.FindVenuesRequest;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.entity.Client;
+import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Review;
 import com.naisa.model.entity.Sport;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
+import com.naisa.model.vo.FindVenueResponse;
 import com.naisa.model.vo.ResourceIdResponse;
+import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.ReviewRepository;
+import com.naisa.repository.SportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Coordinates venue creation and user reviews through table-specific repositories.
+ * Coordinates venue searches, creation, and user reviews through table-specific repositories.
  *
  * <p>Callers supply an authenticated client and a request that has passed field validation. The
  * service checks business rules, records client-scoped user identities, and controls transaction
  * boundaries. External user accounts are managed by the calling clients.
  *
- * @author Vincent Lai, Codex
+ * @author Vincent Lai, Codex, Andrew Hsu, Codex
  */
 @Service
 public class VenueService {
+  private static final ZoneId SEARCH_TIMEZONE = ZoneId.of("America/New_York");
+
   private final VenueRepository venueRepository;
   private final VenueSportRepository venueSportRepository;
   private final ReviewRepository reviewRepository;
+  private final SportRepository sportRepository;
+  private final OpeningIntervalRepository openingIntervalRepository;
 
   /**
-   * Creates the service with the repositories required for venue and review persistence.
+   * Creates the service with the repositories required for venue searches and submissions.
    *
    * @param venueRepository repository for venue records
    * @param venueSportRepository repository for sports offered at venues
    * @param reviewRepository repository for user ratings and comments
-   * @author Vincent Lai, Codex
+   * @param sportRepository repository for registered sports
+   * @param openingIntervalRepository repository for venue opening hours
+   * @author Vincent Lai, Codex, Andrew Hsu, Codex
    */
   public VenueService(
       final VenueRepository venueRepository,
       final VenueSportRepository venueSportRepository,
-      final ReviewRepository reviewRepository) {
+      final ReviewRepository reviewRepository,
+      final SportRepository sportRepository,
+      final OpeningIntervalRepository openingIntervalRepository) {
     this.venueRepository = venueRepository;
     this.venueSportRepository = venueSportRepository;
     this.reviewRepository = reviewRepository;
+    this.sportRepository = sportRepository;
+    this.openingIntervalRepository = openingIntervalRepository;
+  }
+
+  /**
+   * Finds open venues for a sport within the requested distance and hourly
+   * budget.
+   *
+   * <p>The request must already have passed field validation.
+   * Results are sorted by distance, then venue identifier.
+   *
+   * @param request validated search parameters
+   * @return matching venues, or an empty list when none match
+   * @throws VenueException if the requested time is in the past or the sport does
+   *                        not exist
+   * @author Andrew Hsu, Codex
+   */
+  @Transactional(readOnly = true)
+  public List<FindVenueResponse> findVenues(final FindVenuesRequest request) {
+    final LocalDateTime requestedAt = LocalDateTime.of(request.getDate(), request.getTime());
+    if (requestedAt.isBefore(LocalDateTime.now(SEARCH_TIMEZONE))) {
+      throw VenueException.REQUEST_IN_PAST.clone();
+    }
+    if (!sportRepository.existsById(request.getSportId())) {
+      throw VenueException.SPORT_NOT_FOUND.clone();
+    }
+
+    final List<VenueSport> offerings = venueSportRepository.findBySportIdAndPriceLessThanEqual(
+        request.getSportId(), request.getBudget());
+    final List<FindVenueResponse> nearbyVenues = new ArrayList<>();
+    for (final VenueSport offering : offerings) {
+      final Venue venue = offering.getVenue();
+      final double distanceKm = VenueDistance.calculateDistanceKm(
+          request.getLatitude().doubleValue(),
+          request.getLongitude().doubleValue(),
+          venue.getLatitude(),
+          venue.getLongitude());
+      if (BigDecimal.valueOf(distanceKm).compareTo(request.getMaxDistance()) <= 0) {
+        nearbyVenues.add(
+            new FindVenueResponse(
+                venue.getId(),
+                venue.getName(),
+                distanceKm,
+                offering.getPrice(),
+                offering.getIsIndoor(),
+                true));
+      }
+    }
+    if (nearbyVenues.isEmpty()) {
+      return List.of();
+    }
+
+    final List<Long> venueIds = nearbyVenues.stream().map(FindVenueResponse::getVenueId).toList();
+    final Map<Long, List<OpeningInterval>> intervalsByVenue =
+        openingIntervalRepository.findByVenueIdIn(venueIds).stream()
+        .collect(Collectors.groupingBy(interval -> interval.getVenue().getId()));
+
+    return nearbyVenues.stream()
+        .filter(
+            venue -> intervalsByVenue.getOrDefault(venue.getVenueId(), List.of()).stream()
+                .anyMatch(interval -> isOpenAt(interval, requestedAt)))
+        .sorted(
+            Comparator.comparingDouble(FindVenueResponse::getDistanceKm)
+                .thenComparing(FindVenueResponse::getVenueId))
+        .toList();
+  }
+
+  /**
+   * Checks whether a weekly opening interval contains the requested local date
+   * and time.
+   *
+   * @param interval    stored opening interval
+   * @param requestedAt requested date and time in New York
+   * @return true from opening time up to, but excluding, closing time
+   * @author Andrew Hsu, Codex
+   */
+  private static boolean isOpenAt(
+      final OpeningInterval interval, final LocalDateTime requestedAt) {
+    final int daysSinceOpening = Math.floorMod(
+        requestedAt.getDayOfWeek().getValue() - interval.getDayOfWeek().getValue(), 7);
+    final LocalDateTime opensAt =
+        requestedAt.toLocalDate().minusDays(daysSinceOpening).atTime(interval.getOpensAt());
+    LocalDateTime closesAt = opensAt.toLocalDate().atTime(interval.getClosesAt());
+    if (!interval.getClosesAt().isAfter(interval.getOpensAt())) {
+      closesAt = closesAt.plusDays(1);
+    }
+    return !requestedAt.isBefore(opensAt) && requestedAt.isBefore(closesAt);
   }
 
   /**

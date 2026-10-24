@@ -1,5 +1,6 @@
 package com.naisa.service;
 
+import com.naisa.common.VenueDistance;
 import com.naisa.exception.VenueException;
 import com.naisa.model.dto.VenueComparisonRequest;
 import com.naisa.model.entity.OpeningInterval;
@@ -28,12 +29,10 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>Results are sorted by distance from the user. Crowd levels are computed by {@link
  * CrowdReportService} in the same way as Get Venue Status.
  *
- * @author Emily Wang, Codex
+ * @author Emily Wang, Codex, Andrew Hsu, Codex
  */
 @Service
 public class VenueComparisonService {
-  private static final double EARTH_RADIUS_KM = 6371.0;
-
   /** Crowd levels from least to most crowded. */
   private static final List<String> CROWD_LEVEL_ORDER =
       List.of("EMPTY", "LIGHT", "MODERATE", "BUSY", "PACKED");
@@ -77,7 +76,7 @@ public class VenueComparisonService {
    * @return comparison results sorted by distance
    * @throws VenueException if the IDs are duplicated, the sport or a venue does not exist, or a
    *     venue does not offer the sport
-   * @author Emily Wang, Codex, Claude Code
+   * @author Emily Wang, Codex, Claude Code, Andrew Hsu, Codex
    */
   @Transactional(readOnly = true)
   public VenueComparisonResponse compare(final VenueComparisonRequest request) {
@@ -104,7 +103,7 @@ public class VenueComparisonService {
       item.setVenueId(venueId);
       item.setName(venue.getName());
       item.setDistanceKm(
-          calculateDistance(
+          VenueDistance.calculateDistanceKm(
               request.getLatitude().doubleValue(),
               request.getLongitude().doubleValue(),
               venue.getLatitude(),
@@ -146,24 +145,6 @@ public class VenueComparisonService {
     response.setCheapestVenueId(cheapestVenueId);
     response.setLeastCrowdedVenueId(leastCrowdedVenueId);
     return response;
-  }
-
-  private double calculateDistance(
-      final double latitude1,
-      final double longitude1,
-      final double latitude2,
-      final double longitude2) {
-    final double latitudeDifference = Math.toRadians(latitude2 - latitude1);
-    final double longitudeDifference = Math.toRadians(longitude2 - longitude1);
-
-    final double a =
-        Math.pow(Math.sin(latitudeDifference / 2), 2)
-            + Math.cos(Math.toRadians(latitude1))
-                * Math.cos(Math.toRadians(latitude2))
-                * Math.pow(Math.sin(longitudeDifference / 2), 2);
-
-    final double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return EARTH_RADIUS_KM * c;
   }
 
   private Boolean isOpenNow(final Venue venue) {
