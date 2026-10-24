@@ -1,7 +1,7 @@
 package com.naisa.model.dto;
 
 /**
- * Identifies a search value that the client permits operation 2 to change.
+ * Identifies a search value that the client permits the service to change.
  *
  * @author Andrew Hsu, Codex
  */
