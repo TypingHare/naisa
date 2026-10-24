@@ -18,6 +18,13 @@ public final class VenueException extends ServiceException {
           HttpStatus.BAD_REQUEST,
           null);
 
+  public static final VenueException NO_NEARBY_VENUES =
+      new VenueException(
+          "venue.no_nearby_venues",
+          "There are no venues for this sport nearby",
+          HttpStatus.NOT_FOUND,
+          null);
+
   public static final VenueException NOT_FOUND =
       new VenueException(
           "venue.not_found",
