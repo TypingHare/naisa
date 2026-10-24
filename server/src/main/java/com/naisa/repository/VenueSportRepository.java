@@ -1,6 +1,7 @@
 package com.naisa.repository;
 
 import com.naisa.model.entity.VenueSport;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -42,4 +43,15 @@ public interface VenueSportRepository extends JpaRepository<VenueSport, Long> {
    * @author Vincent Lai, Codex
    */
   Optional<VenueSport> findByVenueIdAndSportId(Long venueId, Long sportId);
+
+  /**
+   * Finds offerings for the requested sport within the hourly budget.
+   *
+   * @param sportId identifier of the requested sport
+   * @param budget maximum hourly price in dollars, inclusive
+   * @return matching offerings with their associated venues and sports
+   * @author Andrew Hsu, Codex
+   */
+  @EntityGraph(attributePaths = {"venue", "sport"})
+  List<VenueSport> findBySportIdAndPriceLessThanEqual(Long sportId, BigDecimal budget);
 }
