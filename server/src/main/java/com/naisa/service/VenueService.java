@@ -37,6 +37,7 @@ public class VenueService {
   private final VenueSportRepository venueSportRepository;
   private final ReviewRepository reviewRepository;
   private final OpeningIntervalRepository openingIntervalRepository;
+  private final CrowdReportService crowdReportService;
 
   /**
    * Creates the service with the repositories required for venue details and submissions.
@@ -45,28 +46,32 @@ public class VenueService {
    * @param venueSportRepository repository for sports offered at venues
    * @param reviewRepository repository for user ratings and comments
    * @param openingIntervalRepository repository for weekly venue opening intervals
+   * @param crowdReportService service for the current venue-wide crowd status
    * @author Vincent Lai, Codex, Andrew Hsu, Codex
    */
   public VenueService(
       final VenueRepository venueRepository,
       final VenueSportRepository venueSportRepository,
       final ReviewRepository reviewRepository,
-      final OpeningIntervalRepository openingIntervalRepository) {
+      final OpeningIntervalRepository openingIntervalRepository,
+      final CrowdReportService crowdReportService) {
     this.venueRepository = venueRepository;
     this.venueSportRepository = venueSportRepository;
     this.reviewRepository = reviewRepository;
     this.openingIntervalRepository = openingIntervalRepository;
+    this.crowdReportService = crowdReportService;
   }
 
   /**
-   * Retrieves a venue's location, offered sports, and weekly opening intervals by its ID.
+   * Retrieves a venue's location, offered sports, weekly opening intervals, and crowd status.
    *
    * <p>Sports are sorted by sport ID. Intervals are sorted by weekday, Monday first, then by
    * opening and closing time. Missing sports or intervals produce empty lists. Hours are returned
    * in the venue's local time, including overnight intervals. Current availability is not checked.
+   * Crowd status uses the same recent-report rules as the venue crowd-status endpoint.
    *
    * @param venueId identifier of the venue
-   * @return the venue details with its sports and opening intervals
+   * @return the venue details with its sports, opening intervals, and venue-wide crowd status
    * @throws VenueException if the venue does not exist
    * @author Andrew Hsu, Codex
    */
@@ -106,6 +111,7 @@ public class VenueService {
                 .thenComparing(OpeningIntervalInfo::getOpensAt)
                 .thenComparing(OpeningIntervalInfo::getClosesAt))
             .toList());
+    response.setCrowdStatus(crowdReportService.getCrowdStatus(venueId, null));
     return response;
   }
 

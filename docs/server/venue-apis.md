@@ -124,7 +124,7 @@ nonpositive sport IDs, and negative or nonfinite distance or budget values.
 `GET /v1/venues/{venueId}`
 
 This endpoint returns the stored details of one venue, including its location,
-offered sports, and weekly opening intervals.
+offered sports, weekly opening intervals, and current venue-wide crowd status.
 
 #### Request
 
@@ -165,7 +165,14 @@ HTTP 200:
                 "opensAt": "09:00:00",
                 "closesAt": "21:00:00"
             }
-        ]
+        ],
+        "crowdStatus": {
+            "venueId": 1,
+            "crowdLevel": "BUSY",
+            "reportCount": 3,
+            "latestReportAt": "2026-10-24T14:30:00Z",
+            "source": "LIVE"
+        }
     }
 }
 ```
@@ -193,6 +200,12 @@ Include the opening time and exclude the closing time when interpreting an
 interval. A closing time earlier than the opening time is on the next day.
 Equal opening and closing times represent 24 hours from the stated opening
 time. Preserve multiple intervals on the same weekday.
+
+`crowdStatus` contains the venue-wide result defined in Operation 7. Use the
+same two-hour report window, reporter selection, and tie rules. With no recent
+reports, return `crowdLevel: null`, `reportCount: 0`, `latestReportAt: null`,
+and `source: "UNKNOWN"`. Crowd status is returned even when the venue has no
+sports or opening intervals.
 
 #### Errors
 
