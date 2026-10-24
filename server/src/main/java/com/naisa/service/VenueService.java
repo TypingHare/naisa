@@ -9,44 +9,104 @@ import com.naisa.model.entity.Sport;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
 import com.naisa.model.vo.ResourceIdResponse;
+import com.naisa.model.vo.VenueInfoResponse;
+import com.naisa.model.vo.VenueInfoResponse.OpeningIntervalInfo;
+import com.naisa.model.vo.VenueInfoResponse.SportInfo;
+import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.ReviewRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
 import java.time.ZoneId;
+import java.util.Comparator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Coordinates venue creation and user reviews through table-specific repositories.
+ * Coordinates venue information, creation, and user reviews through table-specific repositories.
  *
- * <p>Callers supply an authenticated client and a request that has passed field validation. The
+ * <p>For submissions, callers supply an authenticated client and a validated request. The
  * service checks business rules, records client-scoped user identities, and controls transaction
  * boundaries. External user accounts are managed by the calling clients.
  *
- * @author Vincent Lai, Codex
+ * @author Vincent Lai, Andrew Hsu, Codex
  */
 @Service
 public class VenueService {
   private final VenueRepository venueRepository;
   private final VenueSportRepository venueSportRepository;
   private final ReviewRepository reviewRepository;
+  private final OpeningIntervalRepository openingIntervalRepository;
 
   /**
-   * Creates the service with the repositories required for venue and review persistence.
+   * Creates the service with the repositories required for venue details and submissions.
    *
    * @param venueRepository repository for venue records
    * @param venueSportRepository repository for sports offered at venues
    * @param reviewRepository repository for user ratings and comments
-   * @author Vincent Lai, Codex
+   * @param openingIntervalRepository repository for weekly venue opening intervals
+   * @author Vincent Lai, Codex, Andrew Hsu, Codex
    */
   public VenueService(
       final VenueRepository venueRepository,
       final VenueSportRepository venueSportRepository,
-      final ReviewRepository reviewRepository) {
+      final ReviewRepository reviewRepository,
+      final OpeningIntervalRepository openingIntervalRepository) {
     this.venueRepository = venueRepository;
     this.venueSportRepository = venueSportRepository;
     this.reviewRepository = reviewRepository;
+    this.openingIntervalRepository = openingIntervalRepository;
+  }
+
+  /**
+   * Retrieves a venue's location, offered sports, and weekly opening intervals by its ID.
+   *
+   * <p>Sports are sorted by sport ID. Intervals are sorted by weekday, Monday first, then by
+   * opening and closing time. Missing sports or intervals produce empty lists. Hours are returned
+   * in the venue's local time, including overnight intervals. Current availability is not checked.
+   *
+   * @param venueId identifier of the venue
+   * @return the venue details with its sports and opening intervals
+   * @throws VenueException if the venue does not exist
+   * @author Andrew Hsu, Codex
+   */
+  @Transactional(readOnly = true)
+  public VenueInfoResponse getVenueInfo(final Long venueId) {
+    final Venue venue =
+        venueRepository.findById(venueId).orElseThrow(VenueException.NOT_FOUND::clone);
+    final VenueInfoResponse response = new VenueInfoResponse();
+    response.setVenueId(venue.getId());
+    response.setName(venue.getName());
+    response.setAddress(venue.getAddress());
+    response.setLatitude(venue.getLatitude());
+    response.setLongitude(venue.getLongitude());
+    response.setTimezone(venue.getTimezone());
+    response.setSports(
+        venueSportRepository.findByVenueId(venueId).stream()
+            .map(offering -> {
+              final SportInfo sport = new SportInfo();
+              sport.setSportId(offering.getSport().getId());
+              sport.setName(offering.getSport().getName());
+              sport.setHourlyPrice(offering.getPrice());
+              sport.setIsIndoor(offering.getIsIndoor());
+              return sport;
+            })
+            .sorted(Comparator.comparing(SportInfo::getSportId))
+            .toList());
+    response.setOpeningIntervals(
+        openingIntervalRepository.findByVenueId(venueId).stream()
+            .map(interval -> {
+              final OpeningIntervalInfo hours = new OpeningIntervalInfo();
+              hours.setDayOfWeek(interval.getDayOfWeek());
+              hours.setOpensAt(interval.getOpensAt());
+              hours.setClosesAt(interval.getClosesAt());
+              return hours;
+            })
+            .sorted(Comparator.comparing(OpeningIntervalInfo::getDayOfWeek)
+                .thenComparing(OpeningIntervalInfo::getOpensAt)
+                .thenComparing(OpeningIntervalInfo::getClosesAt))
+            .toList());
+    return response;
   }
 
   /**
