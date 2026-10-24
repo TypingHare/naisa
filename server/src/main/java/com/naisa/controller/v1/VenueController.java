@@ -5,12 +5,14 @@ import com.naisa.common.annotation.AuthorizationRequired;
 import com.naisa.exception.VenueException;
 import com.naisa.interceptor.AuthorizationInterceptor;
 import com.naisa.model.dto.AddVenueRequest;
+import com.naisa.model.dto.FindAlternativesRequest;
 import com.naisa.model.dto.FindVenuesRequest;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.dto.ReportCrowdRequest;
 import com.naisa.model.dto.VenueComparisonRequest;
 import com.naisa.model.entity.Client;
 import com.naisa.model.vo.CrowdStatusResponse;
+import com.naisa.model.vo.FindAlternativeResponse;
 import com.naisa.model.vo.FindVenueResponse;
 import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.model.vo.ResourceIdResponse;
@@ -80,6 +82,25 @@ public class VenueController {
     final List<FindVenueResponse> results = venueService.findVenues(request);
     final String message =
         results.isEmpty() ? "No venues match the search parameters." : "Venues found.";
+    return ResponseEntity.ok(new Capsule<>(message, results));
+  }
+
+  /**
+   * Finds venue alternatives using only the changes permitted by the client.
+   *
+   * @param request validated search query parameters and permitted changes
+   * @return HTTP 200 with alternatives, or an empty list when none match
+   * @throws VenueException if the original time is in the past, the sport does not exist, or no
+   *     venue offers the sport within the permitted radius
+   * @author Andrew Hsu, Codex
+   */
+  @AuthorizationRequired
+  @GetMapping("/alternatives")
+  public ResponseEntity<Capsule<List<FindAlternativeResponse>>> findAlternatives(
+      @Valid @ModelAttribute final FindAlternativesRequest request) {
+    final List<FindAlternativeResponse> results = venueService.findAlternatives(request);
+    final String message =
+        results.isEmpty() ? "No alternatives match the permitted changes." : "Alternatives found.";
     return ResponseEntity.ok(new Capsule<>(message, results));
   }
 
