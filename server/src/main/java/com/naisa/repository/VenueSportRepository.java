@@ -41,4 +41,14 @@ public interface VenueSportRepository extends JpaRepository<VenueSport, Long> {
    */
   @EntityGraph(attributePaths = {"venue", "sport"})
   List<VenueSport> findBySportIdAndPriceLessThanEqual(Long sportId, BigDecimal budget);
+
+  /**
+   * Finds all offerings for a sport before distance, price, or opening-hour checks.
+   *
+   * @param sportId identifier of the requested sport
+   * @return offerings with their associated venues and sports
+   * @author Andrew Hsu, Codex
+   */
+  @EntityGraph(attributePaths = {"venue", "sport"})
+  List<VenueSport> findBySportId(Long sportId);
 }
