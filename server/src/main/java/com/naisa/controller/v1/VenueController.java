@@ -5,11 +5,13 @@ import com.naisa.common.annotation.AuthorizationRequired;
 import com.naisa.exception.VenueException;
 import com.naisa.interceptor.AuthorizationInterceptor;
 import com.naisa.model.dto.AddVenueRequest;
+import com.naisa.model.dto.FindVenuesRequest;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.dto.ReportCrowdRequest;
 import com.naisa.model.dto.VenueComparisonRequest;
 import com.naisa.model.entity.Client;
 import com.naisa.model.vo.CrowdStatusResponse;
+import com.naisa.model.vo.FindVenueResponse;
 import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.model.vo.ResourceIdResponse;
 import com.naisa.model.vo.VenueComparisonResponse;
@@ -17,6 +19,7 @@ import com.naisa.service.CrowdReportService;
 import com.naisa.service.VenueComparisonService;
 import com.naisa.service.VenueService;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Request objects define accepted input, while response objects expose only information intended
  * for API consumers. Business rules and persistence are delegated to the service layer.
  *
- * @author Vincent Lai, Codex
+ * @author Vincent Lai, Codex, Andrew Hsu, Codex
  */
 @RestController
 @RequestMapping("/v1/venues")
@@ -48,10 +51,10 @@ public class VenueController {
   /**
    * Creates the controller with its services.
    *
-   * @param venueService service responsible for venue creation and reviews
+   * @param venueService service responsible for venue searches, creation, and reviews
    * @param crowdReportService service responsible for crowd reports
    * @param venueComparisonService service responsible for venue comparison
-   * @author Vincent Lai, Codex, Emily Wang, Codex, Claude Code
+   * @author Vincent Lai, Codex, Emily Wang, Codex, Claude Code, Andrew Hsu, Codex
    */
   public VenueController(
       final VenueService venueService,
@@ -60,6 +63,24 @@ public class VenueController {
     this.venueService = venueService;
     this.crowdReportService = crowdReportService;
     this.venueComparisonService = venueComparisonService;
+  }
+
+  /**
+   * Finds open venues within the requested distance and hourly budget for a sport.
+   *
+   * @param request validated search query parameters
+   * @return HTTP 200 with matching venues, or an empty list when none match
+   * @throws VenueException if the requested time is in the past or the sport does not exist
+   * @author Andrew Hsu, Codex
+   */
+  @AuthorizationRequired
+  @GetMapping
+  public ResponseEntity<Capsule<List<FindVenueResponse>>> findVenues(
+      @Valid @ModelAttribute final FindVenuesRequest request) {
+    final List<FindVenueResponse> results = venueService.findVenues(request);
+    final String message =
+        results.isEmpty() ? "No venues match the search parameters." : "Venues found.";
+    return ResponseEntity.ok(new Capsule<>(message, results));
   }
 
   /**
