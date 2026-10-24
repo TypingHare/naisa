@@ -1,5 +1,6 @@
 package com.naisa.service;
 
+import com.naisa.common.VenueConstant;
 import com.naisa.exception.VenueException;
 import com.naisa.model.dto.ReportCrowdRequest;
 import com.naisa.model.entity.Client;
@@ -7,10 +8,16 @@ import com.naisa.model.entity.CrowdReport;
 import com.naisa.model.entity.Sport;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
+import com.naisa.model.vo.CrowdStatusResponse;
 import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.repository.CrowdReportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class CrowdReportService {
+  private static final String SOURCE_LIVE = "LIVE";
+  private static final String SOURCE_UNKNOWN = "UNKNOWN";
+
   private final CrowdReportRepository crowdReportRepository;
   private final VenueRepository venueRepository;
   private final VenueSportRepository venueSportRepository;
@@ -90,5 +100,78 @@ public class CrowdReportService {
     response.setCrowdLevel(savedReport.getCrowdLevel());
     response.setCreatedAt(savedReport.getCreatedAt());
     return response;
+  }
+
+  /**
+   * Returns the current crowd status of a venue or one of its sports.
+   *
+   * <p>We use each reporter's most recent report within the cutoff window. If a sport is given but
+   * has no recent reports, we fall back to all recent reports for the venue. The crowd level is the
+   * most frequently reported level; ties are broken by the most recent report.
+   *
+   * @param venueId the venue ID
+   * @param sportId the sport ID, or {@code null} for the entire venue
+   * @return the crowd status
+   * @throws VenueException if the venue does not exist or does not offer the sport
+   * @author Emily Wang, Claude Code
+   */
+  @Transactional(readOnly = true)
+  public CrowdStatusResponse getCrowdStatus(final Long venueId, final Long sportId) {
+    if (!venueRepository.existsById(venueId)) {
+      throw VenueException.NOT_FOUND.clone();
+    }
+
+    if (sportId != null
+        && venueSportRepository.findByVenueIdAndSportId(venueId, sportId).isEmpty()) {
+      throw VenueException.SPORT_NOT_OFFERED.clone();
+    }
+
+    final Instant cutoff =
+        Instant.now().minus(VenueConstant.CROWD_REPORT_CUTOFF_HOURS, ChronoUnit.HOURS);
+
+    final List<CrowdReport> sportReports =
+        sportId == null
+            ? List.of()
+            : crowdReportRepository.findLatestReportsPerReporter(venueId, sportId, cutoff);
+    final List<CrowdReport> reports =
+        sportReports.isEmpty()
+            ? crowdReportRepository.findLatestReportsPerReporter(venueId, null, cutoff)
+            : sportReports;
+
+    final CrowdStatusResponse response = new CrowdStatusResponse();
+    response.setVenueId(venueId);
+    response.setReportCount(reports.size());
+
+    if (reports.isEmpty()) {
+      response.setSource(SOURCE_UNKNOWN);
+      return response;
+    }
+
+    response.setCrowdLevel(findMostFrequentLevel(reports));
+    response.setLatestReportAt(reports.get(0).getCreatedAt());
+    response.setSource(SOURCE_LIVE);
+    return response;
+  }
+
+  /**
+   * Finds the most frequently reported crowd level.
+   *
+   * <p>The reports must be sorted from newest to oldest, so that the first report with a tied
+   * level is the most recent one.
+   */
+  private String findMostFrequentLevel(final List<CrowdReport> reports) {
+    final Map<String, Integer> counts = new HashMap<>();
+    for (final CrowdReport report : reports) {
+      counts.merge(report.getCrowdLevel(), 1, Integer::sum);
+    }
+
+    final int maxCount = counts.values().stream().max(Integer::compare).orElse(0);
+    for (final CrowdReport report : reports) {
+      if (counts.get(report.getCrowdLevel()) == maxCount) {
+        return report.getCrowdLevel();
+      }
+    }
+
+    return reports.get(0).getCrowdLevel();
   }
 }

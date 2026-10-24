@@ -23,10 +23,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Compares venues offering the same sport using location, price, and opening hours.
+ * Compares venues offering the same sport using location, price, opening hours, and crowd level.
  *
- * <p>Results are sorted by distance from the user. Crowd levels are not included yet; they will be
- * added together with Get Venue Status (Operation 7).
+ * <p>Results are sorted by distance from the user. Crowd levels are computed by {@link
+ * CrowdReportService} in the same way as Get Venue Status.
  *
  * @author Emily Wang, Codex
  */
@@ -34,10 +34,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class VenueComparisonService {
   private static final double EARTH_RADIUS_KM = 6371.0;
 
+  /** Crowd levels from least to most crowded. */
+  private static final List<String> CROWD_LEVEL_ORDER =
+      List.of("EMPTY", "LIGHT", "MODERATE", "BUSY", "PACKED");
+
   private final VenueRepository venueRepository;
   private final VenueSportRepository venueSportRepository;
   private final SportRepository sportRepository;
   private final OpeningIntervalRepository openingIntervalRepository;
+  private final CrowdReportService crowdReportService;
 
   /**
    * Creates the service with the repositories required for venue comparison.
@@ -46,27 +51,33 @@ public class VenueComparisonService {
    * @param venueSportRepository repository for sports offered at venues
    * @param sportRepository repository for sports
    * @param openingIntervalRepository repository for venue opening hours
-   * @author Emily Wang, Codex
+   * @param crowdReportService service for computing crowd levels
+   * @author Emily Wang, Codex, Claude Code
    */
   public VenueComparisonService(
       final VenueRepository venueRepository,
       final VenueSportRepository venueSportRepository,
       final SportRepository sportRepository,
-      final OpeningIntervalRepository openingIntervalRepository) {
+      final OpeningIntervalRepository openingIntervalRepository,
+      final CrowdReportService crowdReportService) {
     this.venueRepository = venueRepository;
     this.venueSportRepository = venueSportRepository;
     this.sportRepository = sportRepository;
     this.openingIntervalRepository = openingIntervalRepository;
+    this.crowdReportService = crowdReportService;
   }
 
   /**
-   * Compares the requested venues and identifies the nearest and cheapest ones.
+   * Compares the requested venues and identifies the nearest, cheapest, and least crowded ones.
+   *
+   * <p>Only venues with a known crowd level are considered for the least crowded venue. If no venue
+   * has recent crowd reports, the least crowded venue ID is null.
    *
    * @param request validated comparison parameters
    * @return comparison results sorted by distance
    * @throws VenueException if the IDs are duplicated, the sport or a venue does not exist, or a
    *     venue does not offer the sport
-   * @author Emily Wang, Codex
+   * @author Emily Wang, Codex, Claude Code
    */
   @Transactional(readOnly = true)
   public VenueComparisonResponse compare(final VenueComparisonRequest request) {
@@ -101,6 +112,8 @@ public class VenueComparisonService {
       item.setHourlyPrice(offering.getPrice());
       item.setIsIndoor(offering.getIsIndoor());
       item.setOpenNow(isOpenNow(venue));
+      item.setCrowdLevel(
+          crowdReportService.getCrowdStatus(venueId, request.getSportId()).getCrowdLevel());
       items.add(item);
     }
 
@@ -116,10 +129,22 @@ public class VenueComparisonService {
             .orElseThrow()
             .getVenueId();
 
+    final Long leastCrowdedVenueId =
+        items.stream()
+            .filter(item -> item.getCrowdLevel() != null)
+            .min(
+                Comparator.comparingInt(
+                        (VenueComparisonItem item) ->
+                            CROWD_LEVEL_ORDER.indexOf(item.getCrowdLevel()))
+                    .thenComparing(VenueComparisonItem::getVenueId))
+            .map(VenueComparisonItem::getVenueId)
+            .orElse(null);
+
     final VenueComparisonResponse response = new VenueComparisonResponse();
     response.setVenues(items);
     response.setNearestVenueId(items.get(0).getVenueId());
     response.setCheapestVenueId(cheapestVenueId);
+    response.setLeastCrowdedVenueId(leastCrowdedVenueId);
     return response;
   }
 
