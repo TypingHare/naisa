@@ -1,6 +1,6 @@
 ### Venue APIs
 
-This document describes the API contracts for Operations 1, 5, 6, and 7. All
+This document describes the API contracts for Operations 1, 4, 5, 6, and 7. All
 endpoints require authorization and use the standard `Capsule` response format.
 See [architecture.md](./architecture.md) for details.
 
@@ -118,6 +118,91 @@ nonpositive sport IDs, and negative or nonfinite distance or budget values.
   close, future behavior should include a warning.
     - Current behavior: no warning
     - Design decisions: warning threshold and response decision
+
+### Operation 4: Get Venue Info
+
+`GET /v1/venues/{venueId}`
+
+This endpoint returns the stored details of one venue, including its location,
+offered sports, and weekly opening intervals.
+
+#### Request
+
+Supply one numeric venue ID in the path. The value must fit a signed 64-bit
+integer. No query parameters or request body are required.
+
+Example:
+
+```http
+GET /v1/venues/1
+```
+
+#### Response
+
+HTTP 200:
+
+```json
+{
+    "message": "Venue information retrieved.",
+    "data": {
+        "venueId": 1,
+        "name": "Venue A",
+        "address": "123 Example Street, New York, NY",
+        "latitude": 40.81,
+        "longitude": -73.96,
+        "timezone": "America/New_York",
+        "sports": [
+            {
+                "sportId": 1,
+                "name": "Basketball",
+                "hourlyPrice": 20.00,
+                "isIndoor": true
+            }
+        ],
+        "openingIntervals": [
+            {
+                "dayOfWeek": "MONDAY",
+                "opensAt": "09:00:00",
+                "closesAt": "21:00:00"
+            }
+        ]
+    }
+}
+```
+
+The response contains one venue object. Coordinates are in degrees. Each sport
+entry contains its ID, name, hourly price in dollars, and indoor status at this
+venue. Sort sports by sport ID ascending.
+
+Opening intervals apply to the whole venue. Return weekday names in uppercase,
+from `MONDAY` through `SUNDAY`, and local times in ISO format. Interpret these
+times in the returned `timezone`. Sort intervals by weekday, Monday first,
+then by opening time and closing time ascending.
+
+#### Behaviors
+
+Look up the venue by its ID. Return HTTP 404 with `venue.not_found` when the
+venue does not exist. Names are not unique and are not lookup identifiers for
+this endpoint.
+
+Return all offered sports and all weekly opening intervals. A venue can be
+retrieved even when it is closed. If it has no sports or opening intervals,
+return HTTP 200 with `sports: []` or `openingIntervals: []`, respectively.
+
+Include the opening time and exclude the closing time when interpreting an
+interval. A closing time earlier than the opening time is on the next day.
+Equal opening and closing times represent 24 hours from the stated opening
+time. Preserve multiple intervals on the same weekday.
+
+#### Errors
+
+| Status | `errorCode`                                  | When                              |
+| ------ | -------------------------------------------- | --------------------------------- |
+| 400    | `request.invalid_parameter`                  | Venue ID is not a 64-bit integer  |
+| 401    | `authorization.no_api_key_provided`          | Missing authorization header      |
+| 401    | `authorization.invalid_authorization_header` | Invalid Bearer header             |
+| 401    | `client.invalid_api_key`                     | Unknown API key                   |
+| 404    | `venue.not_found`                            | Venue does not exist              |
 
 ### Operation 5: Compare Venues
 
