@@ -1,6 +1,6 @@
 ### Venue APIs
 
-This document describes the API contracts for Operations 1, 5, 6, and 7. All
+This document describes the API contracts for Operations 1, 3, 5, 6, and 7. All
 endpoints require authorization and use the standard `Capsule` response format.
 See [architecture.md](./architecture.md) for details.
 
@@ -119,6 +119,129 @@ nonpositive sport IDs, and negative or nonfinite distance or budget values.
   close, future behavior should include a warning.
     - Current behavior: no warning
     - Design decisions: warning threshold and response decision
+
+### Operation 3: Find Group Venues
+
+`POST /v1/venues/group-search`
+
+This endpoint finds open venues for a group of 2–10 members. It reads search
+parameters from a JSON body and does not save the search.
+
+#### Request
+
+Send `Content-Type: application/json`. The following fields are required:
+
+- `locations`: A list of 2–10 objects, each with a required `latitude` between
+  -90 and 90 and a required `longitude` between -180 and 180. List order
+  identifies the members in the response.
+- `sportId`: The positive integer ID of the requested sport.
+- `date`: The desired date in YYYY-MM-DD format.
+- `time`: The desired time on a 24-hour clock. Use the formats defined for
+  Operation 1: HH:mm, HH:mm:ss, or HH:mm:ss with 1–9 fractional second digits.
+  Time-zone offsets are not accepted.
+
+The following fields are optional:
+
+- `distanceFromCenter`: Maximum distance in kilometers from the group center.
+  Defaults to 2.
+- `budget`: Maximum hourly price in dollars for the requested sport. Defaults
+  to 0, which includes only free offerings.
+
+Example:
+
+```json
+{
+    "locations": [
+        { "latitude": 40.81, "longitude": -73.96 },
+        { "latitude": 40.82, "longitude": -73.95 }
+    ],
+    "sportId": 1,
+    "date": "2026-11-01",
+    "time": "18:30",
+    "distanceFromCenter": 2,
+    "budget": 20
+}
+```
+
+#### Response
+
+HTTP 200:
+
+```json
+{
+    "message": "Group venues found.",
+    "data": [
+        {
+            "venueId": 1,
+            "name": "Venue A",
+            "averageDistanceKm": 0.75,
+            "memberDistancesKm": [0.5, 1.0],
+            "hourlyPrice": 20.0,
+            "isIndoor": true,
+            "available": true
+        }
+    ]
+}
+```
+
+`memberDistancesKm` contains one distance per input location, in the same order.
+`averageDistanceKm` is the arithmetic average of these distances. Distances are
+in kilometers. `hourlyPrice` and `isIndoor` describe the requested sport's
+offering. Every returned venue is open at the requested date and time, so
+`available` is always `true`.
+
+Sort results by `averageDistanceKm` ascending, then by venue ID ascending.
+
+If no venues match, return HTTP 200 with an empty list:
+
+```json
+{
+    "message": "No venues match the group search parameters.",
+    "data": []
+}
+```
+
+#### Behaviors
+
+Validate all locations and check that the requested sport exists. Require
+2–10 locations. `distanceFromCenter` and `budget` must be finite and
+nonnegative. Interpret the requested date and time in `America/New_York` and
+reject a combined date and time in the past, including an earlier time today.
+
+Calculate the group center by taking the arithmetic average of the input
+latitudes and the arithmetic average of the input longitudes. Use the Haversine
+formula to calculate direct geographic distances from the center to each
+candidate venue and from each member to each candidate venue.
+
+Select venues that offer the requested sport and whose stored hourly price is
+less than or equal to `budget`. Include venues whose distance from the group
+center is less than or equal to `distanceFromCenter`. This radius applies to
+the center-to-venue distance, not each member's distance or the average member
+distance.
+
+Apply the opening-hour rules defined for Operation 1, including overnight
+intervals, 24-hour intervals, and multiple intervals per day. Exclude closed
+venues and venues with no opening intervals. Availability means that the venue
+is open; booking availability, crowd levels, activity duration, and closing-soon
+warnings are not checked.
+
+Return an empty list when no venues satisfy all filters.
+
+#### Errors
+
+| Status | `errorCode`                                  | When                                    |
+| ------ | -------------------------------------------- | --------------------------------------- |
+| 400    | `request.invalid_body`                       | Missing or unreadable JSON body         |
+| 400    | `request.validation_failed`                  | Missing or invalid search values        |
+| 401    | `authorization.no_api_key_provided`          | Missing authorization header            |
+| 401    | `authorization.invalid_authorization_header` | Invalid Bearer header                   |
+| 401    | `client.invalid_api_key`                     | Unknown API key                         |
+| 404    | `sport.not_found`                            | Sport does not exist                    |
+
+Invalid search values include fewer than 2 or more than 10 locations, missing
+or out-of-range coordinates, a nonpositive sport ID, a requested date and time
+in the past, and negative distance or budget values. Malformed JSON or values
+that cannot be read as the required types return `request.invalid_body`.
 
 ### Operation 5: Compare Venues
 
