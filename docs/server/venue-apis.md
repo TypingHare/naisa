@@ -1,10 +1,124 @@
 ### Venue APIs
 
-This document describes the API contracts for Operations 5, 6, and 7. All
+This document describes the API contracts for Operations 1, 5, 6, and 7. All
 endpoints require authorization and use the standard `Capsule` response format.
 See [architecture.md](./architecture.md) for details.
 
-#### Operation 5: Compare Venues
+### Operation 1: Find Venues
+
+`GET /v1/venues/`
+
+This endpoint finds venues within the request parameters.
+
+#### Request
+
+The following query parameters are required:
+
+- `latitude`: The user's latitude, between -90 and 90
+- `longitude`: The user's longitude, between -180 and 180
+- `sportID`: The ID of the requested sport
+- `date`: The desired date in YYYY-MM-DD format, for example 2026-10-23.
+- `time`: The desired time in 24-hour HH:mm format, from 00:00 to 23:59.
+- `maxDistance`: Confine the search within maxDistance radius around the latitude and longitude.
+
+The following query parameter is optional:
+
+- `budget`: Hourly budget for hourly venue rental costs. Defaults to 0.
+
+#### Response
+
+HTTP 200:
+
+```json
+{
+    "message": "Venues found.",
+    "data": [
+        {
+            "venueId": 1,
+            "name": "Venue A",
+            "distanceKm": 0.5,
+            "hourlyPrice": 20.00,
+            "isIndoor": true,
+            "available": true
+        }
+    ]
+}
+```
+
+Each result contains the venue ID, venue name, distance from the search origin
+in kilometers, hourly price in dollars, indoor status for the requested sport,
+and availability at the requested date and time. Results sorted by distance 
+ascending.
+
+If no venues match, return HTTP 200 with an empty list:
+
+```json
+{
+    "message": "No venues match the search parameters.",
+    "data": []
+}
+```
+
+#### Behaviors
+
+Validate the search parameters and check that the requested sport exists.
+The sport ID must be a positive integer. Coordinates must be within their
+specified ranges. `maxDistance` and `budget` must be finite and nonnegative.
+ Since all venues are in New York City, we interpret the requested date and time 
+ in `America/New_York`. Reject the request with HTTP 400 and 
+ `request.validation_failed` if its combined date and time is earlier than the 
+ current date and time. This includes an earlier time today.
+
+Select venues that offer the requested sport. Calculate direct geographic
+distance from the supplied coordinates with the Haversine formula. Include
+venues whose distance is less than or equal to `maxDistance`.
+
+Use the stored price for the requested sport as `hourlyPrice`. Include venues
+whose hourly price is less than or equal to `budget`. If `budget` is omitted,
+use 0, which includes only free offerings.
+
+Use New York local time to check the venue's weekly opening intervals for the
+requested date and time:
+
+- Include the opening time and exclude the closing time.
+- If the closing time is earlier than the opening time, the interval continues
+  into the next day. For example, Monday 22:00–02:00 includes Tuesday 01:00.
+- Equal opening and closing times represent a 24-hour interval that starts at
+  the opening time on the specified weekday.
+- Multiple intervals on the same day are permitted. A match with any interval
+  is sufficient.
+- Exclude venues with no opening intervals.
+
+Availability means that the venue is open at the requested date and time.
+Booking availability and crowd levels are not checked. The search does not
+require the venue to remain open for an activity duration. Closing-soon
+warnings are deferred.
+
+Return an empty list when no venues satisfy all filters. Do not call
+`findAlternatives` in this iteration.
+
+#### Errors
+
+| Status | `errorCode`                                  | When                          |
+| ------ | -------------------------------------------- | ----------------------------- |
+| 400    | `request.validation_failed`                  | Missing or invalid parameters |
+| 401    | `authorization.no_api_key_provided`          | Missing authorization header  |
+| 401    | `authorization.invalid_authorization_header` | Invalid Bearer header         |
+| 401    | `client.invalid_api_key`                     | Unknown API key               |
+| 404    | `sport.not_found`                            | Sport does not exist          |
+
+Example invalid parameters: invalid dates, times outside the 24-hour HH:mm
+format, a requested date and time in the past, out-of-range coordinates,
+nonpositive sport IDs, and negative or nonfinite distance or budget values.
+
+#### Deferred Behavior/Edge Case
+
+- DEFERRED - Closing soon warning: for times that are within 1 hour of venue close,
+future behavior should include a warning.
+    - Current behavior: no warning
+    - Design decisions: warning threshold and response decision
+
+### Operation 5: Compare Venues
 
 `GET /v1/venues/comparison`
 
@@ -95,7 +209,7 @@ calculating an overall weighted score. The user's coordinates are required.
 | 404    | `venue.not_found`                            | Venue does not exist                |
 | 404    | `sport.not_found`                            | Sport does not exist                |
 
-#### Operation 6: Report Venue Status
+### Operation 6: Report Venue Status
 
 `POST /v1/venues/{venueId}/crowd-reports`
 
@@ -157,7 +271,7 @@ If `sportId` is omitted, the report applies to the venue as a whole.
 | 401    | `client.invalid_api_key`                     | Unknown API key                |
 | 404    | `venue.not_found`                            | Venue does not exist           |
 
-#### Operation 7: Get Venue Status
+### Operation 7: Get Venue Status
 
 `GET /v1/venues/{venueId}/crowd-status`
 
