@@ -66,7 +66,10 @@ public class VenueController {
   }
 
   /**
-   * Finds open venues within the requested distance and hourly budget for a sport.
+   * Finds open venues within the requested distance and hourly budget for one origin or a group.
+   *
+   * <p>Query parameters supply either latitude and longitude or indexed member locations.
+   * Both forms use the same service method and return results sorted by average member distance.
    *
    * @param request validated search query parameters
    * @return HTTP 200 with matching venues, or an empty list when none match
