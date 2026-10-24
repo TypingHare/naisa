@@ -7,12 +7,12 @@ import com.naisa.model.entity.Client;
 import com.naisa.model.entity.CrowdReport;
 import com.naisa.model.entity.Sport;
 import com.naisa.model.entity.Venue;
-import com.naisa.model.entity.VenueSport;
 import com.naisa.model.vo.CrowdStatusResponse;
 import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.repository.CrowdReportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
+import com.naisa.util.Beans;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -24,9 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Handles crowd reports submitted by clients.
  *
- * <p>Users can report the crowd level of a venue or a specific sport. Every submission is stored
- * as a new report so that historical data is kept. Get Venue Status counts only each reporter's
- * most recent report when estimating crowdedness.
+ * <p>Users can report the crowd level of a venue or a specific sport. Every submission is stored as
+ * a new report so that historical data is kept. Get Venue Status counts only each reporter's most
+ * recent report when estimating crowdedness.
  *
  * @author Emily Wang, Codex
  */
@@ -38,6 +38,7 @@ public class CrowdReportService {
   private final CrowdReportRepository crowdReportRepository;
   private final VenueRepository venueRepository;
   private final VenueSportRepository venueSportRepository;
+  private final VenueService venueService;
 
   /**
    * Creates a crowd report service.
@@ -50,10 +51,12 @@ public class CrowdReportService {
   public CrowdReportService(
       final CrowdReportRepository crowdReportRepository,
       final VenueRepository venueRepository,
-      final VenueSportRepository venueSportRepository) {
+      final VenueSportRepository venueSportRepository,
+      final VenueService venueService) {
     this.crowdReportRepository = crowdReportRepository;
     this.venueRepository = venueRepository;
     this.venueSportRepository = venueSportRepository;
+    this.venueService = venueService;
   }
 
   /**
@@ -67,7 +70,7 @@ public class CrowdReportService {
    * @param request the crowd report request
    * @return the saved report
    * @throws VenueException if the venue does not exist or does not offer the sport
-   * @author Emily Wang, Codex
+   * @author Emily Wang, Codex, James Chen
    */
   @Transactional
   public ReportCrowdResponse reportCrowd(
@@ -75,31 +78,28 @@ public class CrowdReportService {
     final Venue venue =
         venueRepository.findById(venueId).orElseThrow(VenueException.NOT_FOUND::clone);
 
-    final Sport sport;
-    if (request.getSportId() == null) {
-      sport = null;
-    } else {
-      final VenueSport offering =
-          venueSportRepository
-              .findByVenueIdAndSportId(venueId, request.getSportId())
-              .orElseThrow(VenueException.SPORT_NOT_OFFERED::clone);
-      sport = offering.getSport();
-    }
+    final Long sportId = request.getSportId();
+    final Sport sport = sportId == null ? null : venueService.getVenueSport(venueId, sportId);
 
-    final CrowdReport report = new CrowdReport();
-    report.setClient(client);
-    report.setExternalUserId(request.getExternalUserId());
-    report.setVenue(venue);
-    report.setSport(sport);
-    report.setCrowdLevel(request.getCrowdLevel());
-
+    final CrowdReport report =
+        Beans.create(
+            CrowdReport.class,
+            (it) -> {
+              it.setClient(client);
+              it.setExternalUserId(request.getExternalUserId());
+              it.setVenue(venue);
+              it.setSport(sport);
+              it.setCrowdLevel(request.getCrowdLevel());
+            });
     final CrowdReport savedReport = crowdReportRepository.saveAndFlush(report);
 
-    final ReportCrowdResponse response = new ReportCrowdResponse();
-    response.setReportId(savedReport.getId());
-    response.setCrowdLevel(savedReport.getCrowdLevel());
-    response.setCreatedAt(savedReport.getCreatedAt());
-    return response;
+    return Beans.create(
+        ReportCrowdResponse.class,
+        (it) -> {
+          it.setReportId(savedReport.getId());
+          it.setCrowdLevel(savedReport.getCrowdLevel());
+          it.setCreatedAt(savedReport.getCreatedAt());
+        });
   }
 
   /**
@@ -156,8 +156,8 @@ public class CrowdReportService {
   /**
    * Finds the most frequently reported crowd level.
    *
-   * <p>The reports must be sorted from newest to oldest, so that the first report with a tied
-   * level is the most recent one.
+   * <p>The reports must be sorted from newest to oldest, so that the first report with a tied level
+   * is the most recent one.
    */
   private String findMostFrequentLevel(final List<CrowdReport> reports) {
     final Map<String, Integer> counts = new HashMap<>();
