@@ -13,6 +13,7 @@ import com.naisa.model.vo.CrowdStatusResponse;
 import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.model.vo.ResourceIdResponse;
 import com.naisa.model.vo.VenueComparisonResponse;
+import com.naisa.model.vo.VenueInfoResponse;
 import com.naisa.service.CrowdReportService;
 import com.naisa.service.VenueComparisonService;
 import com.naisa.service.VenueService;
@@ -36,7 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Request objects define accepted input, while response objects expose only information intended
  * for API consumers. Business rules and persistence are delegated to the service layer.
  *
- * @author Vincent Lai, Codex
+ * @author Vincent Lai, Andrew Hsu, Codex
  */
 @RestController
 @RequestMapping("/v1/venues")
@@ -51,7 +52,7 @@ public class VenueController {
    * @param venueService service responsible for venue creation and reviews
    * @param crowdReportService service responsible for crowd reports
    * @param venueComparisonService service responsible for venue comparison
-   * @author Vincent Lai, Codex, Emily Wang, Codex, Claude Code
+   * @author Vincent Lai, Emily Wang, Codex, Claude Code
    */
   public VenueController(
       final VenueService venueService,
@@ -60,6 +61,22 @@ public class VenueController {
     this.venueService = venueService;
     this.crowdReportService = crowdReportService;
     this.venueComparisonService = venueComparisonService;
+  }
+
+  /**
+   * Returns a venue's location, offered sports, weekly opening intervals, and crowd status.
+   *
+   * @param venueId identifier taken from the request path
+   * @return HTTP 200 with the venue details inside a capsule
+   * @throws VenueException if the venue does not exist
+   * @author Andrew Hsu, Codex
+   */
+  @AuthorizationRequired
+  @GetMapping("/{venueId}")
+  public ResponseEntity<Capsule<VenueInfoResponse>> getVenueInfo(
+      @PathVariable("venueId") final Long venueId) {
+    final VenueInfoResponse result = venueService.getVenueInfo(venueId);
+    return ResponseEntity.ok(new Capsule<>("Venue information retrieved.", result));
   }
 
   /**
