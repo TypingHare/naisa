@@ -5,6 +5,7 @@ import com.naisa.exception.VenueException;
 import com.naisa.model.dto.AddVenueRequest;
 import com.naisa.model.dto.FindAlternativesRequest;
 import com.naisa.model.dto.FindVenuesRequest;
+import com.naisa.model.dto.GroupMemberLocation;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.dto.SearchConstraint;
 import com.naisa.model.entity.Client;
@@ -85,12 +86,14 @@ public class VenueService {
   }
 
   /**
-   * Finds open venues for a sport within the requested distance and hourly budget.
+   * Finds open venues for one origin or a group within the requested radius and hourly budget.
    *
-   * <p>The request must already have passed field validation. Results are sorted by distance, then
-   * venue identifier.
+   * <p>The request must have passed field validation. The center is the average latitude and
+   * longitude. The radius limits distance from this center, not from each member. Member distances
+   * follow input order. Results are sorted by average member distance, then venue identifier.
+   * A single origin uses the same calculation and filters as a group.
    *
-   * @param request validated search parameters
+   * @param request validated search query parameters
    * @return matching venues, or an empty list when none match
    * @throws VenueException if the requested time is in the past or the sport does not exist
    * @author Andrew Hsu, Codex
@@ -100,27 +103,33 @@ public class VenueService {
     final LocalDateTime requestedAt =
         validateSearchRequest(request, LocalDateTime.now(SEARCH_TIMEZONE));
 
-    final List<VenueSport> offerings =
-        venueSportRepository.findBySportIdAndPriceLessThanEqual(
-            request.getSportId(), request.getBudget());
+    final List<GroupMemberLocation> locations = searchLocations(request);
+    final double centerLatitude =
+        locations.stream().mapToDouble(location -> location.getLatitude().doubleValue())
+            .average().orElseThrow();
+    final double centerLongitude =
+        locations.stream().mapToDouble(location -> location.getLongitude().doubleValue())
+            .average().orElseThrow();
+    final List<VenueSport> offerings = venueSportRepository.findBySportIdAndPriceLessThanEqual(
+        request.getSportId(), request.getBudget());
     final List<FindVenueResponse> nearbyVenues = new ArrayList<>();
     for (final VenueSport offering : offerings) {
       final Venue venue = offering.getVenue();
-      final double distanceKm =
-          VenueDistance.calculateDistanceKm(
-              request.getLatitude().doubleValue(),
-              request.getLongitude().doubleValue(),
-              venue.getLatitude(),
-              venue.getLongitude());
+      final double distanceKm = VenueDistance.calculateDistanceKm(
+          centerLatitude, centerLongitude, venue.getLatitude(), venue.getLongitude());
       if (BigDecimal.valueOf(distanceKm).compareTo(request.getMaxDistance()) <= 0) {
-        nearbyVenues.add(
-            new FindVenueResponse(
-                venue.getId(),
-                venue.getName(),
-                distanceKm,
-                offering.getPrice(),
-                offering.getIsIndoor(),
-                true));
+        final List<Double> memberDistances = locations.stream()
+            .map(location -> VenueDistance.calculateDistanceKm(
+                location.getLatitude().doubleValue(), location.getLongitude().doubleValue(),
+                venue.getLatitude(), venue.getLongitude()))
+            .toList();
+        final FindVenueResponse result = new FindVenueResponse(
+            venue.getId(), venue.getName(), distanceKm, offering.getPrice(),
+            offering.getIsIndoor(), true);
+        result.setMemberDistancesKm(memberDistances);
+        result.setAverageDistanceKm(
+            memberDistances.stream().mapToDouble(Double::doubleValue).average().orElseThrow());
+        nearbyVenues.add(result);
       }
     }
     if (nearbyVenues.isEmpty()) {
@@ -133,17 +142,31 @@ public class VenueService {
             .collect(Collectors.groupingBy(interval -> interval.getVenue().getId()));
 
     return nearbyVenues.stream()
-        .filter(
-            venue ->
-                intervalsByVenue.getOrDefault(venue.getVenueId(), List.of()).stream()
-                    .anyMatch(interval -> isOpenAt(interval, requestedAt)))
-        .sorted(
-            Comparator.comparingDouble(FindVenueResponse::getDistanceKm)
-                .thenComparing(FindVenueResponse::getVenueId))
+        .filter(venue -> intervalsByVenue.getOrDefault(venue.getVenueId(), List.of()).stream()
+            .anyMatch(interval -> isOpenAt(interval, requestedAt)))
+        .sorted(Comparator.comparingDouble(FindVenueResponse::getAverageDistanceKm)
+            .thenComparing(FindVenueResponse::getVenueId))
         .toList();
   }
 
   /**
+   * Converts a single coordinate pair to a one-member list, or uses the supplied member list.
+   *
+   * @param request search parameters that have passed field validation
+   * @return locations in member order
+   * @author Andrew Hsu, Codex
+   */
+  private static List<GroupMemberLocation> searchLocations(final FindVenuesRequest request) {
+    if (request.getLocations() != null) {
+      return request.getLocations();
+    }
+    final GroupMemberLocation location = new GroupMemberLocation();
+    location.setLatitude(request.getLatitude());
+    location.setLongitude(request.getLongitude());
+    return List.of(location);
+  }
+ 
+  /** 
    * Finds alternatives by changing only the search values permitted by the client.
    *
    * <p>The request must already have passed field validation. A nearby sport offering is checked
