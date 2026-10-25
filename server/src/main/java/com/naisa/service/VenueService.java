@@ -1,39 +1,23 @@
 package com.naisa.service;
 
-import com.naisa.common.VenueDistance;
 import com.naisa.exception.VenueException;
 import com.naisa.model.dto.AddVenueRequest;
-import com.naisa.model.dto.FindAlternativesRequest;
-import com.naisa.model.dto.FindVenuesRequest;
-import com.naisa.model.dto.GroupMemberLocation;
 import com.naisa.model.dto.RateVenueRequest;
-import com.naisa.model.dto.SearchConstraint;
 import com.naisa.model.entity.Client;
-import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Review;
 import com.naisa.model.entity.Sport;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
-import com.naisa.model.vo.FindAlternativeResponse;
-import com.naisa.model.vo.FindVenueResponse;
 import com.naisa.model.vo.ResourceIdResponse;
+import com.naisa.model.vo.VenueInfoResponse;
+import com.naisa.model.vo.VenueInfoResponse.OpeningIntervalInfo;
+import com.naisa.model.vo.VenueInfoResponse.SportInfo;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.ReviewRepository;
-import com.naisa.repository.SportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
-import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,25 +25,17 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Coordinates venue searches, creation, and user reviews through table-specific repositories.
  *
- * <p>For submissions, callers supply an authenticated client and a validated request. The
- * service checks business rules, records client-scoped user identities, and controls transaction
+ * <p>For submissions, callers supply an authenticated client and a validated request. The service
+ * checks business rules, records client-scoped user identities, and controls transaction
  * boundaries. External user accounts are managed by the calling clients.
  *
  * @author Vincent Lai, Codex, Andrew Hsu, Codex
  */
 @Service
 public class VenueService {
-  private static final ZoneId SEARCH_TIMEZONE = ZoneId.of("America/New_York");
-  private static final int ALTERNATIVE_DATE_WINDOW_DAYS = 3;
-  private static final int ALTERNATIVE_TIME_WINDOW_HOURS = 2;
-  private static final BigDecimal ALTERNATIVE_DISTANCE_INCREASE_KM = BigDecimal.valueOf(5);
-  private static final BigDecimal ALTERNATIVE_BUDGET_INCREASE = BigDecimal.valueOf(20);
-  private static final int ALTERNATIVE_RESULT_LIMIT = 10;
-
   private final VenueRepository venueRepository;
   private final VenueSportRepository venueSportRepository;
   private final ReviewRepository reviewRepository;
-  private final SportRepository sportRepository;
   private final OpeningIntervalRepository openingIntervalRepository;
 
   /**
@@ -76,13 +52,11 @@ public class VenueService {
       final VenueRepository venueRepository,
       final VenueSportRepository venueSportRepository,
       final ReviewRepository reviewRepository,
-      final OpeningIntervalRepository openingIntervalRepository,
-      final CrowdReportService crowdReportService) {
+      final OpeningIntervalRepository openingIntervalRepository) {
     this.venueRepository = venueRepository;
     this.venueSportRepository = venueSportRepository;
     this.reviewRepository = reviewRepository;
     this.openingIntervalRepository = openingIntervalRepository;
-    this.crowdReportService = crowdReportService;
   }
 
   /**
@@ -111,30 +85,33 @@ public class VenueService {
     response.setTimezone(venue.getTimezone());
     response.setSports(
         venueSportRepository.findByVenueId(venueId).stream()
-            .map(offering -> {
-              final SportInfo sport = new SportInfo();
-              sport.setSportId(offering.getSport().getId());
-              sport.setName(offering.getSport().getName());
-              sport.setHourlyPrice(offering.getPrice());
-              sport.setIsIndoor(offering.getIsIndoor());
-              return sport;
-            })
+            .map(
+                offering -> {
+                  final SportInfo sport = new SportInfo();
+                  sport.setSportId(offering.getSport().getId());
+                  sport.setName(offering.getSport().getName());
+                  sport.setHourlyPrice(offering.getPrice());
+                  sport.setIsIndoor(offering.getIsIndoor());
+                  return sport;
+                })
             .sorted(Comparator.comparing(SportInfo::getSportId))
             .toList());
     response.setOpeningIntervals(
         openingIntervalRepository.findByVenueId(venueId).stream()
-            .map(interval -> {
-              final OpeningIntervalInfo hours = new OpeningIntervalInfo();
-              hours.setDayOfWeek(interval.getDayOfWeek());
-              hours.setOpensAt(interval.getOpensAt());
-              hours.setClosesAt(interval.getClosesAt());
-              return hours;
-            })
-            .sorted(Comparator.comparing(OpeningIntervalInfo::getDayOfWeek)
-                .thenComparing(OpeningIntervalInfo::getOpensAt)
-                .thenComparing(OpeningIntervalInfo::getClosesAt))
+            .map(
+                interval -> {
+                  final OpeningIntervalInfo hours = new OpeningIntervalInfo();
+                  hours.setDayOfWeek(interval.getDayOfWeek());
+                  hours.setOpensAt(interval.getOpensAt());
+                  hours.setClosesAt(interval.getClosesAt());
+                  return hours;
+                })
+            .sorted(
+                Comparator.comparing(OpeningIntervalInfo::getDayOfWeek)
+                    .thenComparing(OpeningIntervalInfo::getOpensAt)
+                    .thenComparing(OpeningIntervalInfo::getClosesAt))
             .toList());
-    response.setCrowdStatus(crowdReportService.getCrowdStatus(venueId, null));
+    // response.setCrowdStatus(crowdReportService.getCrowdStatus(venueId, null));
     return response;
   }
 
