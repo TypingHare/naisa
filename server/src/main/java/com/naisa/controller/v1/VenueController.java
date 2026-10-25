@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Request objects define accepted input, while response objects expose only information intended
  * for API consumers. Business rules and persistence are delegated to the service layer.
  *
- * @author Vincent Lai, Andrew Hsu, Codex
+ * @author Vincent Lai, Codex, Andrew Hsu, Codex
  */
 @RestController
 @RequestMapping("/v1/venues")
@@ -57,7 +57,7 @@ public class VenueController {
    * @param venueService service responsible for venue searches, creation, and reviews
    * @param crowdReportService service responsible for crowd reports
    * @param venueComparisonService service responsible for venue comparison
-   * @author Vincent Lai, Emily Wang, Codex, Claude Code
+   * @author Vincent Lai, Codex, Emily Wang, Codex, Claude Code, Andrew Hsu, Codex
    */
   public VenueController(
       final VenueService venueService,
@@ -69,7 +69,7 @@ public class VenueController {
   }
 
   /**
-   * Returns a venue's location, offered sports, weekly opening intervals, and crowd status.
+   * Returns a venue's location, offered sports, and weekly opening intervals.
    *
    * @param venueId identifier taken from the request path
    * @return HTTP 200 with the venue details inside a capsule
@@ -82,6 +82,46 @@ public class VenueController {
       @PathVariable("venueId") final Long venueId) {
     final VenueInfoResponse result = venueService.getVenueInfo(venueId);
     return ResponseEntity.ok(new Capsule<>("Venue information retrieved.", result));
+  }
+
+  /**
+   * Finds open venues within the requested distance and hourly budget for one origin or a group.
+   *
+   * <p>Query parameters supply either latitude and longitude or indexed member locations.
+   * Both forms use the same service method and return results sorted by average member distance.
+   *
+   * @param request validated search query parameters
+   * @return HTTP 200 with matching venues, or an empty list when none match
+   * @throws VenueException if the requested time is in the past or the sport does not exist
+   * @author Andrew Hsu, Codex
+   */
+  @AuthorizationRequired
+  @GetMapping
+  public ResponseEntity<Capsule<List<FindVenueResponse>>> findVenues(
+      @Valid @ModelAttribute final FindVenuesRequest request) {
+    final List<FindVenueResponse> results = venueService.findVenues(request);
+    final String message =
+        results.isEmpty() ? "No venues match the search parameters." : "Venues found.";
+    return ResponseEntity.ok(new Capsule<>(message, results));
+  }
+
+  /**
+   * Finds venue alternatives using only the changes permitted by the client.
+   *
+   * @param request validated search query parameters and permitted changes
+   * @return HTTP 200 with alternatives, or an empty list when none match
+   * @throws VenueException if the original time is in the past, the sport does not exist, or no
+   *     venue offers the sport within the permitted radius
+   * @author Andrew Hsu, Codex
+   */
+  @AuthorizationRequired
+  @GetMapping("/alternatives")
+  public ResponseEntity<Capsule<List<FindAlternativeResponse>>> findAlternatives(
+      @Valid @ModelAttribute final FindAlternativesRequest request) {
+    final List<FindAlternativeResponse> results = venueService.findAlternatives(request);
+    final String message =
+        results.isEmpty() ? "No alternatives match the permitted changes." : "Alternatives found.";
+    return ResponseEntity.ok(new Capsule<>(message, results));
   }
 
   /**

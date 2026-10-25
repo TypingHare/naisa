@@ -9,7 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Describes a venue's location, offered sports, weekly opening intervals, and crowd status.
+ * Describes a venue's location, offered sports, and weekly opening intervals.
  *
  * @author Andrew Hsu, Codex
  */
@@ -25,7 +25,6 @@ public class VenueInfoResponse {
   private String timezone;
   private List<SportInfo> sports = List.of();
   private List<OpeningIntervalInfo> openingIntervals = List.of();
-  private CrowdStatusResponse crowdStatus;
 
   /**
    * Describes a sport offered at this venue, with its hourly price in dollars and indoor status.
