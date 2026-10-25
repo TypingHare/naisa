@@ -1,30 +1,56 @@
 ### Venue APIs
 
-This document describes the API contracts for Operations 1, 4, 5, 6, and 7. All
+This document describes the API contracts for Operations 1, 2, 3, 5, 6, and 7. All
 endpoints require authorization and use the standard `Capsule` response format.
 See [architecture.md](./architecture.md) for details.
 
-### Operation 1: Find Venues
+### Operations 1 and 3: Find Venues
 
-`GET /v1/venues/`
+`GET /v1/venues`
 
-This endpoint finds venues within the request parameters.
+This endpoint finds open venues for one person or a group. Both searches use
+query parameters and return the same response format.
 
 #### Request
 
 The following query parameters are required:
 
-- `latitude`: The user's latitude, between -90 and 90
-- `longitude`: The user's longitude, between -180 and 180
-- `sportID`: The ID of the requested sport
+- `sportId`: The ID of the requested sport
 - `date`: The desired date in YYYY-MM-DD format, for example 2026-10-23.
-- `time`: The desired time in 24-hour HH:mm format, from 00:00 to 23:59.
-- `maxDistance`: Confine the search within maxDistance radius around the
-  latitude and longitude.
+- `time`: The desired time on a 24-hour clock. Accept HH:mm, HH:mm:ss, or
+  HH:mm:ss with 1–9 fractional second digits. Examples: 14:30, 14:30:45, and
+  14:30:45.123. Hours range from 00 to 23. Time-zone offsets are not accepted.
+- `maxDistance`: Maximum distance in kilometers from the search center. This
+  parameter is required for both single-member and group searches.
+
+Supply locations in exactly one of these forms:
+
+- A single `latitude` between -90 and 90 and `longitude` between -180 and 180.
+- An indexed list of 1 to 10 locations. Each index requires
+  `locations[i].latitude` between -90 and 90 and `locations[i].longitude`
+  between -180 and 180. Start at index 0 and use consecutive indices.
+
+Do not mix a single coordinate pair with indexed locations. A one-member list
+has the same meaning as a single coordinate pair. Input order identifies the
+members in the response.
 
 The following query parameter is optional:
 
 - `budget`: Hourly budget for hourly venue rental costs. Defaults to 0.
+
+#### Request Examples
+
+Single origin:
+
+```http
+GET /v1/venues?latitude=40.81&longitude=-73.96&sportId=1&date=2026-11-01&time=18:30&maxDistance=2&budget=20
+```
+
+Two members (square brackets must be URL-encoded when required by the client):
+
+```http
+GET /v1/venues?locations[0].latitude=40.81&locations[0].longitude=-73.96&locations[1].latitude=40.82&locations[1].longitude=-73.95&sportId=1&date=2026-11-01&time=18:30&maxDistance=2&budget=20
+```
 
 #### Response
 
@@ -38,6 +64,8 @@ HTTP 200:
             "venueId": 1,
             "name": "Venue A",
             "distanceKm": 0.5,
+            "averageDistanceKm": 0.5,
+            "memberDistancesKm": [0.5],
             "hourlyPrice": 20.0,
             "isIndoor": true,
             "available": true
@@ -46,10 +74,17 @@ HTTP 200:
 }
 ```
 
-Each result contains the venue ID, venue name, distance from the search origin
-in kilometers, hourly price in dollars, indoor status for the requested sport,
-and availability at the requested date and time. Results sorted by distance
-ascending.
+Each result contains the venue ID, name, hourly price in dollars, indoor status
+for the requested sport, and availability at the requested date and time.
+
+- `distanceKm` is the distance from the search center to the venue.
+- `memberDistancesKm` contains each member's distance to the venue in input order.
+- `averageDistanceKm` is the arithmetic average of the member distances.
+
+All distances are in kilometers. With one member, `distanceKm`,
+`averageDistanceKm`, and the single member distance are equal. Sort results by
+`averageDistanceKm` ascending, then by venue ID ascending. Every returned venue
+is open, so `available` is always `true`.
 
 If no venues match, return HTTP 200 with an empty list:
 
@@ -63,16 +98,23 @@ If no venues match, return HTTP 200 with an empty list:
 #### Behaviors
 
 Validate the search parameters and check that the requested sport exists. The
-sport ID must be a positive integer. Coordinates must be within their specified
-ranges. `maxDistance` and `budget` must be finite and nonnegative. Since all
-venues are in New York City, we interpret the requested date and time in
+sport ID must be a positive integer. Require one complete coordinate pair or
+1 to 10 complete indexed locations, with no mixture of the two forms.
+Coordinates must be within their specified ranges. `maxDistance` and `budget`
+must be finite and nonnegative. Since all venues are in New York City, we interpret the requested date and time in
 `America/New_York`. Reject the request with HTTP 400 and
 `request.validation_failed` if its combined date and time is earlier than the
 current date and time. This includes an earlier time today.
 
-Select venues that offer the requested sport. Calculate direct geographic
-distance from the supplied coordinates with the Haversine formula. Include
-venues whose distance is less than or equal to `maxDistance`.
+Calculate the search center as the arithmetic average of the member latitudes
+and the arithmetic average of the member longitudes. For one member, the center
+is that member's location.
+
+Select venues that offer the requested sport. Use the Haversine formula to
+calculate direct geographic distances from the center and from each member to
+each venue. Include venues whose center-to-venue distance is less than or equal
+to `maxDistance`. The radius does not limit each member's distance or the average
+member distance.
 
 Use the stored price for the requested sport as `hourlyPrice`. Include venues
 whose hourly price is less than or equal to `budget`. If `budget` is omitted,
@@ -108,9 +150,10 @@ Return an empty list when no venues satisfy all filters. Do not call
 | 401    | `client.invalid_api_key`                     | Unknown API key               |
 | 404    | `sport.not_found`                            | Sport does not exist          |
 
-Example invalid parameters: invalid dates, times outside the 24-hour HH:mm
-format, a requested date and time in the past, out-of-range coordinates,
-nonpositive sport IDs, and negative or nonfinite distance or budget values.
+Example invalid parameters: invalid dates, times outside the accepted 24-hour
+formats, a requested date and time in the past, out-of-range coordinates,
+nonpositive sport IDs, negative or nonfinite distance or budget values, missing
+location coordinates, more than 10 members, and mixed location forms.
 
 #### Deferred Behavior/Edge Case
 
@@ -119,22 +162,37 @@ nonpositive sport IDs, and negative or nonfinite distance or budget values.
     - Current behavior: no warning
     - Design decisions: warning threshold and response decision
 
-### Operation 4: Get Venue Info
+### Operation 2: Find Alternatives
 
-`GET /v1/venues/{venueId}`
+`GET /v1/venues/alternatives`
 
-This endpoint returns the stored details of one venue, including its location,
-offered sports, weekly opening intervals, and current venue-wide crowd status.
+This endpoint suggests venues by changing only the search values permitted by
+the client. Operation 1 continues to return an empty list when no venues match;
+it does not call this endpoint automatically.
 
 #### Request
 
-Supply one numeric venue ID in the path. The value must fit a signed 64-bit
-integer. No query parameters or request body are required.
+Use the same search query parameters, formats, and validation rules as
+operation 1:
+
+- Required: `latitude`, `longitude`, `sportId`, `date`, `time`, and
+  `maxDistance`.
+- Optional: `budget`, which defaults to 0 dollars per hour.
+
+The additional required query parameter is:
+
+- `allowedChanges`: A nonempty, comma-separated set of `DATE`, `TIME`,
+  `MAX_DISTANCE`, or `BUDGET`. Values are case-sensitive. Repeated values
+  represent the same permission. Values not listed must remain unchanged.
+
+The original requested date and time must not be in the past in
+`America/New_York`. Seconds and fractional seconds are accepted, as in
+operation 1.
 
 Example:
 
 ```http
-GET /v1/venues/1
+GET /v1/venues/alternatives?latitude=40.81&longitude=-73.96&sportId=1&date=2026-11-01&time=18:30&maxDistance=2&budget=10&allowedChanges=TIME,MAX_DISTANCE
 ```
 
 #### Response
@@ -143,79 +201,100 @@ HTTP 200:
 
 ```json
 {
-    "message": "Venue information retrieved.",
-    "data": {
-        "venueId": 1,
-        "name": "Venue A",
-        "address": "123 Example Street, New York, NY",
-        "latitude": 40.81,
-        "longitude": -73.96,
-        "timezone": "America/New_York",
-        "sports": [
-            {
-                "sportId": 1,
-                "name": "Basketball",
-                "hourlyPrice": 20.00,
-                "isIndoor": true
-            }
-        ],
-        "openingIntervals": [
-            {
-                "dayOfWeek": "MONDAY",
-                "opensAt": "09:00:00",
-                "closesAt": "21:00:00"
-            }
-        ],
-        "crowdStatus": {
-            "venueId": 1,
-            "crowdLevel": "BUSY",
-            "reportCount": 3,
-            "latestReportAt": "2026-10-24T14:30:00Z",
-            "source": "LIVE"
+    "message": "Alternatives found.",
+    "data": [
+        {
+            "venue": {
+                "venueId": 1,
+                "name": "Venue A",
+                "distanceKm": 3.5,
+                "hourlyPrice": 8.00,
+                "isIndoor": true,
+                "available": true
+            },
+            "date": "2026-11-01",
+            "time": "19:30:00",
+            "maxDistance": 3.5,
+            "budget": 10.00
         }
-    }
+    ]
 }
 ```
 
-The response contains one venue object. Coordinates are in degrees. Each sport
-entry contains its ID, name, hourly price in dollars, and indoor status at this
-venue. Sort sports by sport ID ascending.
+Each entry contains the existing operation 1 venue result under `venue`, plus
+its suggested date, time, radius, and hourly budget. A venue may appear more
+than once with different dates or times. Return at most 10 entries.
 
-Opening intervals apply to the whole venue. Return weekday names in uppercase,
-from `MONDAY` through `SUNDAY`, and local times in ISO format. Interpret these
-times in the returned `timezone`. Sort intervals by weekday, Monday first,
-then by opening time and closing time ascending.
+If nearby offerings exist but no permitted alternative qualifies, return
+HTTP 200:
+
+```json
+{
+    "message": "No alternatives match the permitted changes.",
+    "data": []
+}
+```
 
 #### Behaviors
 
-Look up the venue by its ID. Return HTTP 404 with `venue.not_found` when the
-venue does not exist. Names are not unique and are not lookup identifiers for
-this endpoint.
+Apply each of the following rules only when its constraint is listed in
+`allowedChanges`:
 
-Return all offered sports and all weekly opening intervals. A venue can be
-retrieved even when it is closed. If it has no sports or opening intervals,
-return HTTP 200 with `sports: []` or `openingIntervals: []`, respectively.
+- `DATE`: Check up to 3 calendar days before or after the requested date,
+  including the requested date.
+- `TIME`: Check the requested time and offsets of -2, -1, +1, and +2 hours
+  on each permitted date. Preserve minutes, seconds, and fractional seconds.
+- `MAX_DISTANCE`: Permit up to 5 additional kilometers beyond the original
+  radius.
+- `BUDGET`: Permit up to 20 additional dollars per hour beyond the original
+  hourly budget.
 
-Include the opening time and exclude the closing time when interpreting an
-interval. A closing time earlier than the opening time is on the next day.
-Equal opening and closing times represent 24 hours from the stated opening
-time. Preserve multiple intervals on the same weekday.
+Discard all suggested dates and times that are in the past. Time changes may
+cross midnight only if `DATE` is also permitted and the resulting date stays
+within the 3-day limit. Apply operation 1's opening-hour rules, including
+opening and closing boundaries, overnight intervals, and 24-hour intervals.
 
-`crowdStatus` contains the venue-wide result defined in Operation 7. Use the
-same two-hour report window, reporter selection, and tie rules. With no recent
-reports, return `crowdLevel: null`, `reportCount: 0`, `latestReportAt: null`,
-and `source: "UNKNOWN"`. Crowd status is returned even when the venue has no
-sports or opening intervals.
+Keep the original radius and budget unless an increase is necessary. When an
+increase is needed, suggest only the calculated venue distance or stored
+hourly price required to include that venue, within the permitted limits.
+
+Include venues that satisfy the original request without changes. Remove
+duplicate venue/date/time combinations. Sort by:
+
+1. Number of changed constraints, fewest first.
+2. Absolute difference from the original requested date and time, smallest
+   first.
+3. Suggested date and time, earlier first.
+4. Distance, shortest first.
+5. Hourly price, lowest first.
+6. Venue ID, lowest first.
+
+Count actual changes rather than the number of permissions. Return the first
+10 entries after sorting.
+
+Determine whether a nearby offering exists before applying budget and
+opening-hour filters. If no offering for the sport is within the permitted
+radius, return the no-nearby-venues error. If a nearby offering exists but no
+alternative passes the remaining filters, return an empty list.
 
 #### Errors
 
-| Status | `errorCode`                                  | When                              |
-| ------ | -------------------------------------------- | --------------------------------- |
-| 400    | `request.invalid_parameter`                  | Venue ID is not a 64-bit integer  |
-| 401    | `authorization.no_api_key_provided`          | Missing authorization header      |
-| 401    | `authorization.invalid_authorization_header` | Invalid Bearer header             |
-| 401    | `client.invalid_api_key`                     | Unknown API key                   |
-| 404    | `venue.not_found`                            | Venue does not exist              |
+| Status | `errorCode`                                  | When                                 |
+| ------ | -------------------------------------------- | ------------------------------------ |
+| 400    | `request.validation_failed`                  | Missing or invalid parameters        |
+| 401    | `authorization.no_api_key_provided`          | Missing authorization header         |
+| 401    | `authorization.invalid_authorization_header` | Invalid Bearer header                |
+| 401    | `client.invalid_api_key`                     | Unknown API key                      |
+| 404    | `sport.not_found`                            | Sport does not exist                 |
+| 404    | `venue.no_nearby_venues`                      | No sport offering within the radius  |
+
+Invalid parameters include an empty or unknown `allowedChanges` value and the
+invalid search values listed for operation 1. A past original date and time
+is rejected even when `DATE` or `TIME` changes are permitted.
+
+The `venue.no_nearby_venues` message is:
+
+> There are no venues for this sport nearby
 
 ### Operation 5: Compare Venues
 

@@ -1,52 +1,75 @@
 package com.naisa.service;
 
+import com.naisa.common.VenueDistance;
 import com.naisa.exception.VenueException;
 import com.naisa.model.dto.AddVenueRequest;
+import com.naisa.model.dto.FindAlternativesRequest;
+import com.naisa.model.dto.FindVenuesRequest;
+import com.naisa.model.dto.GroupMemberLocation;
 import com.naisa.model.dto.RateVenueRequest;
+import com.naisa.model.dto.SearchConstraint;
 import com.naisa.model.entity.Client;
+import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Review;
 import com.naisa.model.entity.Sport;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
+import com.naisa.model.vo.FindAlternativeResponse;
+import com.naisa.model.vo.FindVenueResponse;
 import com.naisa.model.vo.ResourceIdResponse;
-import com.naisa.model.vo.VenueInfoResponse;
-import com.naisa.model.vo.VenueInfoResponse.OpeningIntervalInfo;
-import com.naisa.model.vo.VenueInfoResponse.SportInfo;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.ReviewRepository;
+import com.naisa.repository.SportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Coordinates venue information, creation, and user reviews through table-specific repositories.
+ * Coordinates venue searches, creation, and user reviews through table-specific repositories.
  *
  * <p>For submissions, callers supply an authenticated client and a validated request. The
  * service checks business rules, records client-scoped user identities, and controls transaction
  * boundaries. External user accounts are managed by the calling clients.
  *
- * @author Vincent Lai, Andrew Hsu, Codex
+ * @author Vincent Lai, Codex, Andrew Hsu, Codex
  */
 @Service
 public class VenueService {
+  private static final ZoneId SEARCH_TIMEZONE = ZoneId.of("America/New_York");
+  private static final int ALTERNATIVE_DATE_WINDOW_DAYS = 3;
+  private static final int ALTERNATIVE_TIME_WINDOW_HOURS = 2;
+  private static final BigDecimal ALTERNATIVE_DISTANCE_INCREASE_KM = BigDecimal.valueOf(5);
+  private static final BigDecimal ALTERNATIVE_BUDGET_INCREASE = BigDecimal.valueOf(20);
+  private static final int ALTERNATIVE_RESULT_LIMIT = 10;
+
   private final VenueRepository venueRepository;
   private final VenueSportRepository venueSportRepository;
   private final ReviewRepository reviewRepository;
+  private final SportRepository sportRepository;
   private final OpeningIntervalRepository openingIntervalRepository;
-  private final CrowdReportService crowdReportService;
 
   /**
-   * Creates the service with the repositories required for venue details and submissions.
+   * Creates the service with the repositories required for venue searches and submissions.
    *
    * @param venueRepository repository for venue records
    * @param venueSportRepository repository for sports offered at venues
    * @param reviewRepository repository for user ratings and comments
-   * @param openingIntervalRepository repository for weekly venue opening intervals
-   * @param crowdReportService service for the current venue-wide crowd status
+   * @param sportRepository repository for registered sports
+   * @param openingIntervalRepository repository for venue opening hours
    * @author Vincent Lai, Codex, Andrew Hsu, Codex
    */
   public VenueService(
@@ -205,5 +228,23 @@ public class VenueService {
 
     final Review savedReview = reviewRepository.saveAndFlush(review);
     return new ResourceIdResponse(savedReview.getId());
+  }
+
+  /**
+   * Gets a sport instance by a venue ID and a sport ID.
+   *
+   * <p>If the sport isn't offered by the Venue, it throws {@code VenueException.SPORT_NOT_OFFERED}.
+   *
+   * @param venueId the ID of the venue to search for
+   * @param sportId the ID of the sport to search for
+   * @return the sport instance that matches both given IDs; result must not be {@code null}
+   * @author James Chen.
+   */
+  public Sport getVenueSport(final Long venueId, final Long sportId) {
+    final VenueSport venueSport =
+        venueSportRepository
+            .findByVenueIdAndSportId(venueId, sportId)
+            .orElseThrow(VenueException.SPORT_NOT_OFFERED::clone);
+    return venueSport.getSport();
   }
 }

@@ -5,11 +5,15 @@ import com.naisa.common.annotation.AuthorizationRequired;
 import com.naisa.exception.VenueException;
 import com.naisa.interceptor.AuthorizationInterceptor;
 import com.naisa.model.dto.AddVenueRequest;
+import com.naisa.model.dto.FindAlternativesRequest;
+import com.naisa.model.dto.FindVenuesRequest;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.dto.ReportCrowdRequest;
 import com.naisa.model.dto.VenueComparisonRequest;
 import com.naisa.model.entity.Client;
 import com.naisa.model.vo.CrowdStatusResponse;
+import com.naisa.model.vo.FindAlternativeResponse;
+import com.naisa.model.vo.FindVenueResponse;
 import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.model.vo.ResourceIdResponse;
 import com.naisa.model.vo.VenueComparisonResponse;
@@ -18,6 +22,7 @@ import com.naisa.service.CrowdReportService;
 import com.naisa.service.VenueComparisonService;
 import com.naisa.service.VenueService;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,7 +54,7 @@ public class VenueController {
   /**
    * Creates the controller with its services.
    *
-   * @param venueService service responsible for venue creation and reviews
+   * @param venueService service responsible for venue searches, creation, and reviews
    * @param crowdReportService service responsible for crowd reports
    * @param venueComparisonService service responsible for venue comparison
    * @author Vincent Lai, Emily Wang, Codex, Claude Code

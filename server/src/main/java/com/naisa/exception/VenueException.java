@@ -3,14 +3,28 @@ package com.naisa.exception;
 import org.springframework.http.HttpStatus;
 
 /**
- * Describes business-rule failures encountered when creating or reviewing venues.
+ * Describes business-rule failures encountered when searching, creating, or reviewing venues.
  *
  * <p>The static instances define reusable error descriptions. Callers must throw a fresh copy using
  * {@link #clone()} or {@link #causedBy(Throwable)} rather than throwing a shared instance.
  *
- * @author Vincent Lai, Codex, Emily Wang, Codex
+ * @author Vincent Lai, Codex, Emily Wang, Codex, Andrew Hsu, Codex
  */
 public final class VenueException extends ServiceException {
+  public static final VenueException REQUEST_IN_PAST =
+      new VenueException(
+          "request.validation_failed",
+          "The requested date and time must not be in the past in America/New_York.",
+          HttpStatus.BAD_REQUEST,
+          null);
+
+  public static final VenueException NO_NEARBY_VENUES =
+      new VenueException(
+          "venue.no_nearby_venues",
+          "There are no venues for this sport nearby",
+          HttpStatus.NOT_FOUND,
+          null);
+
   public static final VenueException NOT_FOUND =
       new VenueException(
           "venue.not_found",
