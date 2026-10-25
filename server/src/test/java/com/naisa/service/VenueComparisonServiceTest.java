@@ -24,6 +24,7 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -102,26 +103,24 @@ class VenueComparisonServiceTest {
     when(crowdReportService.getCrowdStatus(id, SPORT_ID)).thenReturn(status);
   }
 
-  /** Creates an opening interval that lasts the whole given day. */
-  private static OpeningInterval allDay(final DayOfWeek day) {
-    final OpeningInterval interval = new OpeningInterval();
-    interval.setDayOfWeek(day);
-    interval.setOpensAt(LocalTime.MIN);
-    interval.setClosesAt(LocalTime.MAX);
-    return interval;
-  }
-
-  /**
-   * Creates an overnight interval, which closes on the next day because the closing time is earlier
-   * than the opening time.
-   */
-  private static OpeningInterval overnight(
+  /** Creates an opening interval on the given day. */
+  private static OpeningInterval interval(
       final DayOfWeek day, final LocalTime opensAt, final LocalTime closesAt) {
     final OpeningInterval interval = new OpeningInterval();
     interval.setDayOfWeek(day);
     interval.setOpensAt(opensAt);
     interval.setClosesAt(closesAt);
     return interval;
+  }
+
+  /** Creates the same opening interval on every day of the week. */
+  private static List<OpeningInterval> everyDay(final LocalTime opensAt, final LocalTime closesAt) {
+    return Arrays.stream(DayOfWeek.values()).map(day -> interval(day, opensAt, closesAt)).toList();
+  }
+
+  /** Returns a fixed UTC time on Tuesday, 2026-10-27. */
+  private static ZonedDateTime tuesdayAt(final int hour, final int minute) {
+    return ZonedDateTime.of(2026, 10, 27, hour, minute, 0, 0, ZoneOffset.UTC);
   }
 
   /** Tests for sorting and the nearest and cheapest venues. */
@@ -206,7 +205,7 @@ class VenueComparisonServiceTest {
     }
   }
 
-  /** Tests for the opening status. */
+  /** Tests for the opening status in the comparison result. */
   @Nested
   @DisplayName("opening status")
   class OpeningStatus {
@@ -218,9 +217,10 @@ class VenueComparisonServiceTest {
     @Test
     @DisplayName("reports open, closed, and unknown opening status")
     void reportsOpeningStatus() {
-      final DayOfWeek today = ZonedDateTime.now(ZoneOffset.UTC).getDayOfWeek();
-      mockVenue(1L, 40.01, "10.00", null, List.of(allDay(today)));
-      mockVenue(2L, 40.02, "10.00", null, List.of(allDay(today.plus(2))));
+      // Venue 1 is open all day, every day, and venue 2 is never open (it opens and closes at the
+      // same time), so the result does not depend on when the test runs.
+      mockVenue(1L, 40.01, "10.00", null, everyDay(LocalTime.MIN, LocalTime.MAX));
+      mockVenue(2L, 40.02, "10.00", null, everyDay(LocalTime.NOON, LocalTime.NOON));
       mockVenue(3L, 40.03, "10.00", null, List.of());
 
       final List<VenueComparisonItem> venues =
@@ -230,30 +230,50 @@ class VenueComparisonServiceTest {
       assertFalse(venues.get(1).getOpenNow());
       assertNull(venues.get(2).getOpenNow());
     }
+  }
+
+  /**
+   * Tests for {@link VenueComparisonService#isOpenAt} with fixed times, so that the results do not
+   * depend on the real clock.
+   */
+  @Nested
+  @DisplayName("isOpenAt")
+  class IsOpenAt {
+    private final List<OpeningInterval> daytime =
+        List.of(interval(DayOfWeek.TUESDAY, LocalTime.of(9, 0), LocalTime.of(17, 0)));
+    private final List<OpeningInterval> mondayNight =
+        List.of(interval(DayOfWeek.MONDAY, LocalTime.of(22, 0), LocalTime.of(2, 0)));
+    private final List<OpeningInterval> tuesdayNight =
+        List.of(interval(DayOfWeek.TUESDAY, LocalTime.of(22, 0), LocalTime.of(2, 0)));
 
     @Test
-    @DisplayName("handles intervals that close after midnight")
-    void handlesOvernightIntervals() {
-      final DayOfWeek today = ZonedDateTime.now(ZoneOffset.UTC).getDayOfWeek();
-      // Opened yesterday just before midnight and is still open today.
-      final OpeningInterval fromYesterday =
-          overnight(today.minus(1), LocalTime.of(23, 59, 59), LocalTime.of(23, 59, 58));
-      // Opened today just after midnight and closes tomorrow.
-      final OpeningInterval fromToday =
-          overnight(today, LocalTime.of(0, 0, 2), LocalTime.of(0, 0, 1));
-      // Same hours, but on a day that is neither today nor yesterday.
-      final OpeningInterval otherDay =
-          overnight(today.plus(2), LocalTime.of(0, 0, 2), LocalTime.of(0, 0, 1));
-      mockVenue(1L, 40.01, "10.00", null, List.of(fromYesterday));
-      mockVenue(2L, 40.02, "10.00", null, List.of(fromToday));
-      mockVenue(3L, 40.03, "10.00", null, List.of(otherDay));
+    @DisplayName("includes the opening time and excludes the closing time")
+    void checksDaytimeBoundaries() {
+      assertFalse(VenueComparisonService.isOpenAt(daytime, tuesdayAt(8, 59)));
+      assertTrue(VenueComparisonService.isOpenAt(daytime, tuesdayAt(9, 0)));
+      assertTrue(VenueComparisonService.isOpenAt(daytime, tuesdayAt(16, 59)));
+      assertFalse(VenueComparisonService.isOpenAt(daytime, tuesdayAt(17, 0)));
+    }
 
-      final List<VenueComparisonItem> venues =
-          venueComparisonService.compare(request(1L, 2L, 3L)).getVenues();
+    @Test
+    @DisplayName("keeps an overnight interval open after midnight")
+    void checksOvernightAfterMidnight() {
+      assertTrue(VenueComparisonService.isOpenAt(mondayNight, tuesdayAt(1, 59)));
+      assertFalse(VenueComparisonService.isOpenAt(mondayNight, tuesdayAt(2, 0)));
+    }
 
-      assertTrue(venues.get(0).getOpenNow());
-      assertTrue(venues.get(1).getOpenNow());
-      assertFalse(venues.get(2).getOpenNow());
+    @Test
+    @DisplayName("opens an overnight interval on its own day")
+    void checksOvernightBeforeMidnight() {
+      assertFalse(VenueComparisonService.isOpenAt(tuesdayNight, tuesdayAt(21, 59)));
+      assertTrue(VenueComparisonService.isOpenAt(tuesdayNight, tuesdayAt(22, 0)));
+    }
+
+    @Test
+    @DisplayName("ignores intervals on other days")
+    void ignoresOtherDays() {
+      assertFalse(VenueComparisonService.isOpenAt(daytime, tuesdayAt(12, 0).plusDays(1)));
+      assertFalse(VenueComparisonService.isOpenAt(mondayNight, tuesdayAt(1, 0).plusDays(1)));
     }
   }
 
