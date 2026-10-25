@@ -14,10 +14,23 @@ import org.springframework.stereotype.Repository;
  * <p>A venue-sport record establishes that a sport is supported at a location and stores the
  * attributes of that offering.
  *
- * @author Vincent Lai, Codex, Andrew Hsu, Codex
+ * @author Vincent Lai, Andrew Hsu, Codex
  */
 @Repository
 public interface VenueSportRepository extends JpaRepository<VenueSport, Long> {
+  /**
+   * Finds all sports offered at a venue, with the associated sport records loaded.
+   *
+   * <p>An empty list means the venue has no recorded offerings. This query does not check
+   * whether the venue itself exists.
+   *
+   * @param venueId identifier of the venue
+   * @return offerings with their sport names, prices, and indoor status
+   * @author Andrew Hsu, Codex
+   */
+  @EntityGraph(attributePaths = "sport")
+  List<VenueSport> findByVenueId(Long venueId);
+
   /**
    * Finds the offering that connects a venue to a sport.
    *

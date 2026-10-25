@@ -17,6 +17,7 @@ import com.naisa.model.vo.FindVenueResponse;
 import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.model.vo.ResourceIdResponse;
 import com.naisa.model.vo.VenueComparisonResponse;
+import com.naisa.model.vo.VenueInfoResponse;
 import com.naisa.service.CrowdReportService;
 import com.naisa.service.VenueComparisonService;
 import com.naisa.service.VenueService;
@@ -65,6 +66,22 @@ public class VenueController {
     this.venueService = venueService;
     this.crowdReportService = crowdReportService;
     this.venueComparisonService = venueComparisonService;
+  }
+
+  /**
+   * Returns a venue's location, offered sports, and weekly opening intervals.
+   *
+   * @param venueId identifier taken from the request path
+   * @return HTTP 200 with the venue details inside a capsule
+   * @throws VenueException if the venue does not exist
+   * @author Andrew Hsu, Codex
+   */
+  @AuthorizationRequired
+  @GetMapping("/{venueId}")
+  public ResponseEntity<Capsule<VenueInfoResponse>> getVenueInfo(
+      @PathVariable("venueId") final Long venueId) {
+    final VenueInfoResponse result = venueService.getVenueInfo(venueId);
+    return ResponseEntity.ok(new Capsule<>("Venue information retrieved.", result));
   }
 
   /**
