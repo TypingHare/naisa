@@ -1,0 +1,362 @@
+{
+  "info": {
+    "name": "NAISA Venue Operations 5-7",
+    "description": "API tests for Compare Venues (Op 5), Report Venue Status (Op 6), and Get Venue Status (Op 7).\n\nBefore running: start the service and run server/api-tests/seed.sql once against its database. Then run the whole collection in order (Postman Collection Runner or Newman).\n\nAuthor: Emily Wang, Claude Code",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Setup",
+      "item": [
+        {
+          "name": "Issue an API key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "const result = pm.response.json().data;",
+                  "pm.test(\"Returns an API key\", () => pm.expect(result.apiKey).to.be.a(\"string\"));",
+                  "pm.collectionVariables.set(\"apiKey\", result.apiKey);"
+                ]
+              }
+            }
+          ],
+          "request": {"method": "POST", "header": [], "url": "{{baseUrl}}/v1/clients"}
+        },
+        {
+          "name": "Create a fresh venue for crowd tests",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "const result = pm.response.json().data;",
+                  "pm.test(\"Returns the venue ID\", () => pm.expect(result.id).to.be.a(\"number\"));",
+                  "pm.collectionVariables.set(\"freshVenueId\", result.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{apiKey}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"API Test Fresh Venue\", \"address\": \"4 Test St, New York, NY 10027\", \"latitude\": 40.8, \"longitude\": -73.96, \"timezone\": \"America/New_York\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Op 6 - Report Venue Status",
+      "item": [
+        {
+          "name": "Report EMPTY from user u1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "const result = pm.response.json().data;",
+                  "pm.test(\"Returns the saved report\", () => {",
+                  "  pm.expect(result.reportId).to.be.a(\"number\");",
+                  "  pm.expect(result.crowdLevel).to.eql(\"EMPTY\");",
+                  "  pm.expect(result.createdAt).to.be.a(\"string\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{apiKey}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{freshVenueId}}/crowd-reports",
+            "body": {"mode": "raw", "raw": "{\"externalUserId\": \"u1\", \"crowdLevel\": \"EMPTY\"}"}
+          }
+        },
+        {
+          "name": "Report PACKED from user u1 again",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Creates a new report instead of updating\", () => pm.expect(pm.response.json().data.crowdLevel).to.eql(\"PACKED\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{apiKey}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{freshVenueId}}/crowd-reports",
+            "body": {"mode": "raw", "raw": "{\"externalUserId\": \"u1\", \"crowdLevel\": \"PACKED\"}"}
+          }
+        },
+        {
+          "name": "Report BUSY from user u2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {"exec": ["pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{apiKey}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{freshVenueId}}/crowd-reports",
+            "body": {"mode": "raw", "raw": "{\"externalUserId\": \"u2\", \"crowdLevel\": \"BUSY\"}"}
+          }
+        },
+        {
+          "name": "Report LIGHT for basketball at venue 9001",
+          "event": [
+            {
+              "listen": "test",
+              "script": {"exec": ["pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{apiKey}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{baseUrl}}/v1/venues/9001/crowd-reports",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"externalUserId\": \"compare-user\", \"crowdLevel\": \"LIGHT\", \"sportId\": 9001}"
+            }
+          }
+        },
+        {
+          "name": "Report PACKED for the whole venue 9002",
+          "event": [
+            {
+              "listen": "test",
+              "script": {"exec": ["pm.test(\"Status is 201\", () => pm.response.to.have.status(201));"]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{apiKey}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{baseUrl}}/v1/venues/9002/crowd-reports",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"externalUserId\": \"fallback-user\", \"crowdLevel\": \"PACKED\"}"
+            }
+          }
+        },
+        {
+          "name": "Reject an invalid crowd level",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code is request.validation_failed\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{apiKey}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{freshVenueId}}/crowd-reports",
+            "body": {"mode": "raw", "raw": "{\"externalUserId\": \"u1\", \"crowdLevel\": \"FULL\"}"}
+          }
+        },
+        {
+          "name": "Reject an unknown venue",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error code is venue.not_found\", () => pm.expect(pm.response.json().errorCode).to.eql(\"venue.not_found\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{apiKey}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{baseUrl}}/v1/venues/999999/crowd-reports",
+            "body": {"mode": "raw", "raw": "{\"externalUserId\": \"u1\", \"crowdLevel\": \"BUSY\"}"}
+          }
+        },
+        {
+          "name": "Reject a request without an API key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Error code is authorization.no_api_key_provided\", () => pm.expect(pm.response.json().errorCode).to.eql(\"authorization.no_api_key_provided\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/v1/venues/{{freshVenueId}}/crowd-reports",
+            "body": {"mode": "raw", "raw": "{\"externalUserId\": \"u1\", \"crowdLevel\": \"BUSY\"}"}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Op 7 - Get Venue Status",
+      "item": [
+        {
+          "name": "Count only each user's latest report",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const result = pm.response.json().data;",
+                  "pm.test(\"Counts u1 once, using the latest report\", () => pm.expect(result.reportCount).to.eql(2));",
+                  "pm.test(\"Breaks the PACKED/BUSY tie with the most recent report\", () => pm.expect(result.crowdLevel).to.eql(\"BUSY\"));",
+                  "pm.test(\"Source is LIVE\", () => pm.expect(result.source).to.eql(\"LIVE\"));",
+                  "pm.test(\"Has the latest report time\", () => pm.expect(result.latestReportAt).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{apiKey}}"}],
+            "url": "{{baseUrl}}/v1/venues/{{freshVenueId}}/crowd-status"
+          }
+        },
+        {
+          "name": "Reject an unknown venue",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error code is venue.not_found\", () => pm.expect(pm.response.json().errorCode).to.eql(\"venue.not_found\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{apiKey}}"}],
+            "url": "{{baseUrl}}/v1/venues/999999/crowd-status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Op 5 - Compare Venues",
+      "item": [
+        {
+          "name": "Compare three venues",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const result = pm.response.json().data;",
+                  "pm.test(\"Sorts venues by distance\", () => pm.expect(result.venues.map(v => v.venueId)).to.eql([9001, 9002, 9003]));",
+                  "pm.test(\"Nearest venue is 9001\", () => pm.expect(result.nearestVenueId).to.eql(9001));",
+                  "pm.test(\"Cheapest venue is 9002\", () => pm.expect(result.cheapestVenueId).to.eql(9002));",
+                  "pm.test(\"Least crowded venue is 9001 (LIGHT beats PACKED)\", () => pm.expect(result.leastCrowdedVenueId).to.eql(9001));",
+                  "pm.test(\"Venue 9003 has no reports and an unknown crowd level\", () => pm.expect(result.venues[2].crowdLevel).to.be.null);",
+                  "pm.test(\"Venue 9001 is open now\", () => pm.expect(result.venues[0].openNow).to.eql(true));",
+                  "pm.test(\"Venue 9002 has no opening hours\", () => pm.expect(result.venues[1].openNow).to.be.null);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{apiKey}}"}],
+            "url": "{{baseUrl}}/v1/venues/comparison?venueIds=9001,9002,9003&sportId=9001&latitude=40.80&longitude=-73.96"
+          }
+        },
+        {
+          "name": "Reject duplicate venue IDs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code is request.validation_failed\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{apiKey}}"}],
+            "url": "{{baseUrl}}/v1/venues/comparison?venueIds=9001,9001&sportId=9001&latitude=40.80&longitude=-73.96"
+          }
+        },
+        {
+          "name": "Reject a sport a venue does not offer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code is venue.sport_not_offered\", () => pm.expect(pm.response.json().errorCode).to.eql(\"venue.sport_not_offered\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{apiKey}}"}],
+            "url": "{{baseUrl}}/v1/venues/comparison?venueIds=9001,9003&sportId=9002&latitude=40.80&longitude=-73.96"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {"key": "baseUrl", "value": "http://localhost:8080"},
+    {"key": "apiKey", "value": ""},
+    {"key": "freshVenueId", "value": ""}
+  ]
+}
