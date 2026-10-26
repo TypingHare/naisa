@@ -24,9 +24,7 @@ public class VenueComparisonRequest {
   @Size(min = 2, max = 5)
   private List<@NotNull @Positive Long> venueIds;
 
-  @NotNull
-  @Positive
-  private Long sportId;
+  @NotNull @Positive private Long sportId;
 
   @NotNull
   @DecimalMin("-90.0")

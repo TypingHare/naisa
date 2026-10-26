@@ -148,8 +148,7 @@ public class VenueComparisonService {
   }
 
   private Boolean isOpenNow(final Venue venue) {
-    final List<OpeningInterval> intervals =
-        openingIntervalRepository.findByVenueId(venue.getId());
+    final List<OpeningInterval> intervals = openingIntervalRepository.findByVenueId(venue.getId());
 
     if (intervals.isEmpty() || venue.getTimezone() == null) {
       return null;

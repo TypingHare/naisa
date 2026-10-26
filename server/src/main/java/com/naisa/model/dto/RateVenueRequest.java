@@ -18,8 +18,8 @@ import lombok.Setter;
  * sport offered at that venue. The external user identifier is scoped to the authenticated client.
  *
  * <p>Ratings must be whole numbers from one through five, and comments must contain non-whitespace
- * text. Ratings use {@link Short}, matching PostgreSQL's SMALLINT column. JSON decimal numbers
- * are rejected during deserialization so that fractional ratings cannot be silently truncated.
+ * text. Ratings use {@link Short}, matching PostgreSQL's SMALLINT column. JSON decimal numbers are
+ * rejected during deserialization so that fractional ratings cannot be silently truncated.
  *
  * @author Vincent Lai, Codex
  */
@@ -32,8 +32,7 @@ public class RateVenueRequest {
   @Size(max = 128)
   private String externalUserId;
 
-  @Positive
-  private Long sportId;
+  @Positive private Long sportId;
 
   @NotNull
   @Min(1)

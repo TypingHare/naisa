@@ -31,7 +31,8 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Verifies numeric request binding, validation, and persistence using the application's JSON mapper.
+ * Verifies numeric request binding, validation, and persistence using the application's JSON
+ * mapper.
  *
  * @author Vincent Lai, Codex
  */
@@ -50,8 +51,13 @@ class NumericRequestTest {
    */
   @Test
   void validatesDoubleCoordinates() {
-    final List<Object> requests = List.of(new AddVenueRequest(), new FindVenuesRequest(),
-        new FindAlternativesRequest(), new GroupMemberLocation(), new VenueComparisonRequest());
+    final List<Object> requests =
+        List.of(
+            new AddVenueRequest(),
+            new FindVenuesRequest(),
+            new FindAlternativesRequest(),
+            new GroupMemberLocation(),
+            new VenueComparisonRequest());
     for (final Object request : requests) {
       final BeanWrapper wrapper = new BeanWrapperImpl(request);
       for (final String property : List.of("latitude", "longitude")) {
@@ -60,9 +66,14 @@ class NumericRequestTest {
           wrapper.setPropertyValue(property, valid);
           assertTrue(validator.validateProperty(request, property).isEmpty());
         }
-        for (final double invalid : new double[] {
-            -limit - 0.1, limit + 0.1, Double.NaN,
-            Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY}) {
+        for (final double invalid :
+            new double[] {
+              -limit - 0.1,
+              limit + 0.1,
+              Double.NaN,
+              Double.NEGATIVE_INFINITY,
+              Double.POSITIVE_INFINITY
+            }) {
           wrapper.setPropertyValue(property, invalid);
           assertFalse(validator.validateProperty(request, property).isEmpty());
         }
@@ -79,8 +90,8 @@ class NumericRequestTest {
   @ParameterizedTest
   @ValueSource(ints = {1, 5})
   void acceptsWholeNumberRatings(final int rating) {
-    final RateVenueRequest request = jsonMapper.readValue(
-        "{\"rating\":" + rating + "}", RateVenueRequest.class);
+    final RateVenueRequest request =
+        jsonMapper.readValue("{\"rating\":" + rating + "}", RateVenueRequest.class);
     assertEquals(Short.valueOf((short) rating), request.getRating());
     assertTrue(validator.validateProperty(request, "rating").isEmpty());
   }
@@ -94,8 +105,9 @@ class NumericRequestTest {
   @ParameterizedTest
   @ValueSource(strings = {"4.5", "4.0", "32768", "-32769", "\"4.5\""})
   void rejectsInvalidRatingNumbers(final String rating) {
-    assertThrows(JacksonException.class, () -> jsonMapper.readValue(
-        "{\"rating\":" + rating + "}", RateVenueRequest.class));
+    assertThrows(
+        JacksonException.class,
+        () -> jsonMapper.readValue("{\"rating\":" + rating + "}", RateVenueRequest.class));
   }
 
   /**
@@ -107,13 +119,14 @@ class NumericRequestTest {
   @ParameterizedTest
   @ValueSource(strings = {"null", "0", "6"})
   void rejectsMissingOrOutOfRangeRatings(final String rating) {
-    final RateVenueRequest request = jsonMapper.readValue(
-        "{\"rating\":" + rating + "}", RateVenueRequest.class);
+    final RateVenueRequest request =
+        jsonMapper.readValue("{\"rating\":" + rating + "}", RateVenueRequest.class);
     assertFalse(validator.validateProperty(request, "rating").isEmpty());
   }
 
   /**
-   * Saves JSON coordinates and a Short rating through the services and verifies the database values.
+   * Saves JSON coordinates and a Short rating through the services and verifies the database
+   * values.
    *
    * @author Vincent Lai, Codex
    */
@@ -121,14 +134,20 @@ class NumericRequestTest {
   @Transactional
   void persistsCoordinatesAndRating() {
     final Client client = clientService.createClient();
-    final AddVenueRequest venueRequest = jsonMapper.readValue("""
-        {"name":"Numeric test venue","address":"123 Test Street",
-         "latitude":40.812345,"longitude":-73.961234,"timezone":"America/New_York"}
-        """, AddVenueRequest.class);
+    final AddVenueRequest venueRequest =
+        jsonMapper.readValue(
+            """
+            {"name":"Numeric test venue","address":"123 Test Street",
+             "latitude":40.812345,"longitude":-73.961234,"timezone":"America/New_York"}
+            """,
+            AddVenueRequest.class);
     final Long venueId = venueService.addVenue(client, venueRequest).getId();
-    final RateVenueRequest reviewRequest = jsonMapper.readValue("""
-        {"externalUserID":"numeric-test-user","rating":5,"comment":"Great venue"}
-        """, RateVenueRequest.class);
+    final RateVenueRequest reviewRequest =
+        jsonMapper.readValue(
+            """
+            {"externalUserID":"numeric-test-user","rating":5,"comment":"Great venue"}
+            """,
+            RateVenueRequest.class);
     final Long reviewId = venueService.rateVenue(client, venueId, reviewRequest).getId();
     entityManager.flush();
     entityManager.clear();

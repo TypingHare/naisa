@@ -162,15 +162,9 @@ public class VenueService {
 
     final List<GroupMemberLocation> locations = searchLocations(request);
     final double centerLatitude =
-        locations.stream()
-            .mapToDouble(GroupMemberLocation::getLatitude)
-            .average()
-            .orElseThrow();
+        locations.stream().mapToDouble(GroupMemberLocation::getLatitude).average().orElseThrow();
     final double centerLongitude =
-        locations.stream()
-            .mapToDouble(GroupMemberLocation::getLongitude)
-            .average()
-            .orElseThrow();
+        locations.stream().mapToDouble(GroupMemberLocation::getLongitude).average().orElseThrow();
     final List<VenueSport> offerings =
         venueSportRepository.findBySportIdAndPriceLessThanEqual(
             request.getSportId(), request.getBudget());
@@ -188,7 +182,8 @@ public class VenueService {
                         VenueDistance.calculateDistanceKm(
                             location.getLatitude(),
                             location.getLongitude(),
-                            venue.getLatitude(), venue.getLongitude()))
+                            venue.getLatitude(),
+                            venue.getLongitude()))
                 .toList();
         final FindVenueResponse result =
             new FindVenueResponse(
