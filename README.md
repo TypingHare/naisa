@@ -48,12 +48,13 @@ JAVA_TOOL_OPTIONS="-javaagent:$HOME/.m2/repository/org/mockito/mockito-core/5.23
 
 The JAR must exist locally and match the Mockito version resolved by Maven.
 
-The generated HTML report is `server/target/site/jacoco/index.html`. A saved
-[alternatives coverage report](docs/server/coverage/find-alternatives.csv) contains
-JaCoCo's per-class `BRANCH_MISSED` and `BRANCH_COVERED` counts from running only
-`VenueAlternativesTest` (24 passing cases). This snapshot covers 52 of 148
-application branches (35.1%). It is not a combined report for the team's test PRs.
-After those PRs merge, run `make unit-coverage` and save the combined report in
-`docs/server/coverage/`. The iteration requirement is at least 55% branch coverage
-across the application; the second iteration requires at least 80% coverage.
-API endpoint tests are a separate course requirement from these service tests.
+Open `server/target/site/jacoco/index.html` in a browser to inspect the generated
+HTML coverage report. Select a package and class to see method coverage and
+missed branches. The report includes only the tests selected for that run.
+Files under `server/target/` are local build outputs and are removed by `make clean`.
+
+After the test PRs merge, run `make unit-coverage` to measure combined coverage.
+Before course submission, save the combined report in the repository. The
+iteration requirement is at least 55% branch coverage across the application;
+the second iteration requires at least 80% coverage. API endpoint tests are a
+separate course requirement from these service tests.
