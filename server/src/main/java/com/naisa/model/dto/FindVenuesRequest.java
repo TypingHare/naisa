@@ -22,7 +22,7 @@ import org.springframework.format.annotation.DateTimeFormat;
  * <p>Supply either latitude and longitude for one origin, or indexed locations for 1 to 10
  * members. Do not mix the two forms. List indices identify members in the response. Maximum
  * distance is in kilometers from the average latitude and longitude. Budget is the maximum
- * hourly price and defaults to zero. Decimal values cannot represent NaN or infinity.
+ * hourly price and defaults to zero. Coordinates must be finite and within their valid ranges.
  *
  * <p>The date uses YYYY-MM-DD format, parsed with the Java pattern uuuu-MM-dd. The time uses a
  * 24-hour clock. The standard parser accepts HH:mm and ISO local times with seconds and fractional
@@ -30,7 +30,7 @@ import org.springframework.format.annotation.DateTimeFormat;
  * validation succeeds, the service must reject a combined date and time that is in the past and
  * check that the sport exists.
  *
- * @author Andrew Hsu, Codex
+ * @author Andrew Hsu, Codex, Vincent Lai, Codex
  */
 @JavaBean
 @Getter
@@ -38,11 +38,11 @@ import org.springframework.format.annotation.DateTimeFormat;
 public class FindVenuesRequest {
   @DecimalMin("-90")
   @DecimalMax("90")
-  private BigDecimal latitude;
+  private Double latitude;
 
   @DecimalMin("-180")
   @DecimalMax("180")
-  private BigDecimal longitude;
+  private Double longitude;
 
   @Size(min = 1, max = 10)
   private List<@NotNull @Valid GroupMemberLocation> locations;

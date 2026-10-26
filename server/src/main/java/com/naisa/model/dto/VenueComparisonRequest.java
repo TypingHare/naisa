@@ -5,7 +5,6 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import java.math.BigDecimal;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +15,7 @@ import lombok.Setter;
  * <p>Includes the venue IDs, requested sport, and user's location. The venue IDs must be distinct
  * and contain between two and five entries.
  *
- * @author Emily Wang, Codex
+ * @author Emily Wang, Codex, Vincent Lai, Codex
  */
 @Getter
 @Setter
@@ -32,10 +31,10 @@ public class VenueComparisonRequest {
   @NotNull
   @DecimalMin("-90.0")
   @DecimalMax("90.0")
-  private BigDecimal latitude;
+  private Double latitude;
 
   @NotNull
   @DecimalMin("-180.0")
   @DecimalMax("180.0")
-  private BigDecimal longitude;
+  private Double longitude;
 }

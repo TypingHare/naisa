@@ -98,7 +98,7 @@ public class VenueService {
    * @param venueId identifier of the venue
    * @return the venue details with its sports and opening intervals
    * @throws VenueException if the venue does not exist
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, Vincent Lai, Codex
    */
   @Transactional(readOnly = true)
   public VenueInfoResponse getVenueInfo(final Long venueId) {
@@ -153,7 +153,7 @@ public class VenueService {
    * @param request validated search query parameters
    * @return matching venues, or an empty list when none match
    * @throws VenueException if the requested time is in the past or the sport does not exist
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, Vincent Lai, Codex
    */
   @Transactional(readOnly = true)
   public List<FindVenueResponse> findVenues(final FindVenuesRequest request) {
@@ -163,12 +163,12 @@ public class VenueService {
     final List<GroupMemberLocation> locations = searchLocations(request);
     final double centerLatitude =
         locations.stream()
-            .mapToDouble(location -> location.getLatitude().doubleValue())
+            .mapToDouble(GroupMemberLocation::getLatitude)
             .average()
             .orElseThrow();
     final double centerLongitude =
         locations.stream()
-            .mapToDouble(location -> location.getLongitude().doubleValue())
+            .mapToDouble(GroupMemberLocation::getLongitude)
             .average()
             .orElseThrow();
     final List<VenueSport> offerings =
@@ -186,8 +186,8 @@ public class VenueService {
                 .map(
                     location ->
                         VenueDistance.calculateDistanceKm(
-                            location.getLatitude().doubleValue(),
-                                location.getLongitude().doubleValue(),
+                            location.getLatitude(),
+                            location.getLongitude(),
                             venue.getLatitude(), venue.getLongitude()))
                 .toList();
         final FindVenueResponse result =
@@ -251,7 +251,7 @@ public class VenueService {
    * @return up to 10 alternatives, ordered by fewest changes and closest date and time
    * @throws VenueException if the original time is in the past, the sport is unknown, or no
    *     offering is within the permitted radius
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, Vincent Lai, Codex
    */
   @Transactional(readOnly = true)
   public List<FindAlternativeResponse> findAlternatives(final FindAlternativesRequest request) {
@@ -272,8 +272,8 @@ public class VenueService {
       final Venue venue = offering.getVenue();
       final double distanceKm =
           VenueDistance.calculateDistanceKm(
-              request.getLatitude().doubleValue(),
-              request.getLongitude().doubleValue(),
+              request.getLatitude(),
+              request.getLongitude(),
               venue.getLatitude(),
               venue.getLongitude());
       if (BigDecimal.valueOf(distanceKm).compareTo(maximumDistance) <= 0) {
@@ -471,8 +471,8 @@ public class VenueService {
     final Venue venue = new Venue();
     venue.setName(request.getName().strip());
     venue.setAddress(request.getAddress().strip());
-    venue.setLatitude(request.getLatitude().doubleValue());
-    venue.setLongitude(request.getLongitude().doubleValue());
+    venue.setLatitude(request.getLatitude());
+    venue.setLongitude(request.getLongitude());
     venue.setTimezone(timezone);
     venue.setCreatedByClient(client);
 
@@ -529,7 +529,7 @@ public class VenueService {
     review.setExternalUserId(request.getExternalUserId());
     review.setVenue(venue);
     review.setSport(sport);
-    review.setRating(request.getRating().shortValueExact());
+    review.setRating(request.getRating());
     review.setCommentContent(request.getComment().strip());
 
     final Review savedReview = reviewRepository.saveAndFlush(review);
