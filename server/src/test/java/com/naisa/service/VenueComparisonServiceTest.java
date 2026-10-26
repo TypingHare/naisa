@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import com.naisa.exception.VenueException;
@@ -22,6 +24,7 @@ import com.naisa.repository.VenueSportRepository;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
@@ -34,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
@@ -43,7 +47,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * needed. The user is located at (40.0, -73.0); venues are placed north of the user so that a
  * larger latitude means a longer distance.
  *
- * @author Emily Wang, Claude Code
+ * @author Emily Wang, Claude Code, Andrew Hsu, Codex
  */
 @ExtendWith(MockitoExtension.class)
 class VenueComparisonServiceTest {
@@ -214,21 +218,32 @@ class VenueComparisonServiceTest {
       when(sportRepository.existsById(SPORT_ID)).thenReturn(true);
     }
 
+    /**
+     * Checks open, closed, and unknown venues at a fixed time.
+     *
+     * @author Emily Wang, Claude Code, Andrew Hsu, Codex
+     */
     @Test
     @DisplayName("reports open, closed, and unknown opening status")
     void reportsOpeningStatus() {
-      // Venue 1 is open all day, every day, and venue 2 is never open (it opens and closes at the
-      // same time), so the result does not depend on when the test runs.
-      mockVenue(1L, 40.01, "10.00", null, everyDay(LocalTime.MIN, LocalTime.MAX));
-      mockVenue(2L, 40.02, "10.00", null, everyDay(LocalTime.NOON, LocalTime.NOON));
+      mockVenue(1L, 40.01, "10.00", null, everyDay(LocalTime.NOON, LocalTime.NOON));
+      mockVenue(
+          2L,
+          40.02,
+          "10.00",
+          null,
+          List.of(interval(DayOfWeek.TUESDAY, LocalTime.of(14, 0), LocalTime.of(15, 0))));
       mockVenue(3L, 40.03, "10.00", null, List.of());
-
-      final List<VenueComparisonItem> venues =
-          venueComparisonService.compare(request(1L, 2L, 3L)).getVenues();
-
-      assertTrue(venues.get(0).getOpenNow());
-      assertFalse(venues.get(1).getOpenNow());
-      assertNull(venues.get(2).getOpenNow());
+      final ZonedDateTime fixedTime = tuesdayAt(13, 0);
+      try (MockedStatic<ZonedDateTime> times =
+          mockStatic(ZonedDateTime.class, CALLS_REAL_METHODS)) {
+        times.when(() -> ZonedDateTime.now(ZoneId.of("UTC"))).thenReturn(fixedTime);
+        final List<VenueComparisonItem> venues =
+            venueComparisonService.compare(request(1L, 2L, 3L)).getVenues();
+        assertTrue(venues.get(0).getOpenNow());
+        assertFalse(venues.get(1).getOpenNow());
+        assertNull(venues.get(2).getOpenNow());
+      }
     }
   }
 
@@ -245,6 +260,21 @@ class VenueComparisonServiceTest {
         List.of(interval(DayOfWeek.MONDAY, LocalTime.of(22, 0), LocalTime.of(2, 0)));
     private final List<OpeningInterval> tuesdayNight =
         List.of(interval(DayOfWeek.TUESDAY, LocalTime.of(22, 0), LocalTime.of(2, 0)));
+
+    /**
+     * Includes 24 hours from an equal opening and closing time, with an exclusive closing boundary.
+     *
+     * @author Andrew Hsu, Codex
+     */
+    @Test
+    void checksTwentyFourHourInterval() {
+      final List<OpeningInterval> fullDay =
+          List.of(interval(DayOfWeek.TUESDAY, LocalTime.NOON, LocalTime.NOON));
+      assertFalse(VenueComparisonService.isOpenAt(fullDay, tuesdayAt(11, 59)));
+      assertTrue(VenueComparisonService.isOpenAt(fullDay, tuesdayAt(12, 0)));
+      assertTrue(VenueComparisonService.isOpenAt(fullDay, tuesdayAt(11, 59).plusDays(1)));
+      assertFalse(VenueComparisonService.isOpenAt(fullDay, tuesdayAt(12, 0).plusDays(1)));
+    }
 
     @Test
     @DisplayName("includes the opening time and excludes the closing time")

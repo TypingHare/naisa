@@ -161,14 +161,14 @@ public class VenueComparisonService {
    * Checks whether any opening interval contains the given local date and time.
    *
    * <p>An interval whose closing time is earlier than its opening time is an overnight interval: it
-   * starts on its day of the week and ends on the next day. Opening times are inclusive and closing
-   * times are exclusive. This method takes the time as a parameter so that it can be tested with
-   * fixed times.
+   * starts on its day of the week and ends on the next day. Equal opening and closing times
+   * represent 24 hours. Opening times are inclusive and closing times are exclusive. This method
+   * takes the time as a parameter so that it can be tested with fixed times.
    *
    * @param intervals opening intervals of a venue
    * @param time local date and time in the venue's time zone
    * @return true if the venue is open at the given time
-   * @author Emily Wang, Codex, Claude Code
+   * @author Emily Wang, Codex, Claude Code, Andrew Hsu, Codex
    */
   /* default */ static boolean isOpenAt(
       final List<OpeningInterval> intervals, final ZonedDateTime time) {
@@ -179,7 +179,7 @@ public class VenueComparisonService {
     for (final OpeningInterval interval : intervals) {
       final LocalTime opensAt = interval.getOpensAt();
       final LocalTime closesAt = interval.getClosesAt();
-      final boolean overnight = closesAt.isBefore(opensAt);
+      final boolean overnight = !closesAt.isAfter(opensAt);
 
       if (interval.getDayOfWeek() == today) {
         if (!overnight && !currentTime.isBefore(opensAt) && currentTime.isBefore(closesAt)) {

@@ -1,6 +1,6 @@
 MVN = ./mvnw
 
-.PHONY: all lint test coverage run run-test download-sources
+.PHONY: all lint test coverage api-test run run-test download-sources
 
 all:
 	$(MVN) package
@@ -14,6 +14,9 @@ test:
 
 coverage:
 	$(MVN) clean jacoco:prepare-agent test jacoco:report
+
+api-test:
+	bash api-tests/run.sh
 
 run:
 	$(MVN) spring-boot:run
