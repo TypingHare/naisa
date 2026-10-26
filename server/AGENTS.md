@@ -37,3 +37,19 @@ to the codebase, ask the developers for confirmation.
 Because this is just a COURSE PROJECT, you do not have to take security very
 seriously. Avoid writing hard-to-understand code to protect the application from
 attacks or abuse by clients and users.
+
+Before every commit, make sure you run `google-java-format` and `make lint`. If
+`google-java-format` is not installed, ask the developer to install it.
+
+The code you generate should be human-readable and maintainable. You are
+encouraged to use Java streams to reduce the number of lines of code, but avoid
+overusing them at the expense of readability.
+
+Do not make assumptions when creating data structure classes. In this project,
+JavaBean classes, including their attribute names and types, need to be
+carefully designed. Ask the developer to make a decision whenever an assumption
+is needed. In addition, make sure that every JavaBean class has only a public
+no-argument constructor (which does not have to be declared explicitly). Use
+`Beans.create()` (see `com.naisa.util.Beans`) to create JavaBean instances. Name
+the `initializer` parameter `it`, and place the setter calls inside it. Keep
+business logic inside the `initializer` to a minimum.
