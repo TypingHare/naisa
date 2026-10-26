@@ -4,7 +4,7 @@
 
 ### Oct. 20, 2026:
 
-Used Codex to help me develop addVenue and rateVenue operations. 
+Used Codex to help me develop addVenue and rateVenue operations.
 
 Check chat history with Codex for the above purpose:
 https://chatgpt.com/s/cx_6ad825362e608191a7fe8b562d6cfab5
@@ -22,11 +22,12 @@ Uncached input: 385386
 
 ## Andrew Hsu:
 
-### Oct. 23-24, 2026: 
+### Oct. 23-24, 2026:
 
 **Tool:** Codex  
 **Model:** GPT 6.1 Sol  
-**Usage:** I used AI to help plan, implement, review, and manually test operations 1-4.
+**Usage:** I used AI to help plan, implement, review, and manually test
+operations 1-4.
 
 #### Operation 1
 
@@ -86,4 +87,21 @@ output_tokens           : 6086
 reasoning_output_tokens : 1797
 total_tokens            : 2144837
 uncached_input_tokens   : 115199
+```
+
+## Emily Wang:
+
+### Oct. 20-24, 2026:
+
+Used Claude Code (Claude Opus 5.5) and Codex to help me implement operations 5-7
+(compareVenues, reportVenueStatus, getVenueStatus) and generate the unit tests
+and API tests for them.
+
+```text
+input_tokens                : 672
+cache_creation_input_tokens : 3725510
+cache_read_input_tokens     : 103786625
+total_input_tokens          : 107512807
+output_tokens               : 340057
+total_tokens                : 107852864
 ```
