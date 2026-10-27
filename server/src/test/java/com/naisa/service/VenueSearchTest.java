@@ -71,8 +71,8 @@ class VenueSearchTest {
     dateTimes = mockStatic(LocalDateTime.class, CALLS_REAL_METHODS);
     dateTimes.when(() -> LocalDateTime.now(SEARCH_ZONE)).thenReturn(NOW);
     request = new FindVenuesRequest();
-    request.setLatitude(new BigDecimal("40.00"));
-    request.setLongitude(new BigDecimal("-73.00"));
+    request.setLatitude(40.00);
+    request.setLongitude(-73.00);
     request.setSportId(SPORT_ID);
     request.setDate(LocalDate.of(2026, 10, 27));
     request.setTime(LocalTime.NOON);
