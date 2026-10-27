@@ -20,6 +20,7 @@ import com.naisa.repository.ReviewRepository;
 import com.naisa.repository.SportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
+import com.naisa.util.Beans;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -100,8 +101,8 @@ class GroupVenueSearchTest {
 
     final List<FindVenueResponse> groupResults = venueService.findVenues(request);
     request.setLocations(null);
-    request.setLatitude(new BigDecimal("40.00"));
-    request.setLongitude(new BigDecimal("-73.00"));
+    request.setLatitude(40.00);
+    request.setLongitude(-73.00);
     final List<FindVenueResponse> individualResults = venueService.findVenues(request);
 
     assertThat(groupResults).hasSize(1);
@@ -323,15 +324,17 @@ class GroupVenueSearchTest {
   }
 
   /**
-   * Creates one member location without rounding its decimal coordinates.
+   * Creates one member location with double-precision coordinates.
    *
    * @author Andrew Hsu, Codex
    */
   private static GroupMemberLocation location(final String latitude, final String longitude) {
-    final GroupMemberLocation location = new GroupMemberLocation();
-    location.setLatitude(new BigDecimal(latitude));
-    location.setLongitude(new BigDecimal(longitude));
-    return location;
+    return Beans.create(
+        GroupMemberLocation.class,
+        it -> {
+          it.setLatitude(Double.valueOf(latitude));
+          it.setLongitude(Double.valueOf(longitude));
+        });
   }
 
   /**
