@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CrowdReportService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.naisa.service</a> &gt; <span class="el_source">CrowdReportService.java</span></div><h1>CrowdReportService.java</h1><pre class="source lang-java linenums">package com.naisa.service;
+
+import com.naisa.common.VenueConstant;
+import com.naisa.exception.VenueException;
+import com.naisa.model.dto.ReportCrowdRequest;
+import com.naisa.model.entity.Client;
+import com.naisa.model.entity.CrowdReport;
+import com.naisa.model.entity.Sport;
+import com.naisa.model.entity.Venue;
+import com.naisa.model.vo.CrowdStatusResponse;
+import com.naisa.model.vo.ReportCrowdResponse;
+import com.naisa.repository.CrowdReportRepository;
+import com.naisa.repository.VenueRepository;
+import com.naisa.repository.VenueSportRepository;
+import com.naisa.util.Beans;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Handles crowd reports submitted by clients.
+ *
+ * &lt;p&gt;Users can report the crowd level of a venue or a specific sport. Every submission is stored as
+ * a new report so that historical data is kept. Get Venue Status counts only each reporter's most
+ * recent report when estimating crowdedness.
+ *
+ * @author Emily Wang, Codex
+ */
+@Service
+public class CrowdReportService {
+  private static final String SOURCE_LIVE = &quot;LIVE&quot;;
+  private static final String SOURCE_UNKNOWN = &quot;UNKNOWN&quot;;
+
+  private final CrowdReportRepository crowdReportRepository;
+  private final VenueRepository venueRepository;
+  private final VenueSportRepository venueSportRepository;
+  private final VenueService venueService;
+
+  /**
+   * Creates a crowd report service.
+   *
+   * @param crowdReportRepository repository for crowd reports
+   * @param venueRepository repository for venues
+   * @param venueSportRepository repository for venue sports
+   * @author Emily Wang, Codex
+   */
+  public CrowdReportService(
+      final CrowdReportRepository crowdReportRepository,
+      final VenueRepository venueRepository,
+      final VenueSportRepository venueSportRepository,
+<span class="fc" id="L55">      final VenueService venueService) {</span>
+<span class="fc" id="L56">    this.crowdReportRepository = crowdReportRepository;</span>
+<span class="fc" id="L57">    this.venueRepository = venueRepository;</span>
+<span class="fc" id="L58">    this.venueSportRepository = venueSportRepository;</span>
+<span class="fc" id="L59">    this.venueService = venueService;</span>
+<span class="fc" id="L60">  }</span>
+
+  /**
+   * Saves a new crowd report for a venue.
+   *
+   * &lt;p&gt;We first check whether the venue exists and offers the requested sport. Then we store the
+   * report with the current server time.
+   *
+   * @param client the client submitting the report
+   * @param venueId the venue ID
+   * @param request the crowd report request
+   * @return the saved report
+   * @throws VenueException if the venue does not exist or does not offer the sport
+   * @author Emily Wang, Codex, James Chen
+   */
+  @Transactional
+  public ReportCrowdResponse reportCrowd(
+      final Client client, final Long venueId, final ReportCrowdRequest request) {
+<span class="fc" id="L78">    final Venue venue =</span>
+<span class="fc" id="L79">        venueRepository.findById(venueId).orElseThrow(VenueException.NOT_FOUND::clone);</span>
+
+<span class="fc" id="L81">    final Long sportId = request.getSportId();</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">    final Sport sport = sportId == null ? null : venueService.getVenueSport(venueId, sportId);</span>
+
+<span class="fc" id="L84">    final CrowdReport report =</span>
+<span class="fc" id="L85">        Beans.create(</span>
+            CrowdReport.class,
+            (it) -&gt; {
+<span class="fc" id="L88">              it.setClient(client);</span>
+<span class="fc" id="L89">              it.setExternalUserId(request.getExternalUserId());</span>
+<span class="fc" id="L90">              it.setVenue(venue);</span>
+<span class="fc" id="L91">              it.setSport(sport);</span>
+<span class="fc" id="L92">              it.setCrowdLevel(request.getCrowdLevel());</span>
+<span class="fc" id="L93">            });</span>
+<span class="fc" id="L94">    final CrowdReport savedReport = crowdReportRepository.saveAndFlush(report);</span>
+
+<span class="fc" id="L96">    return Beans.create(</span>
+        ReportCrowdResponse.class,
+        (it) -&gt; {
+<span class="fc" id="L99">          it.setReportId(savedReport.getId());</span>
+<span class="fc" id="L100">          it.setCrowdLevel(savedReport.getCrowdLevel());</span>
+<span class="fc" id="L101">          it.setCreatedAt(savedReport.getCreatedAt());</span>
+<span class="fc" id="L102">        });</span>
+  }
+
+  /**
+   * Returns the current crowd status of a venue or one of its sports.
+   *
+   * &lt;p&gt;We use each reporter's most recent report within the cutoff window. If a sport is given but
+   * has no recent reports, we fall back to all recent reports for the venue. The crowd level is the
+   * most frequently reported level; ties are broken by the most recent report.
+   *
+   * @param venueId the venue ID
+   * @param sportId the sport ID, or {@code null} for the entire venue
+   * @return the crowd status
+   * @throws VenueException if the venue does not exist or does not offer the sport
+   * @author Emily Wang, Claude Code
+   */
+  @Transactional(readOnly = true)
+  public CrowdStatusResponse getCrowdStatus(final Long venueId, final Long sportId) {
+<span class="fc bfc" id="L120" title="All 2 branches covered.">    if (!venueRepository.existsById(venueId)) {</span>
+<span class="fc" id="L121">      throw VenueException.NOT_FOUND.clone();</span>
+    }
+
+<span class="fc bfc" id="L124" title="All 2 branches covered.">    if (sportId != null</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        &amp;&amp; venueSportRepository.findByVenueIdAndSportId(venueId, sportId).isEmpty()) {</span>
+<span class="fc" id="L126">      throw VenueException.SPORT_NOT_OFFERED.clone();</span>
+    }
+
+    final Instant cutoff =
+<span class="fc" id="L130">        Instant.now().minus(VenueConstant.CROWD_REPORT_CUTOFF_HOURS, ChronoUnit.HOURS);</span>
+
+    final List&lt;CrowdReport&gt; sportReports =
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        sportId == null</span>
+<span class="fc" id="L134">            ? List.of()</span>
+<span class="fc" id="L135">            : crowdReportRepository.findLatestReportsPerReporter(venueId, sportId, cutoff);</span>
+    final List&lt;CrowdReport&gt; reports =
+<span class="fc bfc" id="L137" title="All 2 branches covered.">        sportReports.isEmpty()</span>
+<span class="fc" id="L138">            ? crowdReportRepository.findLatestReportsPerReporter(venueId, null, cutoff)</span>
+<span class="fc" id="L139">            : sportReports;</span>
+
+<span class="fc" id="L141">    final CrowdStatusResponse response = new CrowdStatusResponse();</span>
+<span class="fc" id="L142">    response.setVenueId(venueId);</span>
+<span class="fc" id="L143">    response.setReportCount(reports.size());</span>
+
+<span class="fc bfc" id="L145" title="All 2 branches covered.">    if (reports.isEmpty()) {</span>
+<span class="fc" id="L146">      response.setSource(SOURCE_UNKNOWN);</span>
+<span class="fc" id="L147">      return response;</span>
+    }
+
+<span class="fc" id="L150">    response.setCrowdLevel(findMostFrequentLevel(reports));</span>
+<span class="fc" id="L151">    response.setLatestReportAt(reports.get(0).getCreatedAt());</span>
+<span class="fc" id="L152">    response.setSource(SOURCE_LIVE);</span>
+<span class="fc" id="L153">    return response;</span>
+  }
+
+  /**
+   * Finds the most frequently reported crowd level.
+   *
+   * &lt;p&gt;The reports must be sorted from newest to oldest, so that the first report with a tied level
+   * is the most recent one.
+   */
+  private String findMostFrequentLevel(final List&lt;CrowdReport&gt; reports) {
+<span class="fc" id="L163">    final Map&lt;String, Integer&gt; counts = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">    for (final CrowdReport report : reports) {</span>
+<span class="fc" id="L165">      counts.merge(report.getCrowdLevel(), 1, Integer::sum);</span>
+<span class="fc" id="L166">    }</span>
+
+<span class="fc" id="L168">    final int maxCount = counts.values().stream().max(Integer::compare).orElse(0);</span>
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">    for (final CrowdReport report : reports) {</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">      if (counts.get(report.getCrowdLevel()) == maxCount) {</span>
+<span class="fc" id="L171">        return report.getCrowdLevel();</span>
+      }
+<span class="nc" id="L173">    }</span>
+
+<span class="nc" id="L175">    return reports.get(0).getCrowdLevel();</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VenueDistance.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.naisa.common</a> &gt; <span class="el_source">VenueDistance.java</span></div><h1>VenueDistance.java</h1><pre class="source lang-java linenums">package com.naisa.common;
+
+/**
+ * Calculates direct geographic distances for venue searches and comparisons.
+ *
+ * @author Emily Wang, Codex, Andrew Hsu, Codex
+ */
+public final class VenueDistance {
+  private static final double EARTH_RADIUS_KM = 6371.0;
+
+  private VenueDistance() {}
+
+  /**
+   * Calculates distance between two coordinates with the Haversine formula.
+   *
+   * @param originLatitude origin latitude in degrees
+   * @param originLongitude origin longitude in degrees
+   * @param venueLatitude venue latitude in degrees
+   * @param venueLongitude venue longitude in degrees
+   * @return distance in kilometers
+   */
+  public static double calculateDistanceKm(
+      final double originLatitude,
+      final double originLongitude,
+      final double venueLatitude,
+      final double venueLongitude) {
+<span class="fc" id="L27">    final double latitudeDifference = Math.toRadians(venueLatitude - originLatitude);</span>
+<span class="fc" id="L28">    final double longitudeDifference = Math.toRadians(venueLongitude - originLongitude);</span>
+<span class="fc" id="L29">    final double haversine =</span>
+<span class="fc" id="L30">        Math.pow(Math.sin(latitudeDifference / 2), 2)</span>
+<span class="fc" id="L31">            + Math.cos(Math.toRadians(originLatitude))</span>
+<span class="fc" id="L32">                * Math.cos(Math.toRadians(venueLatitude))</span>
+<span class="fc" id="L33">                * Math.pow(Math.sin(longitudeDifference / 2), 2);</span>
+    // Keep rounding errors within the square roots' valid range.
+<span class="fc" id="L35">    final double boundedHaversine = Math.max(0, Math.min(1, haversine));</span>
+<span class="fc" id="L36">    final double centralAngle =</span>
+<span class="fc" id="L37">        2 * Math.atan2(Math.sqrt(boundedHaversine), Math.sqrt(1 - boundedHaversine));</span>
+<span class="fc" id="L38">    return EARTH_RADIUS_KM * centralAngle;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

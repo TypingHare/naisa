@@ -54,3 +54,6 @@ jobs:
 
       - name: Start Service
         run: ./mvnw spring-boot:start && ./mvnw spring-boot:stop
+
+      - name: API tests and branch coverage
+        run: make api-test

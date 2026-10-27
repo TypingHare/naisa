@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthorizationInterceptor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.naisa.interceptor</a> &gt; <span class="el_source">AuthorizationInterceptor.java</span></div><h1>AuthorizationInterceptor.java</h1><pre class="source lang-java linenums">package com.naisa.interceptor;
+
+import com.naisa.common.Capsule;
+import com.naisa.common.annotation.AuthorizationRequired;
+import com.naisa.exception.ClientException;
+import com.naisa.model.entity.Client;
+import com.naisa.service.ClientService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerInterceptor;
+import tools.jackson.databind.ObjectMapper;
+
+/**
+ * This interceptor verifies user authorization when required.
+ *
+ * &lt;p&gt;Before the controller method (also known as the handler method) handles the request, this
+ * interceptor checks whether the method is annotated with {@code AuthorizationRequired}. If so, it
+ * extracts the API key from the &quot;Authorization&quot; header and checks whether a client is associated
+ * with that key.
+ *
+ * &lt;p&gt;A valid Authorization header value must start with &quot;Bearer &quot;. If the header is invalid, the
+ * interceptor builds a response and prevents the controller method from handling the request. The
+ * response contains a capsule with the error code {@code ERROR_CODE_INVALID_AUTHORIZATION_HEADER}.
+ *
+ * &lt;p&gt;If the API key is missing or is not associated with any client, the interceptor builds a
+ * response and prevents the controller method from handling the request. The response contains a
+ * capsule with the error code {@code ERROR_CODE_NO_API_KEY_PROVIDED}.
+ *
+ * @author James Chen
+ */
+@Component
+public class AuthorizationInterceptor implements HandlerInterceptor {
+  private ClientService clientService;
+
+  public static final String ERROR_CODE_INVALID_AUTHORIZATION_HEADER =
+      &quot;authorization.invalid_authorization_header&quot;;
+
+  public static final String ERROR_CODE_NO_API_KEY_PROVIDED = &quot;authorization.no_api_key_provided&quot;;
+
+  private static final String AUTHORIZATION_HEADER_PREFIX = &quot;Bearer &quot;;
+
+  public static final String REQUEST_ATTRIBUTE_CLIENT = &quot;client&quot;;
+
+<span class="fc" id="L48">  private AuthorizationInterceptor(final ClientService clientService) {</span>
+<span class="fc" id="L49">    this.clientService = clientService;</span>
+<span class="fc" id="L50">  }</span>
+
+  /**
+   * Authenticates requests whose handler requires a client API key.
+   *
+   * &lt;p&gt;A successfully authenticated client is attached to the request so that endpoint handlers can
+   * attribute submitted data without accepting a client identifier from the request body. Requests
+   * with missing or invalid credentials receive an unauthorized response and do not reach the
+   * handler. Handlers without the authorization annotation are allowed to proceed.
+   *
+   * @param request incoming request containing the authorization header
+   * @param response response used to report an authentication failure
+   * @param handler selected request handler
+   * @return {@code true} when processing may continue; {@code false} after an authentication
+   *     failure
+   * @throws Exception if response writing or subsequent interceptor processing fails
+   * @author James Chen, Vincent Lai, Codex
+   */
+  @Override
+  public boolean preHandle(
+      final HttpServletRequest request, final HttpServletResponse response, final Object handler)
+      throws Exception {
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">    if (handler instanceof HandlerMethod method) {</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">      if (method.hasMethodAnnotation(AuthorizationRequired.class)) {</span>
+<span class="fc" id="L74">        final String authorizationHeader = request.getHeader(&quot;Authorization&quot;);</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (authorizationHeader == null) {</span>
+<span class="fc" id="L76">          final Capsule&lt;Object&gt; capsule =</span>
+              new Capsule&lt;&gt;(&quot;No API key provided.&quot;, null, ERROR_CODE_NO_API_KEY_PROVIDED);
+<span class="fc" id="L78">          buildResponse(response, capsule);</span>
+<span class="fc" id="L79">          return false;</span>
+        }
+
+<span class="fc" id="L82">        final int authorizationHeaderPrefixLength = AUTHORIZATION_HEADER_PREFIX.length();</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if (authorizationHeader.length() &lt;= authorizationHeaderPrefixLength</span>
+            || !authorizationHeader
+<span class="fc" id="L85">                .substring(0, authorizationHeaderPrefixLength)</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">                .equals(AUTHORIZATION_HEADER_PREFIX)) {</span>
+<span class="fc" id="L87">          final Capsule&lt;Object&gt; capsule =</span>
+              new Capsule&lt;&gt;(
+                  &quot;Invalid Authorization header.&quot;, null, ERROR_CODE_INVALID_AUTHORIZATION_HEADER);
+<span class="fc" id="L90">          buildResponse(response, capsule);</span>
+<span class="fc" id="L91">          return false;</span>
+        }
+
+<span class="fc" id="L94">        final String apiKey =</span>
+<span class="fc" id="L95">            authorizationHeader.substring(AUTHORIZATION_HEADER_PREFIX.length()).trim();</span>
+        try {
+<span class="fc" id="L97">          final Client client = clientService.getClientByApiKey(apiKey);</span>
+<span class="fc" id="L98">          request.setAttribute(REQUEST_ATTRIBUTE_CLIENT, client);</span>
+<span class="fc" id="L99">        } catch (ClientException e) {</span>
+<span class="fc" id="L100">          buildResponse(response, Capsule.fromServiceException(e));</span>
+<span class="fc" id="L101">          return false;</span>
+<span class="fc" id="L102">        }</span>
+      }
+    }
+
+<span class="fc" id="L106">    return HandlerInterceptor.super.preHandle(request, response, handler);</span>
+  }
+
+  /**
+   * Writes the capsule as a UTF-8 JSON response with HTTP status 401 (Unauthorized).
+   *
+   * @param response the servlet response to populate
+   * @param capsule the response payload to serialize as JSON
+   * @throws IOException if writing the response body fails
+   */
+  private void buildResponse(final HttpServletResponse response, final Capsule&lt;Object&gt; capsule)
+      throws IOException {
+<span class="fc" id="L118">    final String body = new ObjectMapper().writeValueAsString(capsule);</span>
+<span class="fc" id="L119">    response.setStatus(HttpStatus.UNAUTHORIZED.value());</span>
+<span class="fc" id="L120">    response.setCharacterEncoding(&quot;UTF-8&quot;);</span>
+<span class="fc" id="L121">    response.setContentType(&quot;application/json&quot;);</span>
+<span class="fc" id="L122">    response.getWriter().write(body);</span>
+<span class="fc" id="L123">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
