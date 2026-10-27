@@ -1,0 +1,2505 @@
+{
+  "info": {
+    "name": "NAISA Venue Submissions - Operations 8-9",
+    "description": "AI-generated with Codex. Author: Vincent Lai, Codex. Run this entire collection in order against a disposable test database. Start the service and apply api-tests/seed.sql first. Creates fresh clients, venues, and reviews on every run; it does not clean them up. See docs/server/venue-apis.md and docs/server/development.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Setup - issue two independent client keys",
+      "item": [
+        {
+          "name": "Issue apiKey",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.collectionVariables.set('apiKey', pm.response.json().data.apiKey);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/v1/clients"
+          }
+        },
+        {
+          "name": "Issue otherApiKey",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.collectionVariables.set('otherApiKey', pm.response.json().data.apiKey);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/v1/clients"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. addVenue - successful creation and readback",
+      "item": [
+        {
+          "name": "Create a venue",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Positive resource ID\", () => pm.expect(pm.response.json().data.id).to.be.above(0));",
+                  "pm.collectionVariables.set(\"createdVenueId\", pm.response.json().data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Read persisted normalized venue",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Persisted venue fields\", () => { const v=pm.response.json().data; pm.expect(v.name).to.eql(\"Submission API Court\"); pm.expect(v.address).to.eql(\"1 Test Street\"); pm.expect(v.latitude).to.be.closeTo(40.812345, 0.0000001); pm.expect(v.longitude).to.be.closeTo(-73.961234, 0.0000001); pm.expect(v.timezone).to.eql(\"America/New_York\"); pm.expect(v.sports).to.eql([]); pm.expect(v.openingIntervals).to.eql([]); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}"
+          }
+        },
+        {
+          "name": "Identical submission creates another venue",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Independent resource ID\", () => pm.expect(pm.response.json().data.id).not.to.eql(Number(pm.collectionVariables.get(\"createdVenueId\"))));",
+                  "pm.test(\"Positive resource ID\", () => pm.expect(pm.response.json().data.id).to.be.above(0));",
+                  "pm.collectionVariables.set(\"otherVenueId\", pm.response.json().data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Coordinate lower boundaries",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": -90,\n  \"longitude\": -180,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Coordinate upper boundaries",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 90,\n  \"longitude\": 180,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. addVenue - invalid input",
+      "item": [
+        {
+          "name": "Missing name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Missing address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Missing latitude",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Missing longitude",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Missing timezone",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "blank name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"   \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "long name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn\",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "blank address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \" \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "long address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "latitude above maximum",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 90.1,\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "latitude below minimum",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": -90.1,\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "longitude above maximum",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": 180.1,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "longitude below minimum",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -180.1,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "blank timezone",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \" \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "long timezone",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"ttttttttttttttttttttttttttttttttt\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Unknown timezone Mars/Olympus",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"venue.invalid_timezone\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"Mars/Olympus\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Unknown timezone america/new_york",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"venue.invalid_timezone\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"america/new_york\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Unknown timezone +02:00",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"venue.invalid_timezone\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"+02:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Malformed JSON",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.invalid_body\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Missing JSON body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.invalid_body\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. rateVenue - create, update, and isolate review scopes",
+      "item": [
+        {
+          "name": "Create whole-venue review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Positive resource ID\", () => pm.expect(pm.response.json().data.id).to.be.above(0));",
+                  "pm.collectionVariables.set(\"wholeReviewId\", pm.response.json().data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update same reviewer and scope at lower rating boundary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Same review ID\", () => pm.expect(pm.response.json().data.id).to.eql(Number(pm.collectionVariables.get(\"wholeReviewId\"))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 1,\n  \"comment\": \"Updated feedback.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Explicit null sport updates whole-venue review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Same review ID\", () => pm.expect(pm.response.json().data.id).to.eql(Number(pm.collectionVariables.get(\"wholeReviewId\"))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 4,\n  \"comment\": \"Final whole-venue feedback.\",\n  \"sportId\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Different external user gets independent review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Independent resource ID\", () => pm.expect(pm.response.json().data.id).not.to.eql(Number(pm.collectionVariables.get(\"wholeReviewId\"))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-b\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "External user whitespace is significant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Independent resource ID\", () => pm.expect(pm.response.json().data.id).not.to.eql(Number(pm.collectionVariables.get(\"wholeReviewId\"))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \" submission-user-a \",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Different client gets independent review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Independent resource ID\", () => pm.expect(pm.response.json().data.id).not.to.eql(Number(pm.collectionVariables.get(\"wholeReviewId\"))));",
+                  "pm.test(\"Positive resource ID\", () => pm.expect(pm.response.json().data.id).to.be.above(0));",
+                  "pm.collectionVariables.set(\"otherClientReviewId\", pm.response.json().data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{otherApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Second client updates only its own review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Same review ID\", () => pm.expect(pm.response.json().data.id).to.eql(Number(pm.collectionVariables.get(\"otherClientReviewId\"))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{otherApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 2,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Different venue gets independent review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Independent resource ID\", () => pm.expect(pm.response.json().data.id).not.to.eql(Number(pm.collectionVariables.get(\"wholeReviewId\"))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{otherVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Whole-venue review on seeded venue",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Positive resource ID\", () => pm.expect(pm.response.json().data.id).to.be.above(0));",
+                  "pm.collectionVariables.set(\"seedWholeReviewId\", pm.response.json().data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{offeredVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Sport review is independent from whole-venue review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Independent resource ID\", () => pm.expect(pm.response.json().data.id).not.to.eql(Number(pm.collectionVariables.get(\"seedWholeReviewId\"))));",
+                  "pm.test(\"Positive resource ID\", () => pm.expect(pm.response.json().data.id).to.be.above(0));",
+                  "pm.collectionVariables.set(\"sportReviewId\", pm.response.json().data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{offeredVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \",\n  \"sportId\": \"{{offeredSportId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update same sport review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Same review ID\", () => pm.expect(pm.response.json().data.id).to.eql(Number(pm.collectionVariables.get(\"sportReviewId\"))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{offeredVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 3,\n  \"comment\": \"Updated sport feedback.\",\n  \"sportId\": \"{{offeredSportId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Whole-venue review survives sport review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No error code\", () => pm.expect(pm.response.json()).not.to.have.property(\"errorCode\"));",
+                  "pm.test(\"Same review ID\", () => pm.expect(pm.response.json().data.id).to.eql(Number(pm.collectionVariables.get(\"seedWholeReviewId\"))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{offeredVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. rateVenue - invalid input and missing resources",
+      "item": [
+        {
+          "name": "Missing externalUserID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Missing rating",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Missing comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "blank external user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \" \",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "long external user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "blank comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "long comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "rating below minimum",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 0,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "rating above maximum",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 6,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "fractional rating",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.invalid_body\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 2.5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "null rating",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": null,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "zero sport ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \",\n  \"sportId\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "negative sport ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \",\n  \"sportId\": -1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Incorrect externalUserId JSON spelling",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.validation_failed\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \",\n  \"externalUserId\": \"submission-user-a\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Unsupported sport on seeded venue",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"venue.sport_not_offered\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{offeredVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \",\n  \"sportId\": \"{{unsupportedSportId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Unknown sport",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"venue.sport_not_offered\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \",\n  \"sportId\": 9223372036854770000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Missing venue",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"venue.not_found\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/9223372036854775807/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Nonnumeric venue ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.invalid_parameter\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/not-a-number/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Malformed JSON",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.invalid_body\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Missing JSON body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"request.invalid_body\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Both operations - authorization",
+      "item": [
+        {
+          "name": "/v1/venues: missing authorization",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"authorization.no_api_key_provided\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "/v1/venues: malformed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"authorization.invalid_authorization_header\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic abc"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "/v1/venues: invalidApiKey",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"client.invalid_api_key\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{invalidApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"  Submission API Court  \",\n  \"address\": \"  1 Test Street  \",\n  \"latitude\": 40.812345,\n  \"longitude\": -73.961234,\n  \"timezone\": \"  America/New_York  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "/v1/venues/{{createdVenueId}}/reviews: missing authorization",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"authorization.no_api_key_provided\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "/v1/venues/{{createdVenueId}}/reviews: malformed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"authorization.invalid_authorization_header\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic abc"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "/v1/venues/{{createdVenueId}}/reviews: invalidApiKey",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Error code\", () => pm.expect(pm.response.json().errorCode).to.eql(\"client.invalid_api_key\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{invalidApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/{{createdVenueId}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalUserID\": \"submission-user-a\",\n  \"rating\": 5,\n  \"comment\": \"  Excellent court.  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "offeredVenueId",
+      "value": "9001",
+      "type": "string"
+    },
+    {
+      "key": "offeredSportId",
+      "value": "9001",
+      "type": "string"
+    },
+    {
+      "key": "unsupportedSportId",
+      "value": "9002",
+      "type": "string"
+    },
+    {
+      "key": "invalidApiKey",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    }
+  ]
+}
