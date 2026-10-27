@@ -11,7 +11,7 @@ import lombok.Setter;
 /**
  * Describes a venue's location, offered sports, and weekly opening intervals.
  *
- * @author Andrew Hsu, Codex
+ * @author Andrew Hsu, Codex, Vincent Lai, Codex
  */
 @JavaBean
 @Getter
@@ -20,8 +20,8 @@ public class VenueInfoResponse {
   private Long venueId;
   private String name;
   private String address;
-  private double latitude;
-  private double longitude;
+  private Double latitude;
+  private Double longitude;
   private String timezone;
   private List<SportInfo> sports = List.of();
   private List<OpeningIntervalInfo> openingIntervals = List.of();
