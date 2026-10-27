@@ -193,3 +193,17 @@ uncached_input_tokens   : 216418
 Source: local Codex session token-count events. Update this snapshot from the
 completed session before the team's final submission; do not estimate missing
 usage or count this snapshot again as a separate session.
+
+
+### Retrospective task tracking follow-up
+
+Vincent Lai used Codex to create and assign 13 retrospective completed-task issues
+from the contributions document and merged source/PR evidence, close those issues
+as completed, and link them from the README. Shared credits were preserved and
+course-staff access was not assumed. The issue bodies identify this AI assistance.
+This later follow-up is outside the timestamped usage snapshot above.
+
+Prompt:
+
+> can you create GitHub issues for each team member's completed tasks based on the
+> contributions doc, assign them, and link them in the README?

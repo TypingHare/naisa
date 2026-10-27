@@ -4,6 +4,36 @@
 > Software Engineering** course at Columbia University. Team members include
 > James Chen, Vincent Lai, Andrew Hsu, and Emily Wang.
 
+## Project management
+
+Completed Iteration 1 tasks are tracked in [GitHub Issues](https://github.com/TypingHare/naisa/issues?q=is%3Aissue+is%3Aclosed+%22Iteration+1%22).
+The records below were created retrospectively after implementation, using the
+[contributions document](docs/team-contributions.md), source author tags, and
+merged pull requests. Each issue has an assignee, completed-work checklist,
+source/PR evidence, and shared-credit notes. All 13 are closed as completed;
+this records implementation completion, not final release or access verification.
+
+| Responsible teammate(s) | Completed task record |
+| --- | --- |
+| James Chen | [#46 - shared HTTP infrastructure and authorization](https://github.com/TypingHare/naisa/issues/46) |
+| James Chen | [#47 - client registration, API-key lookup, and health endpoint](https://github.com/TypingHare/naisa/issues/47) |
+| James Chen and Vincent Lai | [#48 - shared persistence entities and venue/sport lookup](https://github.com/TypingHare/naisa/issues/48) |
+| Vincent Lai | [#49 - addVenue implementation, tests, and documentation](https://github.com/TypingHare/naisa/issues/49) |
+| Vincent Lai | [#50 - rateVenue review upserts, tests, and documentation](https://github.com/TypingHare/naisa/issues/50) |
+| Vincent Lai | [#51 - double coordinates and smallint-compatible ratings](https://github.com/TypingHare/naisa/issues/51) |
+| Vincent Lai | [#52 - venue-sport lighting persistence](https://github.com/TypingHare/naisa/issues/52) |
+| Andrew Hsu | [#53 - individual/group searches, alternatives, and venue details](https://github.com/TypingHare/naisa/issues/53) |
+| Andrew Hsu | [#54 - unit tests for searches, alternatives, and venue details](https://github.com/TypingHare/naisa/issues/54) |
+| Andrew Hsu | [#55 - full API suite, coverage gate, and regression fixes](https://github.com/TypingHare/naisa/issues/55) |
+| Emily Wang | [#56 - venue comparison endpoint and ranking behavior](https://github.com/TypingHare/naisa/issues/56) |
+| Emily Wang | [#57 - crowd-report submission and current venue status](https://github.com/TypingHare/naisa/issues/57) |
+| Emily Wang | [#58 - comparison and crowd service/API tests](https://github.com/TypingHare/naisa/issues/58) |
+
+The task records use this repository's issue tracker, with no external tool.
+Before submitting, confirm that the Mentor and Instructor can open the issue
+links using their own GitHub accounts. Shared authorship is recorded without
+claiming exclusive ownership or inventing work hours or completion dates.
+
 ## Setup and run
 
 Use Java 21, Maven through the included wrapper, and PostgreSQL. Follow the
