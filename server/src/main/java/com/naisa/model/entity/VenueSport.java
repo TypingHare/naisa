@@ -25,9 +25,11 @@ import lombok.Setter;
  *
  * <p>The {@code price} field is the price of playing the sport at the specified venue. We assume
  * the price is the same every day of the week and remains constant throughout the day. The {@code
- * is_indoor} field indicates whether the sport is played indoors.
+ * is_indoor} field indicates whether the sport is played indoors. The {@code hasLighting} field
+ * indicates whether lighting is available for that sport at the venue. It defaults to false for
+ * existing records and new offerings unless explicitly enabled.
  *
- * @author James Chen, Vincent Lai
+ * @author James Chen, Vincent Lai, Codex
  */
 @JavaBean
 @Entity
@@ -58,4 +60,7 @@ public class VenueSport {
 
   @Column(name = "is_indoor", nullable = false)
   private Boolean isIndoor;
+
+  @Column(name = "has_lighting", nullable = false)
+  private boolean hasLighting;
 }
