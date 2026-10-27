@@ -23,3 +23,14 @@ run-test:
 
 download-sources:
 	$(MVN) dependency:sources
+
+# Keep database-free targets separate from the API runner added by PR #39.
+UNIT_TESTS = *Test,!ApplicationTest,!NumericRequestTest,!VenueSportPersistenceTest
+
+.PHONY: unit unit-coverage
+
+unit:
+	$(MVN) '-Dtest=$(UNIT_TESTS)' test
+
+unit-coverage:
+	$(MVN) '-Dtest=$(UNIT_TESTS)' clean jacoco:prepare-agent test jacoco:report
