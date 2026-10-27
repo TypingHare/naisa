@@ -23,9 +23,12 @@ Generate branch coverage for all unit tests available on the current branch:
 make unit-coverage
 ```
 
-These targets select `*Test` classes and exclude `ApplicationTest`, which starts
-Spring and requires database configuration. `make test` and `make coverage`
-include that application test. Use `make lint` to run Checkstyle and PMD.
+These database-free targets select `*Test` classes and exclude `ApplicationTest`,
+`NumericRequestTest`, and `VenueSportPersistenceTest`. All three excluded classes
+start Spring and require a database. The shared `UNIT_TESTS` filter is defined in
+`server/Makefile`; update it when adding another database-backed test class.
+`make test` and `make coverage` include all Java test classes and require a
+configured PostgreSQL database. Use `make lint` to run Checkstyle and PMD.
 
 To run only the alternatives tests and generate their coverage:
 
@@ -58,3 +61,9 @@ Before course submission, save the combined report in the repository. The
 iteration requirement is at least 55% branch coverage across the application;
 the second iteration requires at least 80% coverage. API endpoint tests are a
 separate course requirement from these service tests.
+
+## API tests
+
+Postman/Newman API tests and fixtures are in [server/api-tests](server/api-tests/).
+Run instructions are included with that suite. API tests send real HTTP requests
+and are separate from the database-free service unit tests.

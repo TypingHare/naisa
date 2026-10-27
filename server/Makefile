@@ -1,6 +1,6 @@
 MVN = ./mvnw
 
-.PHONY: all lint test unit coverage unit-coverage run run-test download-sources
+.PHONY: all lint test coverage run run-test download-sources
 
 all:
 	$(MVN) package
@@ -12,14 +12,8 @@ lint:
 test:
 	$(MVN) test
 
-unit:
-	$(MVN) '-Dtest=*Test,!ApplicationTest' test
-
 coverage:
 	$(MVN) clean jacoco:prepare-agent test jacoco:report
-
-unit-coverage:
-	$(MVN) '-Dtest=*Test,!ApplicationTest' clean jacoco:prepare-agent test jacoco:report
 
 run:
 	$(MVN) spring-boot:run
@@ -29,3 +23,14 @@ run-test:
 
 download-sources:
 	$(MVN) dependency:sources
+
+# Keep database-free targets separate from the API runner added by PR #39.
+UNIT_TESTS = *Test,!ApplicationTest,!NumericRequestTest,!VenueSportPersistenceTest
+
+.PHONY: unit unit-coverage
+
+unit:
+	$(MVN) '-Dtest=$(UNIT_TESTS)' test
+
+unit-coverage:
+	$(MVN) '-Dtest=$(UNIT_TESTS)' clean jacoco:prepare-agent test jacoco:report
