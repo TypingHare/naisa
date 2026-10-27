@@ -440,7 +440,7 @@ public class VenueService {
   }
 
   /**
-   * Creates a venue and records the client and external user who submitted it.
+   * Creates a venue and records the authenticated client who submitted it.
    *
    * <p>The request must already have passed field validation. The timezone is checked against the
    * application's recognized region identifiers before persistence. Coordinates are supplied by the
@@ -450,7 +450,7 @@ public class VenueService {
    * duplicates. Sports, prices, and opening intervals are populated separately.
    *
    * @param client authenticated client submitting the venue
-   * @param request validated venue information and external user identifier
+   * @param request validated venue information
    * @return the identifier assigned to the created venue
    * @throws VenueException if the timezone is not recognized
    * @author Vincent Lai, Codex

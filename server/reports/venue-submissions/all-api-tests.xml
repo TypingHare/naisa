@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="NAISA All Endpoint API Tests" tests="97" time="2.218">
+  <testsuite name="0. Setup / Health is public and has no body" id="4c6f5527-ce99-4eaa-876c-57eb34cbb0ab" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.149">
+    <testcase name="HTTP 204" time="0.149" classname="0SetupHealthIsPublicAndHasNoBody"/>
+    <testcase name="No response body" time="0.149" classname="0SetupHealthIsPublicAndHasNoBody"/>
+  </testsuite>
+  <testsuite name="0. Setup / Issue an API key" id="d68917e1-e630-48a5-bf31-3a53e519461f" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.110">
+    <testcase name="Status is 201" time="0.110" classname="0SetupIssueAnApiKey"/>
+    <testcase name="Returns an API key" time="0.110" classname="0SetupIssueAnApiKey"/>
+  </testsuite>
+  <testsuite name="0. Setup / Create a fresh venue for crowd tests" id="ba5d9ac1-3f12-490a-8d63-8dc7cf86e5de" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.572">
+    <testcase name="Status is 201" time="0.572" classname="0SetupCreateAFreshVenueForCrowdTests"/>
+    <testcase name="Returns the venue ID" time="0.572" classname="0SetupCreateAFreshVenueForCrowdTests"/>
+  </testsuite>
+  <testsuite name="0. Setup / Fresh venue has UNKNOWN crowd status" id="dccaa480-87e1-4c45-9fb5-ba7f357a9f09" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.087">
+    <testcase name="HTTP 200" time="0.087" classname="0SetupFreshVenueHasUnknownCrowdStatus"/>
+    <testcase name="Success capsule" time="0.087" classname="0SetupFreshVenueHasUnknownCrowdStatus"/>
+    <testcase name="No reports" time="0.087" classname="0SetupFreshVenueHasUnknownCrowdStatus"/>
+  </testsuite>
+  <testsuite name="Op 6 - Report Venue Status / Report EMPTY from user u1" id="6f061932-9997-424a-9703-e40b3de31111" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.034">
+    <testcase name="Status is 201" time="0.034" classname="Op6ReportVenueStatusReportEmptyFromUserU1"/>
+    <testcase name="Returns the saved report" time="0.034" classname="Op6ReportVenueStatusReportEmptyFromUserU1"/>
+  </testsuite>
+  <testsuite name="Op 6 - Report Venue Status / Report PACKED from user u1 again" id="6b44b37e-3dac-464d-a9b3-98dffaa4a3d9" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.011">
+    <testcase name="Status is 201" time="0.011" classname="Op6ReportVenueStatusReportPackedFromUserU1Again"/>
+    <testcase name="Creates a new report ID" time="0.011" classname="Op6ReportVenueStatusReportPackedFromUserU1Again"/>
+  </testsuite>
+  <testsuite name="Op 6 - Report Venue Status / Verify u1 latest report before u2 submits" id="1fa60328-52cb-4ac0-bc50-c736c39ea494" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.014">
+    <testcase name="HTTP 200" time="0.014" classname="Op6ReportVenueStatusVerifyU1LatestReportBeforeU2Submits"/>
+    <testcase name="Success capsule" time="0.014" classname="Op6ReportVenueStatusVerifyU1LatestReportBeforeU2Submits"/>
+    <testcase name="Latest report replaces earlier vote" time="0.014" classname="Op6ReportVenueStatusVerifyU1LatestReportBeforeU2Submits"/>
+  </testsuite>
+  <testsuite name="Op 6 - Report Venue Status / Report BUSY from user u2" id="2e5eafe6-86d3-472a-be9a-e7797b51b1ea" timestamp="2026-10-27T02:26:53.889Z" tests="1" failures="0" errors="0" time="0.012">
+    <testcase name="Status is 201" time="0.012" classname="Op6ReportVenueStatusReportBusyFromUserU2"/>
+  </testsuite>
+  <testsuite name="Op 6 - Report Venue Status / Report LIGHT for basketball at venue 9001" id="2db39090-f0c6-4981-858d-d506ca3cd61e" timestamp="2026-10-27T02:26:53.889Z" tests="1" failures="0" errors="0" time="0.039">
+    <testcase name="Status is 201" time="0.039" classname="Op6ReportVenueStatusReportLightForBasketballAtVenue9001"/>
+  </testsuite>
+  <testsuite name="Op 6 - Report Venue Status / Report PACKED for the whole venue 9002" id="a33f6bb4-b801-42c7-8e72-189b7930ea6a" timestamp="2026-10-27T02:26:53.889Z" tests="1" failures="0" errors="0" time="0.014">
+    <testcase name="Status is 201" time="0.014" classname="Op6ReportVenueStatusReportPackedForTheWholeVenue9002"/>
+  </testsuite>
+  <testsuite name="Op 6 - Report Venue Status / Reject an invalid crowd level" id="3d80ae8b-7e6d-4929-bf49-318ab82003be" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.056">
+    <testcase name="Status is 400" time="0.056" classname="Op6ReportVenueStatusRejectAnInvalidCrowdLevel"/>
+    <testcase name="Error code is request.validation_failed" time="0.056" classname="Op6ReportVenueStatusRejectAnInvalidCrowdLevel"/>
+  </testsuite>
+  <testsuite name="Op 6 - Report Venue Status / Reject an unknown venue" id="f6de3793-647a-4972-ad78-3fb5b9f3acf3" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.012">
+    <testcase name="Status is 404" time="0.012" classname="Op6ReportVenueStatusRejectAnUnknownVenue"/>
+    <testcase name="Error code is venue.not_found" time="0.012" classname="Op6ReportVenueStatusRejectAnUnknownVenue"/>
+  </testsuite>
+  <testsuite name="Op 6 - Report Venue Status / Reject a request without an API key" id="be995535-b79e-44cc-a12c-a66c024a49bc" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.007">
+    <testcase name="Status is 401" time="0.007" classname="Op6ReportVenueStatusRejectARequestWithoutAnApiKey"/>
+    <testcase name="Error code is authorization.no_api_key_provided" time="0.007" classname="Op6ReportVenueStatusRejectARequestWithoutAnApiKey"/>
+  </testsuite>
+  <testsuite name="Op 7 - Get Venue Status / Count only each user's latest report" id="d951d1d6-6624-4846-b60d-ebf40239987f" timestamp="2026-10-27T02:26:53.889Z" tests="5" failures="0" errors="0" time="0.012">
+    <testcase name="Status is 200" time="0.012" classname="Op7GetVenueStatusCountOnlyEachUsersLatestReport"/>
+    <testcase name="Counts u1 once, using the latest report" time="0.012" classname="Op7GetVenueStatusCountOnlyEachUsersLatestReport"/>
+    <testcase name="Breaks the PACKED/BUSY tie with the most recent report" time="0.012" classname="Op7GetVenueStatusCountOnlyEachUsersLatestReport"/>
+    <testcase name="Source is LIVE" time="0.012" classname="Op7GetVenueStatusCountOnlyEachUsersLatestReport"/>
+    <testcase name="Has the latest report time" time="0.012" classname="Op7GetVenueStatusCountOnlyEachUsersLatestReport"/>
+  </testsuite>
+  <testsuite name="Op 7 - Get Venue Status / Reject an unknown venue" id="3427d3c6-60f2-4b45-9fc7-c07e99c3d6b9" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="Status is 404" time="0.008" classname="Op7GetVenueStatusRejectAnUnknownVenue"/>
+    <testcase name="Error code is venue.not_found" time="0.008" classname="Op7GetVenueStatusRejectAnUnknownVenue"/>
+  </testsuite>
+  <testsuite name="Op 7 - Get Venue Status / Sport-scoped live crowd status" id="8524464e-8008-4c46-aad8-1e2f4483e84c" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.016">
+    <testcase name="HTTP 200" time="0.016" classname="Op7GetVenueStatusSportScopedLiveCrowdStatus"/>
+    <testcase name="Success capsule" time="0.016" classname="Op7GetVenueStatusSportScopedLiveCrowdStatus"/>
+    <testcase name="Sport reports" time="0.016" classname="Op7GetVenueStatusSportScopedLiveCrowdStatus"/>
+  </testsuite>
+  <testsuite name="Op 7 - Get Venue Status / Sport-scoped fallback status" id="af726fa3-ecc9-4d86-a82d-36f86ed6dc42" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.014">
+    <testcase name="HTTP 200" time="0.014" classname="Op7GetVenueStatusSportScopedFallbackStatus"/>
+    <testcase name="Success capsule" time="0.014" classname="Op7GetVenueStatusSportScopedFallbackStatus"/>
+    <testcase name="Venue-wide fallback" time="0.014" classname="Op7GetVenueStatusSportScopedFallbackStatus"/>
+  </testsuite>
+  <testsuite name="Op 7 - Get Venue Status / Expired reports yield UNKNOWN" id="9e07b9b8-473e-46ce-b6c5-3ca2f9cfdc98" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.009">
+    <testcase name="HTTP 200" time="0.009" classname="Op7GetVenueStatusExpiredReportsYieldUnknown"/>
+    <testcase name="Success capsule" time="0.009" classname="Op7GetVenueStatusExpiredReportsYieldUnknown"/>
+    <testcase name="Three-hour-old report is excluded" time="0.009" classname="Op7GetVenueStatusExpiredReportsYieldUnknown"/>
+  </testsuite>
+  <testsuite name="Op 7 - Get Venue Status / Reject unsupported crowd sport" id="13ec3f48-571e-4cc8-b978-977b85d3f292" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="HTTP 400" time="0.008" classname="Op7GetVenueStatusRejectUnsupportedCrowdSport"/>
+    <testcase name="Error code" time="0.008" classname="Op7GetVenueStatusRejectUnsupportedCrowdSport"/>
+  </testsuite>
+  <testsuite name="Op 5 - Compare Venues / Compare three venues" id="a82b0e9a-8d85-4351-be59-cdee0d9a5f84" timestamp="2026-10-27T02:26:53.889Z" tests="9" failures="0" errors="0" time="0.068">
+    <testcase name="Status is 200" time="0.068" classname="Op5CompareVenuesCompareThreeVenues"/>
+    <testcase name="Sorts venues by distance" time="0.068" classname="Op5CompareVenuesCompareThreeVenues"/>
+    <testcase name="Nearest venue is 9001" time="0.068" classname="Op5CompareVenuesCompareThreeVenues"/>
+    <testcase name="Cheapest venue is 9002" time="0.068" classname="Op5CompareVenuesCompareThreeVenues"/>
+    <testcase name="Least crowded venue is 9001 (LIGHT beats PACKED)" time="0.068" classname="Op5CompareVenuesCompareThreeVenues"/>
+    <testcase name="Venue 9003 has no reports and an unknown crowd level" time="0.068" classname="Op5CompareVenuesCompareThreeVenues"/>
+    <testcase name="Venue 9001 is open now" time="0.068" classname="Op5CompareVenuesCompareThreeVenues"/>
+    <testcase name="Venue 9002 has no opening hours" time="0.068" classname="Op5CompareVenuesCompareThreeVenues"/>
+    <testcase name="Venue 9002 uses venue-wide PACKED fallback" time="0.068" classname="Op5CompareVenuesCompareThreeVenues"/>
+  </testsuite>
+  <testsuite name="Op 5 - Compare Venues / Reject duplicate venue IDs" id="321c365a-89a5-4254-8cb0-c6e8f44159ea" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.007">
+    <testcase name="Status is 400" time="0.007" classname="Op5CompareVenuesRejectDuplicateVenueIDs"/>
+    <testcase name="Error code is request.validation_failed" time="0.007" classname="Op5CompareVenuesRejectDuplicateVenueIDs"/>
+  </testsuite>
+  <testsuite name="Op 5 - Compare Venues / Reject a sport a venue does not offer" id="663868da-d6c2-4fa1-8219-98581c86b786" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.012">
+    <testcase name="Status is 400" time="0.012" classname="Op5CompareVenuesRejectASportAVenueDoesNotOffer"/>
+    <testcase name="Error code is venue.sport_not_offered" time="0.012" classname="Op5CompareVenuesRejectASportAVenueDoesNotOffer"/>
+  </testsuite>
+  <testsuite name="Op 5 - Compare Venues / Unknown comparison sport" id="a4d0eefa-be90-41c8-871a-3ce4d3ca8891" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.009">
+    <testcase name="HTTP 404" time="0.009" classname="Op5CompareVenuesUnknownComparisonSport"/>
+    <testcase name="Error code" time="0.009" classname="Op5CompareVenuesUnknownComparisonSport"/>
+  </testsuite>
+  <testsuite name="Op 5 - Compare Venues / Unknown comparison venue" id="7f51788e-e3fd-489c-b947-09289e8be302" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.017">
+    <testcase name="HTTP 404" time="0.017" classname="Op5CompareVenuesUnknownComparisonVenue"/>
+    <testcase name="Error code" time="0.017" classname="Op5CompareVenuesUnknownComparisonVenue"/>
+  </testsuite>
+  <testsuite name="Op 5 - Compare Venues / Too few comparison venues" id="2cc3acdf-6071-4a51-8788-d51e3d07812b" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="HTTP 400" time="0.008" classname="Op5CompareVenuesTooFewComparisonVenues"/>
+    <testcase name="Error code" time="0.008" classname="Op5CompareVenuesTooFewComparisonVenues"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Individual search returns nearest open affordable venues" id="1a970e47-5023-464b-9ffe-20a539762c29" timestamp="2026-10-27T02:26:53.889Z" tests="4" failures="0" errors="0" time="0.078">
+    <testcase name="HTTP 200" time="0.078" classname="Op1IndividualSearchAndOpeningHoursIndividualSearchReturnsNearestOpenAffordableVenues"/>
+    <testcase name="Success capsule" time="0.078" classname="Op1IndividualSearchAndOpeningHoursIndividualSearchReturnsNearestOpenAffordableVenues"/>
+    <testcase name="Ordered venue IDs" time="0.078" classname="Op1IndividualSearchAndOpeningHoursIndividualSearchReturnsNearestOpenAffordableVenues"/>
+    <testcase name="Result fields and distances" time="0.078" classname="Op1IndividualSearchAndOpeningHoursIndividualSearchReturnsNearestOpenAffordableVenues"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Zero radius includes exact center" id="b609d5c3-5344-4aff-a2c5-53bd2d36baf4" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.019">
+    <testcase name="HTTP 200" time="0.019" classname="Op1IndividualSearchAndOpeningHoursZeroRadiusIncludesExactCenter"/>
+    <testcase name="Success capsule" time="0.019" classname="Op1IndividualSearchAndOpeningHoursZeroRadiusIncludesExactCenter"/>
+    <testcase name="Inclusive radius" time="0.019" classname="Op1IndividualSearchAndOpeningHoursZeroRadiusIncludesExactCenter"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Default budget includes only free offerings" id="14d90454-2e87-4443-9af4-c6380ad0ec5c" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.014">
+    <testcase name="HTTP 200" time="0.014" classname="Op1IndividualSearchAndOpeningHoursDefaultBudgetIncludesOnlyFreeOfferings"/>
+    <testcase name="Success capsule" time="0.014" classname="Op1IndividualSearchAndOpeningHoursDefaultBudgetIncludesOnlyFreeOfferings"/>
+    <testcase name="Default zero budget" time="0.014" classname="Op1IndividualSearchAndOpeningHoursDefaultBudgetIncludesOnlyFreeOfferings"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / No sport offerings yields empty results" id="7525f772-8ee2-4295-a938-60f57e7ddec3" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.013">
+    <testcase name="HTTP 200" time="0.013" classname="Op1IndividualSearchAndOpeningHoursNoSportOfferingsYieldsEmptyResults"/>
+    <testcase name="Success capsule" time="0.013" classname="Op1IndividualSearchAndOpeningHoursNoSportOfferingsYieldsEmptyResults"/>
+    <testcase name="No matches" time="0.013" classname="Op1IndividualSearchAndOpeningHoursNoSportOfferingsYieldsEmptyResults"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Zero budget excludes paid venues" id="c641698e-7883-4e60-82fa-26090755b3a3" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.015">
+    <testcase name="HTTP 200" time="0.015" classname="Op1IndividualSearchAndOpeningHoursZeroBudgetExcludesPaidVenues"/>
+    <testcase name="Success capsule" time="0.015" classname="Op1IndividualSearchAndOpeningHoursZeroBudgetExcludesPaidVenues"/>
+    <testcase name="No affordable open venues" time="0.015" classname="Op1IndividualSearchAndOpeningHoursZeroBudgetExcludesPaidVenues"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Unknown sport is rejected" id="501266b7-66b2-4f03-8867-cb9771fa6c9d" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.009">
+    <testcase name="HTTP 404" time="0.009" classname="Op1IndividualSearchAndOpeningHoursUnknownSportIsRejected"/>
+    <testcase name="Error code" time="0.009" classname="Op1IndividualSearchAndOpeningHoursUnknownSportIsRejected"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Past search is rejected" id="063dc893-97fa-4689-b518-38bbee993dc5" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="HTTP 400" time="0.008" classname="Op1IndividualSearchAndOpeningHoursPastSearchIsRejected"/>
+    <testcase name="Error code" time="0.008" classname="Op1IndividualSearchAndOpeningHoursPastSearchIsRejected"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Invalid latitude" id="3635541b-3002-4045-b0d9-0ad082270847" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.039">
+    <testcase name="HTTP 400" time="0.039" classname="Op1IndividualSearchAndOpeningHoursInvalidLatitude"/>
+    <testcase name="Error code" time="0.039" classname="Op1IndividualSearchAndOpeningHoursInvalidLatitude"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Negative distance" id="eff36a05-5086-4f69-b394-deead3acb365" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="HTTP 400" time="0.008" classname="Op1IndividualSearchAndOpeningHoursNegativeDistance"/>
+    <testcase name="Error code" time="0.008" classname="Op1IndividualSearchAndOpeningHoursNegativeDistance"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Invalid date" id="c06dd90f-48f8-46d9-8295-b0f7140eb6a5" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.010">
+    <testcase name="HTTP 400" time="0.010" classname="Op1IndividualSearchAndOpeningHoursInvalidDate"/>
+    <testcase name="Error code" time="0.010" classname="Op1IndividualSearchAndOpeningHoursInvalidDate"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Missing time" id="b0c038a5-bd2a-4b94-8031-d377c77369b0" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="HTTP 400" time="0.008" classname="Op1IndividualSearchAndOpeningHoursMissingTime"/>
+    <testcase name="Error code" time="0.008" classname="Op1IndividualSearchAndOpeningHoursMissingTime"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Includes opening boundary" id="bfc67a72-269f-4358-b2a6-60b353f1feaa" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.016">
+    <testcase name="HTTP 200" time="0.016" classname="Op1IndividualSearchAndOpeningHoursIncludesOpeningBoundary"/>
+    <testcase name="Success capsule" time="0.016" classname="Op1IndividualSearchAndOpeningHoursIncludesOpeningBoundary"/>
+    <testcase name="Opening-hour result" time="0.016" classname="Op1IndividualSearchAndOpeningHoursIncludesOpeningBoundary"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Excludes closing boundary" id="16c5317f-b04d-4f73-bbf7-6be0818c658e" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.018">
+    <testcase name="HTTP 200" time="0.018" classname="Op1IndividualSearchAndOpeningHoursExcludesClosingBoundary"/>
+    <testcase name="Success capsule" time="0.018" classname="Op1IndividualSearchAndOpeningHoursExcludesClosingBoundary"/>
+    <testcase name="Opening-hour result" time="0.018" classname="Op1IndividualSearchAndOpeningHoursExcludesClosingBoundary"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Overnight after midnight" id="d41e117e-f019-415a-8e47-a3a408b30f43" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.015">
+    <testcase name="HTTP 200" time="0.015" classname="Op1IndividualSearchAndOpeningHoursOvernightAfterMidnight"/>
+    <testcase name="Success capsule" time="0.015" classname="Op1IndividualSearchAndOpeningHoursOvernightAfterMidnight"/>
+    <testcase name="Opening-hour result" time="0.015" classname="Op1IndividualSearchAndOpeningHoursOvernightAfterMidnight"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Overnight closing boundary" id="ac46aae8-4077-4aa4-930d-a95df8649115" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.014">
+    <testcase name="HTTP 200" time="0.014" classname="Op1IndividualSearchAndOpeningHoursOvernightClosingBoundary"/>
+    <testcase name="Success capsule" time="0.014" classname="Op1IndividualSearchAndOpeningHoursOvernightClosingBoundary"/>
+    <testcase name="Opening-hour result" time="0.014" classname="Op1IndividualSearchAndOpeningHoursOvernightClosingBoundary"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Overnight opening boundary" id="449f411d-a083-48af-bff0-554b09ddc2f4" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.014">
+    <testcase name="HTTP 200" time="0.014" classname="Op1IndividualSearchAndOpeningHoursOvernightOpeningBoundary"/>
+    <testcase name="Success capsule" time="0.014" classname="Op1IndividualSearchAndOpeningHoursOvernightOpeningBoundary"/>
+    <testcase name="Opening-hour result" time="0.014" classname="Op1IndividualSearchAndOpeningHoursOvernightOpeningBoundary"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Overnight before opening" id="e2a1de15-0f18-4aa4-b671-28d18d9f76d7" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.013">
+    <testcase name="HTTP 200" time="0.013" classname="Op1IndividualSearchAndOpeningHoursOvernightBeforeOpening"/>
+    <testcase name="Success capsule" time="0.013" classname="Op1IndividualSearchAndOpeningHoursOvernightBeforeOpening"/>
+    <testcase name="Opening-hour result" time="0.013" classname="Op1IndividualSearchAndOpeningHoursOvernightBeforeOpening"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Twenty-four-hour opening boundary" id="48ad83db-fd10-4bed-9e88-2e48b4ec6b90" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.013">
+    <testcase name="HTTP 200" time="0.013" classname="Op1IndividualSearchAndOpeningHoursTwentyFourHourOpeningBoundary"/>
+    <testcase name="Success capsule" time="0.013" classname="Op1IndividualSearchAndOpeningHoursTwentyFourHourOpeningBoundary"/>
+    <testcase name="Opening-hour result" time="0.013" classname="Op1IndividualSearchAndOpeningHoursTwentyFourHourOpeningBoundary"/>
+  </testsuite>
+  <testsuite name="Op 1 - Individual search and opening hours / Twenty-four-hour next morning" id="d1530ecf-ec3d-4111-ba72-5f974c5f4dce" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.014">
+    <testcase name="HTTP 200" time="0.014" classname="Op1IndividualSearchAndOpeningHoursTwentyFourHourNextMorning"/>
+    <testcase name="Success capsule" time="0.014" classname="Op1IndividualSearchAndOpeningHoursTwentyFourHourNextMorning"/>
+    <testcase name="Opening-hour result" time="0.014" classname="Op1IndividualSearchAndOpeningHoursTwentyFourHourNextMorning"/>
+  </testsuite>
+  <testsuite name="Op 3 - Group search / Group sorts by member average rather than center distance" id="eb8edb75-93c8-4d68-8835-eb59358fc7f9" timestamp="2026-10-27T02:26:53.889Z" tests="4" failures="0" errors="0" time="0.024">
+    <testcase name="HTTP 200" time="0.024" classname="Op3GroupSearchGroupSortsByMemberAverageRatherThanCenterDistance"/>
+    <testcase name="Success capsule" time="0.024" classname="Op3GroupSearchGroupSortsByMemberAverageRatherThanCenterDistance"/>
+    <testcase name="Group order" time="0.024" classname="Op3GroupSearchGroupSortsByMemberAverageRatherThanCenterDistance"/>
+    <testcase name="Member order and average" time="0.024" classname="Op3GroupSearchGroupSortsByMemberAverageRatherThanCenterDistance"/>
+  </testsuite>
+  <testsuite name="Op 3 - Group search / Radius applies to center even when members are farther away" id="2ad79e40-8206-4f47-84f4-1c57143c0636" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.013">
+    <testcase name="HTTP 200" time="0.013" classname="Op3GroupSearchRadiusAppliesToCenterEvenWhenMembersAreFartherAway"/>
+    <testcase name="Success capsule" time="0.013" classname="Op3GroupSearchRadiusAppliesToCenterEvenWhenMembersAreFartherAway"/>
+    <testcase name="Center only" time="0.013" classname="Op3GroupSearchRadiusAppliesToCenterEvenWhenMembersAreFartherAway"/>
+  </testsuite>
+  <testsuite name="Op 3 - Group search / One-member group matches individual search" id="ae900ef7-e812-4656-9b4b-8c66152fa44d" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.019">
+    <testcase name="HTTP 200" time="0.019" classname="Op3GroupSearchOneMemberGroupMatchesIndividualSearch"/>
+    <testcase name="Success capsule" time="0.019" classname="Op3GroupSearchOneMemberGroupMatchesIndividualSearch"/>
+    <testcase name="One member" time="0.019" classname="Op3GroupSearchOneMemberGroupMatchesIndividualSearch"/>
+  </testsuite>
+  <testsuite name="Op 3 - Group search / Reject mixed location forms" id="e1c3bcd3-e16b-49e3-a14e-eff932b3fd0f" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="HTTP 400" time="0.008" classname="Op3GroupSearchRejectMixedLocationForms"/>
+    <testcase name="Error code" time="0.008" classname="Op3GroupSearchRejectMixedLocationForms"/>
+  </testsuite>
+  <testsuite name="Op 3 - Group search / Reject incomplete member coordinates" id="088d7951-8060-4a65-89be-c6f2d556387f" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.009">
+    <testcase name="HTTP 400" time="0.009" classname="Op3GroupSearchRejectIncompleteMemberCoordinates"/>
+    <testcase name="Error code" time="0.009" classname="Op3GroupSearchRejectIncompleteMemberCoordinates"/>
+  </testsuite>
+  <testsuite name="Op 3 - Group search / Reject more than ten members" id="545e9bcc-55d1-469d-a31b-3ea430074d1c" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.011">
+    <testcase name="HTTP 400" time="0.011" classname="Op3GroupSearchRejectMoreThanTenMembers"/>
+    <testcase name="Error code" time="0.011" classname="Op3GroupSearchRejectMoreThanTenMembers"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Unchanged alternatives keep original constraints" id="bc02d885-723d-4ddd-a994-33380d7353ad" timestamp="2026-10-27T02:26:53.889Z" tests="4" failures="0" errors="0" time="0.032">
+    <testcase name="HTTP 200" time="0.032" classname="Op2AlternativesUnchangedAlternativesKeepOriginalConstraints"/>
+    <testcase name="Success capsule" time="0.032" classname="Op2AlternativesUnchangedAlternativesKeepOriginalConstraints"/>
+    <testcase name="Original retained" time="0.032" classname="Op2AlternativesUnchangedAlternativesKeepOriginalConstraints"/>
+    <testcase name="Budget increase limit" time="0.032" classname="Op2AlternativesUnchangedAlternativesKeepOriginalConstraints"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Only permitted radius expands" id="b09940a0-a61a-4c32-86b0-5d300dda5d12" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.017">
+    <testcase name="HTTP 200" time="0.017" classname="Op2AlternativesOnlyPermittedRadiusExpands"/>
+    <testcase name="Success capsule" time="0.017" classname="Op2AlternativesOnlyPermittedRadiusExpands"/>
+    <testcase name="Radius expansion" time="0.017" classname="Op2AlternativesOnlyPermittedRadiusExpands"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / No nearby offering differs from no valid alternative" id="49287041-4e19-4691-af8e-a06ede1ff312" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.011">
+    <testcase name="HTTP 404" time="0.011" classname="Op2AlternativesNoNearbyOfferingDiffersFromNoValidAlternative"/>
+    <testcase name="Error code" time="0.011" classname="Op2AlternativesNoNearbyOfferingDiffersFromNoValidAlternative"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Nearby but unaffordable yields empty alternatives" id="67030baa-b50d-44dd-a951-25efb5a76a7b" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.011">
+    <testcase name="HTTP 200" time="0.011" classname="Op2AlternativesNearbyButUnaffordableYieldsEmptyAlternatives"/>
+    <testcase name="Success capsule" time="0.011" classname="Op2AlternativesNearbyButUnaffordableYieldsEmptyAlternatives"/>
+    <testcase name="No valid alternative" time="0.011" classname="Op2AlternativesNearbyButUnaffordableYieldsEmptyAlternatives"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Unknown allowed change is rejected" id="5ddfbc05-0be5-47cb-9c56-73f3fb9cda45" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.009">
+    <testcase name="HTTP 400" time="0.009" classname="Op2AlternativesUnknownAllowedChangeIsRejected"/>
+    <testcase name="Error code" time="0.009" classname="Op2AlternativesUnknownAllowedChangeIsRejected"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Empty allowed changes is rejected" id="c8843cdf-636f-4043-bae6-3efb1a1fefbd" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.006">
+    <testcase name="HTTP 400" time="0.006" classname="Op2AlternativesEmptyAllowedChangesIsRejected"/>
+    <testcase name="Error code" time="0.006" classname="Op2AlternativesEmptyAllowedChangesIsRejected"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Unknown alternative sport" id="128fbad3-5f47-4aa8-8e79-8ac71bdd7dfb" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.009">
+    <testcase name="HTTP 404" time="0.009" classname="Op2AlternativesUnknownAlternativeSport"/>
+    <testcase name="Error code" time="0.009" classname="Op2AlternativesUnknownAlternativeSport"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Past original remains invalid with date permission" id="57b4d0d0-14e2-48f3-b3ca-bd707694628a" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.007">
+    <testcase name="HTTP 400" time="0.007" classname="Op2AlternativesPastOriginalRemainsInvalidWithDatePermission"/>
+    <testcase name="Error code" time="0.007" classname="Op2AlternativesPastOriginalRemainsInvalidWithDatePermission"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Date permission suggests previous Monday" id="d6b3f4b3-d0c2-48bd-904b-89ed21d93d42" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.015">
+    <testcase name="HTTP 200" time="0.015" classname="Op2AlternativesDatePermissionSuggestsPreviousMonday"/>
+    <testcase name="Success capsule" time="0.015" classname="Op2AlternativesDatePermissionSuggestsPreviousMonday"/>
+    <testcase name="Only Monday available" time="0.015" classname="Op2AlternativesDatePermissionSuggestsPreviousMonday"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Date stays unchanged without permission" id="8154ba43-2f4f-4033-9e12-82aec17e60e2" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.012">
+    <testcase name="HTTP 200" time="0.012" classname="Op2AlternativesDateStaysUnchangedWithoutPermission"/>
+    <testcase name="Success capsule" time="0.012" classname="Op2AlternativesDateStaysUnchangedWithoutPermission"/>
+    <testcase name="No Tuesday availability" time="0.012" classname="Op2AlternativesDateStaysUnchangedWithoutPermission"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Three-day date boundary is included" id="c0da96a3-150a-4eeb-8545-a572c1624906" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.014">
+    <testcase name="HTTP 200" time="0.014" classname="Op2AlternativesThreeDayDateBoundaryIsIncluded"/>
+    <testcase name="Success capsule" time="0.014" classname="Op2AlternativesThreeDayDateBoundaryIsIncluded"/>
+    <testcase name="Monday within three days" time="0.014" classname="Op2AlternativesThreeDayDateBoundaryIsIncluded"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Two-hour change reaches open venue" id="09b74731-0460-4ca7-b552-27b28fb9b429" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.013">
+    <testcase name="HTTP 200" time="0.013" classname="Op2AlternativesTwoHourChangeReachesOpenVenue"/>
+    <testcase name="Success capsule" time="0.013" classname="Op2AlternativesTwoHourChangeReachesOpenVenue"/>
+    <testcase name="Only 16:00 is open" time="0.013" classname="Op2AlternativesTwoHourChangeReachesOpenVenue"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Cannot change time without permission" id="6d77e64a-6b86-4fe0-923b-8c738d6aacde" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.013">
+    <testcase name="HTTP 200" time="0.013" classname="Op2AlternativesCannotChangeTimeWithoutPermission"/>
+    <testcase name="Success capsule" time="0.013" classname="Op2AlternativesCannotChangeTimeWithoutPermission"/>
+    <testcase name="Still closed" time="0.013" classname="Op2AlternativesCannotChangeTimeWithoutPermission"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Beyond two-hour limit stays unavailable" id="7a1713a3-d795-4e46-ac8d-e40c6ead7544" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.014">
+    <testcase name="HTTP 200" time="0.014" classname="Op2AlternativesBeyondTwoHourLimitStaysUnavailable"/>
+    <testcase name="Success capsule" time="0.014" classname="Op2AlternativesBeyondTwoHourLimitStaysUnavailable"/>
+    <testcase name="17:00 closing excluded" time="0.014" classname="Op2AlternativesBeyondTwoHourLimitStaysUnavailable"/>
+  </testsuite>
+  <testsuite name="Op 2 - Alternatives / Limit and ordering for many alternatives" id="fcc96ff7-a326-4e5e-bce8-a726f0c31fe9" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.020">
+    <testcase name="HTTP 200" time="0.020" classname="Op2AlternativesLimitAndOrderingForManyAlternatives"/>
+    <testcase name="Success capsule" time="0.020" classname="Op2AlternativesLimitAndOrderingForManyAlternatives"/>
+    <testcase name="Ten sorted unique alternatives" time="0.020" classname="Op2AlternativesLimitAndOrderingForManyAlternatives"/>
+  </testsuite>
+  <testsuite name="Op 4 - Venue information / Venue information includes sorted sports and hours" id="52be1363-eca1-4369-898f-02564606e9f6" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.018">
+    <testcase name="HTTP 200" time="0.018" classname="Op4VenueInformationVenueInformationIncludesSortedSportsAndHours"/>
+    <testcase name="Success capsule" time="0.018" classname="Op4VenueInformationVenueInformationIncludesSortedSportsAndHours"/>
+    <testcase name="Details contract" time="0.018" classname="Op4VenueInformationVenueInformationIncludesSortedSportsAndHours"/>
+  </testsuite>
+  <testsuite name="Op 4 - Venue information / Fresh venue returns empty related lists" id="27a0a952-2c90-4012-a2aa-fee6970c789a" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.010">
+    <testcase name="HTTP 200" time="0.010" classname="Op4VenueInformationFreshVenueReturnsEmptyRelatedLists"/>
+    <testcase name="Success capsule" time="0.010" classname="Op4VenueInformationFreshVenueReturnsEmptyRelatedLists"/>
+    <testcase name="Empty sports and hours" time="0.010" classname="Op4VenueInformationFreshVenueReturnsEmptyRelatedLists"/>
+  </testsuite>
+  <testsuite name="Op 4 - Venue information / Hours sort Monday first" id="ca812a09-660b-4ebe-a11f-32d9e8502ba8" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.015">
+    <testcase name="HTTP 200" time="0.015" classname="Op4VenueInformationHoursSortMondayFirst"/>
+    <testcase name="Success capsule" time="0.015" classname="Op4VenueInformationHoursSortMondayFirst"/>
+    <testcase name="Weekly intervals" time="0.015" classname="Op4VenueInformationHoursSortMondayFirst"/>
+  </testsuite>
+  <testsuite name="Op 4 - Venue information / Unknown venue information" id="b5c54085-a42d-4252-bd9d-2685d8fb096b" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.007">
+    <testcase name="HTTP 404" time="0.007" classname="Op4VenueInformationUnknownVenueInformation"/>
+    <testcase name="Error code" time="0.007" classname="Op4VenueInformationUnknownVenueInformation"/>
+  </testsuite>
+  <testsuite name="Op 4 - Venue information / Nonnumeric path is client error" id="2b0ad1f5-09e7-4586-bbf8-d679939d2eeb" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.006">
+    <testcase name="HTTP 400" time="0.006" classname="Op4VenueInformationNonnumericPathIsClientError"/>
+    <testcase name="Error code" time="0.006" classname="Op4VenueInformationNonnumericPathIsClientError"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Create and trim a venue" id="50441aa0-5b4c-4c5f-aef4-bda3f3b7d15f" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.010">
+    <testcase name="HTTP 201" time="0.010" classname="VenueCreationAndReviewsCreateAndTrimAVenue"/>
+    <testcase name="Success capsule" time="0.010" classname="VenueCreationAndReviewsCreateAndTrimAVenue"/>
+    <testcase name="Save created ID" time="0.010" classname="VenueCreationAndReviewsCreateAndTrimAVenue"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Read back created venue" id="493068b3-01bc-41fe-96f6-42b08824c46f" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.009">
+    <testcase name="HTTP 200" time="0.009" classname="VenueCreationAndReviewsReadBackCreatedVenue"/>
+    <testcase name="Success capsule" time="0.009" classname="VenueCreationAndReviewsReadBackCreatedVenue"/>
+    <testcase name="Stored values" time="0.009" classname="VenueCreationAndReviewsReadBackCreatedVenue"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Reject invalid venue timezone" id="94d45c43-3fcf-4d40-8389-21f8bc883d8d" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.007">
+    <testcase name="HTTP 400" time="0.007" classname="VenueCreationAndReviewsRejectInvalidVenueTimezone"/>
+    <testcase name="Error code" time="0.007" classname="VenueCreationAndReviewsRejectInvalidVenueTimezone"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Reject blank venue name" id="17b1998b-5908-440b-9bbb-25addb20a0b0" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="HTTP 400" time="0.008" classname="VenueCreationAndReviewsRejectBlankVenueName"/>
+    <testcase name="Error code" time="0.008" classname="VenueCreationAndReviewsRejectBlankVenueName"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Reject malformed JSON" id="d4a984b6-2760-4ab0-9c36-128c02dd6db4" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.007">
+    <testcase name="HTTP 400" time="0.007" classname="VenueCreationAndReviewsRejectMalformedJson"/>
+    <testcase name="Error code" time="0.007" classname="VenueCreationAndReviewsRejectMalformedJson"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Create venue-wide review" id="c457e792-3b4a-4574-9c1b-9185f0607d6a" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.026">
+    <testcase name="HTTP 200" time="0.026" classname="VenueCreationAndReviewsCreateVenueWideReview"/>
+    <testcase name="Success capsule" time="0.026" classname="VenueCreationAndReviewsCreateVenueWideReview"/>
+    <testcase name="Save review ID" time="0.026" classname="VenueCreationAndReviewsCreateVenueWideReview"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Update same user review" id="9b807a50-77d4-432b-9edb-8b56557ab80a" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.027">
+    <testcase name="HTTP 200" time="0.027" classname="VenueCreationAndReviewsUpdateSameUserReview"/>
+    <testcase name="Success capsule" time="0.027" classname="VenueCreationAndReviewsUpdateSameUserReview"/>
+    <testcase name="Preserve review ID" time="0.027" classname="VenueCreationAndReviewsUpdateSameUserReview"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Different user gets independent review" id="30dd3d61-8e56-40e0-9e08-1d574e1ec9c3" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.013">
+    <testcase name="HTTP 200" time="0.013" classname="VenueCreationAndReviewsDifferentUserGetsIndependentReview"/>
+    <testcase name="Success capsule" time="0.013" classname="VenueCreationAndReviewsDifferentUserGetsIndependentReview"/>
+    <testcase name="Different review ID" time="0.013" classname="VenueCreationAndReviewsDifferentUserGetsIndependentReview"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Sport-specific review is independent" id="95a995f1-bda8-4474-a514-70be736456be" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.013">
+    <testcase name="HTTP 200" time="0.013" classname="VenueCreationAndReviewsSportSpecificReviewIsIndependent"/>
+    <testcase name="Success capsule" time="0.013" classname="VenueCreationAndReviewsSportSpecificReviewIsIndependent"/>
+    <testcase name="Different sport scope ID" time="0.013" classname="VenueCreationAndReviewsSportSpecificReviewIsIndependent"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Issue second client key" id="5982f6a1-56a3-49fd-aee7-e0869b2e544d" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.006">
+    <testcase name="HTTP 201" time="0.006" classname="VenueCreationAndReviewsIssueSecondClientKey"/>
+    <testcase name="Success capsule" time="0.006" classname="VenueCreationAndReviewsIssueSecondClientKey"/>
+    <testcase name="Independent client" time="0.006" classname="VenueCreationAndReviewsIssueSecondClientKey"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Different client has independent user namespace" id="dad0a2af-9b91-40f4-9811-ee8efa2906da" timestamp="2026-10-27T02:26:53.889Z" tests="3" failures="0" errors="0" time="0.011">
+    <testcase name="HTTP 200" time="0.011" classname="VenueCreationAndReviewsDifferentClientHasIndependentUserNamespace"/>
+    <testcase name="Success capsule" time="0.011" classname="VenueCreationAndReviewsDifferentClientHasIndependentUserNamespace"/>
+    <testcase name="Client isolation" time="0.011" classname="VenueCreationAndReviewsDifferentClientHasIndependentUserNamespace"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Reject fractional rating" id="27eb17e0-30c9-4138-8878-9f4ceef7fb36" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="HTTP 400" time="0.008" classname="VenueCreationAndReviewsRejectFractionalRating"/>
+    <testcase name="Error code" time="0.008" classname="VenueCreationAndReviewsRejectFractionalRating"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Reject integer rating 0 outside one through five" id="d7c0be24-d945-4019-8339-1eaf29f28826" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="HTTP 400" time="0.008" classname="VenueCreationAndReviewsRejectIntegerRating0OutsideOneThroughFive"/>
+    <testcase name="Error code" time="0.008" classname="VenueCreationAndReviewsRejectIntegerRating0OutsideOneThroughFive"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Reject integer rating 6 outside one through five" id="5a92a2cc-a0eb-4add-bc91-ea842d0f7b38" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="HTTP 400" time="0.008" classname="VenueCreationAndReviewsRejectIntegerRating6OutsideOneThroughFive"/>
+    <testcase name="Error code" time="0.008" classname="VenueCreationAndReviewsRejectIntegerRating6OutsideOneThroughFive"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Reject unsupported review sport" id="b07be254-52c5-471e-bd53-09ebe21e2ed5" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.010">
+    <testcase name="HTTP 400" time="0.010" classname="VenueCreationAndReviewsRejectUnsupportedReviewSport"/>
+    <testcase name="Error code" time="0.010" classname="VenueCreationAndReviewsRejectUnsupportedReviewSport"/>
+  </testsuite>
+  <testsuite name="Venue creation and reviews / Reject unknown review venue" id="623f26c9-41e1-446a-a982-ea06ad81b05f" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.011">
+    <testcase name="HTTP 404" time="0.011" classname="VenueCreationAndReviewsRejectUnknownReviewVenue"/>
+    <testcase name="Error code" time="0.011" classname="VenueCreationAndReviewsRejectUnknownReviewVenue"/>
+  </testsuite>
+  <testsuite name="Authorization / Missing API key: GET /v1/venues" id="681ce5c4-a544-4743-a80c-cf597cc3b7ed" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.006">
+    <testcase name="HTTP 401" time="0.006" classname="AuthorizationMissingApiKeyGetV1Venues"/>
+    <testcase name="Error code" time="0.006" classname="AuthorizationMissingApiKeyGetV1Venues"/>
+  </testsuite>
+  <testsuite name="Authorization / Missing API key: GET /v1/venues" id="14150b87-f8e3-4296-a239-679a338720e0" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.005">
+    <testcase name="HTTP 401" time="0.005" classname="AuthorizationMissingApiKeyGetV1Venues"/>
+    <testcase name="Error code" time="0.005" classname="AuthorizationMissingApiKeyGetV1Venues"/>
+  </testsuite>
+  <testsuite name="Authorization / Missing API key: GET /v1/venues/alternatives" id="fd61bb50-adaa-4cf6-840d-0a1a1d06a964" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.004">
+    <testcase name="HTTP 401" time="0.004" classname="AuthorizationMissingApiKeyGetV1VenuesAlternatives"/>
+    <testcase name="Error code" time="0.004" classname="AuthorizationMissingApiKeyGetV1VenuesAlternatives"/>
+  </testsuite>
+  <testsuite name="Authorization / Missing API key: GET /v1/venues/9001" id="0dfb22d4-8873-4730-8dbd-4ba00acabbd1" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.004">
+    <testcase name="HTTP 401" time="0.004" classname="AuthorizationMissingApiKeyGetV1Venues9001"/>
+    <testcase name="Error code" time="0.004" classname="AuthorizationMissingApiKeyGetV1Venues9001"/>
+  </testsuite>
+  <testsuite name="Authorization / Missing API key: POST /v1/venues" id="f8698eeb-e753-4398-815f-3e1631c6e008" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.004">
+    <testcase name="HTTP 401" time="0.004" classname="AuthorizationMissingApiKeyPostV1Venues"/>
+    <testcase name="Error code" time="0.004" classname="AuthorizationMissingApiKeyPostV1Venues"/>
+  </testsuite>
+  <testsuite name="Authorization / Missing API key: POST /v1/venues/9001/reviews" id="ce6196c7-26cf-4041-b42b-a8f5a59b73c1" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.004">
+    <testcase name="HTTP 401" time="0.004" classname="AuthorizationMissingApiKeyPostV1Venues9001Reviews"/>
+    <testcase name="Error code" time="0.004" classname="AuthorizationMissingApiKeyPostV1Venues9001Reviews"/>
+  </testsuite>
+  <testsuite name="Authorization / Missing API key: POST /v1/venues/9001/crowd-reports" id="f4b3a68d-37c9-4bd5-abc1-9c32a0704217" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.004">
+    <testcase name="HTTP 401" time="0.004" classname="AuthorizationMissingApiKeyPostV1Venues9001CrowdReports"/>
+    <testcase name="Error code" time="0.004" classname="AuthorizationMissingApiKeyPostV1Venues9001CrowdReports"/>
+  </testsuite>
+  <testsuite name="Authorization / Missing API key: GET /v1/venues/9001/crowd-status" id="0ff3a6e6-86c8-4fc5-904c-e88eca629b7e" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.004">
+    <testcase name="HTTP 401" time="0.004" classname="AuthorizationMissingApiKeyGetV1Venues9001CrowdStatus"/>
+    <testcase name="Error code" time="0.004" classname="AuthorizationMissingApiKeyGetV1Venues9001CrowdStatus"/>
+  </testsuite>
+  <testsuite name="Authorization / Missing API key: GET /v1/venues/comparison" id="886c1537-55b8-49e5-97b1-d80f25137336" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.004">
+    <testcase name="HTTP 401" time="0.004" classname="AuthorizationMissingApiKeyGetV1VenuesComparison"/>
+    <testcase name="Error code" time="0.004" classname="AuthorizationMissingApiKeyGetV1VenuesComparison"/>
+  </testsuite>
+  <testsuite name="Authorization / Malformed Bearer header" id="7108c597-85e3-4b12-8531-849ae5a7ffaf" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.005">
+    <testcase name="HTTP 401" time="0.005" classname="AuthorizationMalformedBearerHeader"/>
+    <testcase name="Error code" time="0.005" classname="AuthorizationMalformedBearerHeader"/>
+  </testsuite>
+  <testsuite name="Authorization / Unknown API key" id="9e1ae456-227c-4c0e-a72f-01ba62e67676" timestamp="2026-10-27T02:26:53.889Z" tests="2" failures="0" errors="0" time="0.006">
+    <testcase name="HTTP 401" time="0.006" classname="AuthorizationUnknownApiKey"/>
+    <testcase name="Error code" time="0.006" classname="AuthorizationUnknownApiKey"/>
+  </testsuite>
+</testsuites>
