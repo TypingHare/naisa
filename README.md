@@ -67,3 +67,41 @@ separate course requirement from these service tests.
 Postman/Newman API tests and fixtures are in [server/api-tests](server/api-tests/).
 Run instructions are included with that suite. API tests send real HTTP requests
 and are separate from the database-free service unit tests.
+
+## Venue submissions (operations 8 and 9)
+
+- [API contracts, errors, side effects, and step-by-step examples](docs/server/venue-apis.md#operation-8-add-venue)
+- [Database setup](docs/server/database.md) and [test/run instructions](docs/server/development.md#testing-venue-submissions-operations-8-and-9)
+- Unit tests: `server/src/test/java/com/naisa/service/VenueSubmissionServiceTest.java`
+  (JUnit Jupiter, Mockito, and Maven Surefire; dependencies configured in `server/pom.xml`).
+- API tests: `server/api-tests/naisa-venue-submissions.postman_collection.json`
+  (Postman Collection Runner or Newman 6; fixture data in `server/api-tests/seed.sql`).
+- Style: Checkstyle using `google_checks.xml` (Google Java Style), including test sources;
+  configured in `server/pom.xml`. Run `./mvnw checkstyle:check` from `server`.
+- [AI usage disclosure](docs/AI-Usage.md).
+
+The submission tests use Maven-managed libraries and Newman installed through npm;
+no third-party implementation code is copied into these tests.
+
+## Submission evidence and team contributions
+
+- [Team contributions](docs/team-contributions.md): per-person summaries and the
+  complete source/test `@author` inventory, with shared credit retained.
+- [Verification summary](server/reports/venue-submissions/summary.txt): full Java
+  tests, focused and complete API tests, database assertions, and coverage.
+- [Clean Checkstyle report](server/reports/venue-submissions/checkstyle.xml):
+  Google Java Style (`google_checks.xml`), including all production and test Java
+  sources. Configuration is in `server/pom.xml`; `make lint` runs the checks.
+- [Checked-source hashes](server/reports/venue-submissions/checked-source-sha256.json):
+  SHA-256 of the checked Java sources and build/style configuration, normalized
+  to UTF-8 with LF endings so the evidence can be matched to a release checkout.
+- [Full Java branch coverage](server/reports/venue-submissions/jacoco.xml) and
+  [full API HTML coverage](docs/server/coverage/api-tests/index.html).
+
+Build from `server` with `./mvnw package`; run with `make run`. Follow the
+[database setup](docs/server/database.md), [development instructions](docs/server/development.md),
+and [API contracts](docs/server/venue-apis.md) first. Run `make test`, `make lint`,
+and `make api-test` before tagging the final main commit. The saved reports are
+development evidence until the reviewed changes are merged and the intended
+release contains the same checked sources. The existing `v0.1.0` tag predates
+this PR and does not contain these additions.
