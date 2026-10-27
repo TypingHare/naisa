@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ServiceException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.naisa.exception</a> &gt; <span class="el_source">ServiceException.java</span></div><h1>ServiceException.java</h1><pre class="source lang-java linenums">package com.naisa.exception;
+
+import com.naisa.common.Capsule;
+import org.springframework.http.HttpStatus;
+
+/**
+ * Represents a service exception.
+ *
+ * &lt;p&gt;A service exception should only be thrown in the service layer (i.e., classes in the {@code
+ * com.naisa.service} package).
+ *
+ * &lt;p&gt;A service exception can be converted into a capsule to form an error response. Its code and
+ * message are used in {@code Capsule}, and its status is used as the HTTP response status.
+ *
+ * @see Capsule
+ * @author James Chen
+ */
+public class ServiceException extends RuntimeException implements Cloneable {
+  protected final String code;
+  protected final HttpStatus status;
+
+  protected ServiceException(
+      final String code, final String message, final HttpStatus status, final Throwable cause) {
+<span class="fc" id="L24">    super(message, cause);</span>
+
+<span class="fc" id="L26">    this.code = code;</span>
+<span class="fc" id="L27">    this.status = status;</span>
+<span class="fc" id="L28">  }</span>
+
+  protected ServiceException(final String code, final String message, final HttpStatus status) {
+<span class="fc" id="L31">    this(code, message, status, null);</span>
+<span class="fc" id="L32">  }</span>
+
+  public String getCode() {
+<span class="fc" id="L35">    return code;</span>
+  }
+
+  public HttpStatus getStatus() {
+<span class="fc" id="L39">    return status;</span>
+  }
+
+  @Override
+  public ServiceException clone() {
+<span class="nc" id="L44">    return new ServiceException(code, this.getMessage(), status);</span>
+  }
+
+  public ServiceException causedBy(final Throwable throwable) {
+<span class="nc" id="L48">    return new ServiceException(code, this.getMessage(), status, throwable);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

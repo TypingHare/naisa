@@ -47,7 +47,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * needed. The user is located at (40.0, -73.0); venues are placed north of the user so that a
  * larger latitude means a longer distance.
  *
- * @author Emily Wang, Claude Code, Andrew Hsu, Codex
+ * @author Emily Wang, Claude Code, Andrew Hsu, Codex, Vincent Lai, Codex
  */
 @ExtendWith(MockitoExtension.class)
 class VenueComparisonServiceTest {
@@ -61,13 +61,17 @@ class VenueComparisonServiceTest {
 
   @InjectMocks private VenueComparisonService venueComparisonService;
 
-  /** Creates a request from the user's fixed location for the given venue IDs. */
+  /**
+   * Creates a request using double-precision coordinates for the given venue IDs.
+   *
+   * @author Emily Wang, Claude Code, Vincent Lai, Codex
+   */
   private static VenueComparisonRequest request(final Long... venueIds) {
     final VenueComparisonRequest request = new VenueComparisonRequest();
     request.setVenueIds(List.of(venueIds));
     request.setSportId(SPORT_ID);
-    request.setLatitude(BigDecimal.valueOf(40.0));
-    request.setLongitude(BigDecimal.valueOf(-73.0));
+    request.setLatitude(40.0);
+    request.setLongitude(-73.0);
     return request;
   }
 

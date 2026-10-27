@@ -42,7 +42,7 @@ jobs:
           spring.datasource.url=jdbc:postgresql://localhost:5432/naisa
           spring.datasource.username=naisa
           spring.datasource.password=ci_password
-          spring.jpa.hibernate.ddl-auto=create-drop
+          spring.jpa.hibernate.ddl-auto=validate
           spring.jpa.open-in-view=false
           EOF
 

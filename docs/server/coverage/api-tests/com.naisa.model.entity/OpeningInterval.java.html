@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpeningInterval.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.naisa.model.entity</a> &gt; <span class="el_source">OpeningInterval.java</span></div><h1>OpeningInterval.java</h1><pre class="source lang-java linenums">package com.naisa.model.entity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import java.beans.JavaBean;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * Represents an opening interval entity.
+ *
+ * &lt;p&gt;The {@code opening_intervals} table records the time intervals during which a venue is open.
+ * We allow a venue to have multiple opening intervals on the same day of the week. However, we
+ * assume that all sports at a given venue share the same opening intervals.
+ *
+ * @author James Chen, Vincent Lai
+ */
+@JavaBean
+@Entity
+@Table(name = &quot;opening_intervals&quot;)
+@Getter
+@Setter
+<span class="fc" id="L33">public class OpeningInterval {</span>
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = &quot;id&quot;, nullable = false, updatable = false)
+  private Long id;
+
+  @ManyToOne
+  @JoinColumn(name = &quot;venue_id&quot;, nullable = false)
+  private Venue venue;
+
+  @Column(name = &quot;day_of_week&quot;, length = 9, nullable = false)
+  @Enumerated(EnumType.STRING)
+  private DayOfWeek dayOfWeek;
+
+  @Column(name = &quot;opens_at&quot;, nullable = false)
+  private LocalTime opensAt;
+
+  @Column(name = &quot;closes_at&quot;, nullable = false)
+  private LocalTime closesAt;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

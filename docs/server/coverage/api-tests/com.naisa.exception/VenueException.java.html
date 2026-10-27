@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VenueException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.naisa.exception</a> &gt; <span class="el_source">VenueException.java</span></div><h1>VenueException.java</h1><pre class="source lang-java linenums">package com.naisa.exception;
+
+import org.springframework.http.HttpStatus;
+
+/**
+ * Describes business-rule failures encountered when searching, creating, or reviewing venues.
+ *
+ * &lt;p&gt;The static instances define reusable error descriptions. Callers must throw a fresh copy using
+ * {@link #clone()} or {@link #causedBy(Throwable)} rather than throwing a shared instance.
+ *
+ * @author Vincent Lai, Codex, Emily Wang, Codex, Andrew Hsu, Codex
+ */
+public final class VenueException extends ServiceException {
+<span class="fc" id="L14">  public static final VenueException REQUEST_IN_PAST =</span>
+      new VenueException(
+          &quot;request.validation_failed&quot;,
+          &quot;The requested date and time must not be in the past in America/New_York.&quot;,
+          HttpStatus.BAD_REQUEST,
+          null);
+
+<span class="fc" id="L21">  public static final VenueException NO_NEARBY_VENUES =</span>
+      new VenueException(
+          &quot;venue.no_nearby_venues&quot;,
+          &quot;There are no venues for this sport nearby&quot;,
+          HttpStatus.NOT_FOUND,
+          null);
+
+<span class="fc" id="L28">  public static final VenueException NOT_FOUND =</span>
+      new VenueException(
+          &quot;venue.not_found&quot;,
+          &quot;The requested venue does not exist.&quot;,
+          HttpStatus.NOT_FOUND,
+          null);
+
+<span class="fc" id="L35">  public static final VenueException INVALID_TIMEZONE =</span>
+      new VenueException(
+          &quot;venue.invalid_timezone&quot;,
+          &quot;Timezone must identify a recognized region such as America/New_York.&quot;,
+          HttpStatus.BAD_REQUEST,
+          null);
+
+<span class="fc" id="L42">  public static final VenueException SPORT_NOT_OFFERED =</span>
+      new VenueException(
+          &quot;venue.sport_not_offered&quot;,
+          &quot;The requested sport is not registered at this venue.&quot;,
+          HttpStatus.BAD_REQUEST,
+          null);
+
+<span class="fc" id="L49">  public static final VenueException DUPLICATE_IDS =</span>
+      new VenueException(
+          &quot;request.validation_failed&quot;,
+          &quot;Venue IDs must be distinct.&quot;,
+          HttpStatus.BAD_REQUEST,
+          null);
+
+<span class="fc" id="L56">  public static final VenueException SPORT_NOT_FOUND =</span>
+      new VenueException(
+          &quot;sport.not_found&quot;,
+          &quot;Sport does not exist.&quot;,
+          HttpStatus.NOT_FOUND,
+          null);
+
+  /**
+   * Creates an error description with its HTTP status and optional underlying cause.
+   *
+   * @param code stable error code returned to clients
+   * @param message explanation of the failed business rule
+   * @param status HTTP status associated with the failure
+   * @param cause underlying failure, or null when there is no underlying exception
+   * @author Vincent Lai, Codex
+   */
+  private VenueException(
+      final String code,
+      final String message,
+      final HttpStatus status,
+      final Throwable cause) {
+<span class="fc" id="L77">    super(code, message, status, cause);</span>
+<span class="fc" id="L78">  }</span>
+
+  /**
+   * Creates a fresh throwable with the same error description.
+   *
+   * @return a new exception with this code, message, and HTTP status
+   * @author Vincent Lai, Codex
+   */
+  @Override
+  public VenueException clone() {
+<span class="fc" id="L88">    return new VenueException(code, getMessage(), status, null);</span>
+  }
+
+  /**
+   * Creates a fresh throwable that retains the supplied underlying failure.
+   *
+   * @param cause underlying exception that caused this failure
+   * @return a new exception with this error description and the supplied cause
+   * @author Vincent Lai, Codex
+   */
+  @Override
+  public VenueException causedBy(final Throwable cause) {
+<span class="nc" id="L100">    return new VenueException(code, getMessage(), status, cause);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Venue.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.naisa.model.entity</a> &gt; <span class="el_source">Venue.java</span></div><h1>Venue.java</h1><pre class="source lang-java linenums">package com.naisa.model.entity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
+import java.beans.JavaBean;
+import java.time.Instant;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
+
+/**
+ * Represents a venue entity.
+ *
+ * &lt;p&gt;A venue is a location where people can play one or more sports. This entity contains the
+ * venue's name and location information.
+ *
+ * &lt;p&gt;The {@code address} field is the venue's USPS address, which serves as its identifier on the
+ * map. The {@code latitude} and {@code longitude} fields are used to calculate the distance between
+ * users' locations and the venue's location. The {@code timeZone} field is necessary to check
+ * whether the venue's opening hours accommodate users' proposed time range.
+ *
+ * &lt;p&gt;Submitted venues record both the authenticated client and an external user identifier supplied
+ * by that client. The external identifier is meaningful only within that client's user system; this
+ * service does not maintain an account for the external user. Older or imported venues may have no
+ * submission information.
+ *
+ * @author James Chen, Vincent Lai, Codex
+ */
+@JavaBean
+@Entity(name = &quot;venues&quot;)
+@Getter
+@Setter
+<span class="fc" id="L42">public class Venue {</span>
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = &quot;id&quot;, nullable = false, updatable = false)
+  private Long id;
+
+  @Column(name = &quot;name&quot;, length = 255, nullable = false)
+  @Size(max = 255, message = &quot;Venue name must not exceed 255 characters.&quot;)
+  private String name;
+
+  @Column(name = &quot;address&quot;, length = 255, nullable = false)
+  @Size(max = 255, message = &quot;Address must not exceed 255 characters.&quot;)
+  private String address;
+
+  @Min(-90)
+  @Max(90)
+  @Column(name = &quot;latitude&quot;, nullable = false)
+  private Double latitude;
+
+  @Min(-180)
+  @Max(180)
+  @Column(name = &quot;longitude&quot;, nullable = false)
+  private Double longitude;
+
+  @Column(name = &quot;timezone&quot;, length = 32, nullable = false)
+  @Size(max = 32, message = &quot;Timezone must not exceed 32 characters.&quot;)
+  private String timezone;
+
+  /** Client service that submitted the venue; absent for unattributed records. */
+  @ManyToOne
+  @JoinColumn(name = &quot;created_by_client_id&quot;, updatable = false)
+  private Client createdByClient;
+
+  /** Database-generated creation time; may be unknown for older records. */
+  @Generated(event = EventType.INSERT)
+  @Column(name = &quot;created_at&quot;, updatable = false)
+  private Instant createdAt;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

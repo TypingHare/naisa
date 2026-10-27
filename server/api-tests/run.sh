@@ -9,7 +9,6 @@ db_name="${run_name}-db"
 app_name="${run_name}-app"
 network_name="${run_name}-network"
 port="${API_TEST_PORT:-18080}"
-mkdir -p target/api-tests
 
 cleanup() {
   docker logs "$app_name" > target/api-tests/server.log 2>&1 || true
@@ -18,9 +17,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
-./mvnw --batch-mode -DskipTests package dependency:copy \
+./mvnw --batch-mode clean -DskipTests package dependency:copy \
   -Dartifact=org.jacoco:org.jacoco.agent:0.8.14:jar:runtime \
   -DoutputDirectory=target/api-tests-tools
+mkdir -p target/api-tests
 rm -f target/api-tests.exec
 docker network create "$network_name" >/dev/null
 docker run -d --name "$db_name" --network "$network_name" --network-alias db \

@@ -2503,6 +2503,78 @@
                   "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
                   "const response = pm.response.json();",
                   "const data = response.data;",
+                  "pm.test(\"Error code\", () => pm.expect(response.errorCode).to.eql(\"request.invalid_body\"));",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject integer rating 0 outside one through five",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/9001/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"externalUserID\": \"bad-review\", \"rating\": 0, \"comment\": \"Invalid rating\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "const response = pm.response.json();",
+                  "const data = response.data;",
+                  "pm.test(\"Error code\", () => pm.expect(response.errorCode).to.eql(\"request.validation_failed\"));",
+                  "})();"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject integer rating 6 outside one through five",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{apiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/v1/venues/9001/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"externalUserID\": \"bad-review\", \"rating\": 6, \"comment\": \"Invalid rating\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "(() => {",
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "const response = pm.response.json();",
+                  "const data = response.data;",
                   "pm.test(\"Error code\", () => pm.expect(response.errorCode).to.eql(\"request.validation_failed\"));",
                   "})();"
                 ]

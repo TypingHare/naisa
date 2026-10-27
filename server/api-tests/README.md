@@ -45,7 +45,7 @@ database. The fixture SQL must be used only with a disposable test database.
 - `POST /v1/venues`: creation, read-back, trimming, timezone checks, validation,
   and malformed JSON.
 - `POST /v1/venues/{venueId}/reviews`: create and update, user/client/sport scope
-  isolation, fractional ratings, and missing or unsupported resources.
+  isolation, fractional ratings, integer rating bounds, and missing or unsupported resources.
 - `POST /v1/venues/{venueId}/crowd-reports` and
   `GET /v1/venues/{venueId}/crowd-status`: append-only reports, latest-report
   selection, sport fallback, expiration, aggregation, and errors.
@@ -60,7 +60,7 @@ cover stored behavior for which the API has no separate history endpoint.
 
 ## Results and branch coverage
 
-The verified run on 2026-10-26 completed 95 requests and 242 assertions with no
+The verified run on 2026-10-26 completed 97 requests and 246 assertions with no
 failures. Database postconditions passed. The saved report records 118 covered
 branches out of 150 application branches (78.7%).
 
@@ -75,15 +75,18 @@ application-level `BRANCH` counters, with no custom class exclusions, to enforce
 the 55% threshold. Passing runs save the complete HTML report and test results
 under `docs/server/coverage/api-tests/` for review and course submission.
 
-The saved report is a snapshot from the API suite alone. It does not claim
+The [saved HTML report](../../docs/server/coverage/api-tests/index.html) is a
+snapshot from the API suite alone. It does not claim
 combined unit and API coverage. Build outputs under `server/target` are temporary;
 the saved HTML report is included in Git. JaCoCo configuration is in
 `server/pom.xml`, the runner is `api-tests/run.sh`, and CI calls `make api-test`.
 
 The tests exposed two bugs that this change fixes: comparison treated 24-hour
 opening intervals as closed, and review uniqueness omitted the external user ID.
-Flyway migration V3 corrects the review constraint without changing migrations
-already applied to existing databases.
+Flyway migration V4 corrects the review constraint without changing migrations
+already applied to existing databases. V3 remains the venue-sport lighting
+migration from PR #33. The runner performs a clean build so renamed migrations
+cannot remain in the compiled resource directory.
 
 ## Use Postman or Newman with a separate test service
 
