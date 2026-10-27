@@ -26,7 +26,7 @@ The following query parameters are required:
 - `sportId`: The ID of the requested sport
 - `date`: The desired date in YYYY-MM-DD format, for example 2026-10-23.
 - `time`: The desired time on a 24-hour clock. Accept HH:mm, HH:mm:ss, or
-  HH:mm:ss with 1â€“9 fractional second digits. Examples: 14:30, 14:30:45, and
+  HH:mm:ss with 1-9 fractional second digits. Examples: 14:30, 14:30:45, and
   14:30:45.123. Hours range from 00 to 23. Time-zone offsets are not accepted.
 - `maxDistance`: Maximum distance in kilometers from the search center. This
   parameter is required for both single-member and group searches.
@@ -133,7 +133,7 @@ requested date and time:
 
 - Include the opening time and exclude the closing time.
 - If the closing time is earlier than the opening time, the interval continues
-  into the next day. For example, Monday 22:00â€“02:00 includes Tuesday 01:00.
+  into the next day. For example, Monday 22:00-02:00 includes Tuesday 01:00.
 - Equal opening and closing times represent a 24-hour interval that starts at
   the opening time on the specified weekday.
 - Multiple intervals on the same day are permitted. A match with any interval is
@@ -393,14 +393,14 @@ time. Preserve multiple intervals on the same weekday.
 
 `GET /v1/venues/comparison`
 
-This endpoint compares 2â€“5 venues for a given sport. Venues are sorted by
+This endpoint compares 2-5 venues for a given sport. Venues are sorted by
 distance from the user's location.
 
 ##### Request
 
 The following query parameters are required:
 
-- `venueIds`: 2â€“5 distinct venue IDs, separated by commas.
+- `venueIds`: 2-5 distinct venue IDs, separated by commas.
 - `sportId`: The ID of the requested sport.
 - `latitude`: The user's latitude, between -90 and 90.
 - `longitude`: The user's longitude, between -180 and 180.

@@ -1,7 +1,7 @@
-# Team contributions â€” Iteration 1
+# Team contributions - Iteration 1
 
 This retrospective records work attributed by `@author` tags in the Java source
-and tests. It covers main at `11c68c4` plus the operations 8â€“9 tests in this PR.
+and tests. It covers main at `11c68c4` plus the operations 8-9 tests in this PR.
 Vincent Lai used Codex to compile this document on October 26, 2026.
 
 Tags establish recorded contribution, not exclusive ownership, hours worked, or
@@ -43,7 +43,7 @@ contributors. Codex and Claude Code are AI tools, not team members. The spelling
 
 ## Andrew Hsu
 
-- Implemented operations 1â€“4: individual/group venue searches, permitted-change
+- Implemented operations 1-4: individual/group venue searches, permitted-change
   alternatives, and venue details, with request/response models, controller
   methods, service logic, and repository queries.
 - Added search validation, group-member handling, future date/time suggestions,
@@ -56,7 +56,7 @@ contributors. Codex and Claude Code are AI tools, not team members. The spelling
 
 ## Emily Wang
 
-- Implemented operations 5â€“7: venue comparison, crowd-report submission, and
+- Implemented operations 5-7: venue comparison, crowd-report submission, and
   current crowd-status calculation, including controller methods and DTOs/VOs.
 - Authored the crowd-report and comparison services, crowd-report repository,
   crowd constants, and shared repository/distance utilities. Tags credit James
@@ -75,7 +75,7 @@ do not capture:
 | Contributor | Additional recorded work | Evidence |
 | --- | --- | --- |
 | Andrew Hsu, Codex | Full HTTP API suite, isolated runner, SQL assertions, review-uniqueness migration V4, and coverage reports | [PR #39](https://github.com/TypingHare/naisa/pull/39), [API suite](../server/api-tests/README.md) |
-| Vincent Lai, Codex | Focused operations 8â€“9 Postman collection, persistence assertions, API documentation, and style evidence in this change | [Collection](../server/api-tests/naisa-venue-submissions.postman_collection.json), [SQL assertions](../server/api-tests/submission-assertions.sql), [API documentation](server/venue-apis.md#operation-8-add-venue), [reports](../server/reports/venue-submissions/summary.txt) |
+| Vincent Lai, Codex | Focused operations 8-9 Postman collection, persistence assertions, API documentation, and style evidence in this change | [Collection](../server/api-tests/naisa-venue-submissions.postman_collection.json), [SQL assertions](../server/api-tests/submission-assertions.sql), [API documentation](server/venue-apis.md#operation-8-add-venue), [reports](../server/reports/venue-submissions/summary.txt) |
 | Vincent Lai, Codex | Lighting and numeric-type changes | [PR #33](https://github.com/TypingHare/naisa/pull/33), [PR #34](https://github.com/TypingHare/naisa/pull/34) |
 | Andrew Hsu, Codex | Venue information, individual/group search, and alternative-search unit suites | [PR #35](https://github.com/TypingHare/naisa/pull/35), [PR #36](https://github.com/TypingHare/naisa/pull/36), [PR #37](https://github.com/TypingHare/naisa/pull/37), [PR #38](https://github.com/TypingHare/naisa/pull/38) |
 
