@@ -87,8 +87,8 @@ public class VenueController {
   /**
    * Finds open venues within the requested distance and hourly budget for one origin or a group.
    *
-   * <p>Query parameters supply either latitude and longitude or indexed member locations.
-   * Both forms use the same service method and return results sorted by average member distance.
+   * <p>Query parameters supply either latitude and longitude or indexed member locations. Both
+   * forms use the same service method and return results sorted by average member distance.
    *
    * @param request validated search query parameters
    * @return HTTP 200 with matching venues, or an empty list when none match
@@ -127,9 +127,9 @@ public class VenueController {
   /**
    * Accepts basic venue information and creates a venue attributed to its submitter.
    *
-   * <p>The client is taken from the authenticated request context. The JSON body supplies the
-   * external user identifier and venue information. Field validation occurs before this method is
-   * invoked; business-rule failures are handled by the shared exception handler.
+   * <p>The client is taken from the authenticated request context. The JSON body supplies the venue
+   * information. Field validation occurs before this method is invoked; business-rule failures are
+   * handled by the shared exception handler.
    *
    * @param client authenticated client attached by the authorization interceptor
    * @param request validated venue submission
