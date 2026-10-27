@@ -76,7 +76,7 @@ public class VenueComparisonService {
    * @return comparison results sorted by distance
    * @throws VenueException if the IDs are duplicated, the sport or a venue does not exist, or a
    *     venue does not offer the sport
-   * @author Emily Wang, Codex, Claude Code, Andrew Hsu, Codex
+   * @author Emily Wang, Codex, Claude Code, Andrew Hsu, Codex, Vincent Lai, Codex
    */
   @Transactional(readOnly = true)
   public VenueComparisonResponse compare(final VenueComparisonRequest request) {
@@ -104,8 +104,8 @@ public class VenueComparisonService {
       item.setName(venue.getName());
       item.setDistanceKm(
           VenueDistance.calculateDistanceKm(
-              request.getLatitude().doubleValue(),
-              request.getLongitude().doubleValue(),
+              request.getLatitude(),
+              request.getLongitude(),
               venue.getLatitude(),
               venue.getLongitude()));
       item.setHourlyPrice(offering.getPrice());
