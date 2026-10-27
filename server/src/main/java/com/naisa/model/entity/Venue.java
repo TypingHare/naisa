@@ -28,8 +28,10 @@ import org.hibernate.generator.EventType;
  * users' locations and the venue's location. The {@code timeZone} field is necessary to check
  * whether the venue's opening hours accommodate users' proposed time range.
  *
- * <p>Submitted venues record the authenticated client that created them. Venue submissions do not
- * record an external user identifier. Older or imported venues may have no submission information.
+ * <p>Submitted venues record both the authenticated client and an external user identifier supplied
+ * by that client. The external identifier is meaningful only within that client's user system; this
+ * service does not maintain an account for the external user. Older or imported venues may have no
+ * submission information.
  *
  * @author James Chen, Vincent Lai, Codex
  */

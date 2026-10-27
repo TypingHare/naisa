@@ -11,7 +11,6 @@ refers to the major design decisions regarding dependencies (e.g., third-party
 libraries and CLI tools), components (e.g., layers and utilities), communication
 (e.g., protocols between endpoints), and so on.
 
-In [venue-apis.md](./venue-apis.md), we describe the API contracts for operations
-1-9, including inputs, outputs, errors, side effects, and submission examples.
-See [development.md](./development.md) for test and run instructions and
-[database.md](./database.md) for database configuration.
+In [venue-apis.md](./venue-apis.md), we describe the API contracts for Operation
+5 (Compare Venues), Operation 6 (Report Venue Status), and Operation 7 (Get
+Venue Status).

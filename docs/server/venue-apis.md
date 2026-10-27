@@ -1,6 +1,6 @@
 ### Venue APIs
 
-This document describes the API contracts for Operations 1-9. All
+This document describes the API contracts for Operations 1, 2, 3, 5, 6, and 7. All
 endpoints require authorization and use the standard `Capsule` response format.
 See [architecture.md](./architecture.md) for details.
 
@@ -26,7 +26,7 @@ The following query parameters are required:
 - `sportId`: The ID of the requested sport
 - `date`: The desired date in YYYY-MM-DD format, for example 2026-10-23.
 - `time`: The desired time on a 24-hour clock. Accept HH:mm, HH:mm:ss, or
-  HH:mm:ss with 1â€“9 fractional second digits. Examples: 14:30, 14:30:45, and
+  HH:mm:ss with 1–9 fractional second digits. Examples: 14:30, 14:30:45, and
   14:30:45.123. Hours range from 00 to 23. Time-zone offsets are not accepted.
 - `maxDistance`: Maximum distance in kilometers from the search center. This
   parameter is required for both single-member and group searches.
@@ -133,7 +133,7 @@ requested date and time:
 
 - Include the opening time and exclude the closing time.
 - If the closing time is earlier than the opening time, the interval continues
-  into the next day. For example, Monday 22:00â€“02:00 includes Tuesday 01:00.
+  into the next day. For example, Monday 22:00–02:00 includes Tuesday 01:00.
 - Equal opening and closing times represent a 24-hour interval that starts at
   the opening time on the specified weekday.
 - Multiple intervals on the same day are permitted. A match with any interval is
@@ -393,14 +393,14 @@ time. Preserve multiple intervals on the same weekday.
 
 `GET /v1/venues/comparison`
 
-This endpoint compares 2â€“5 venues for a given sport. Venues are sorted by
+This endpoint compares 2–5 venues for a given sport. Venues are sorted by
 distance from the user's location.
 
 ##### Request
 
 The following query parameters are required:
 
-- `venueIds`: 2â€“5 distinct venue IDs, separated by commas.
+- `venueIds`: 2–5 distinct venue IDs, separated by commas.
 - `sportId`: The ID of the requested sport.
 - `latitude`: The user's latitude, between -90 and 90.
 - `longitude`: The user's longitude, between -180 and 180.
@@ -616,209 +616,3 @@ Historical estimates are not included in the first iteration.
 | 401    | `authorization.invalid_authorization_header` | Invalid Bearer header              |
 | 401    | `client.invalid_api_key`                     | Unknown API key                    |
 | 404    | `venue.not_found`                            | Venue does not exist               |
-
-### Operation 8: Add Venue
-
-`POST /v1/venues`
-
-Creates a venue attributed to the authenticated client. Send
-`Authorization: Bearer <apiKey>` and `Content-Type: application/json`.
-Obtain a key first with `POST /v1/clients` (no body or authorization required);
-its HTTP 201 response contains the key in `data.apiKey`.
-
-#### Request
-
-All five fields are required and must be non-null:
-
-| Field | Type | Rules |
-| --- | --- | --- |
-| `name` | string | Nonblank; at most 255 characters |
-| `address` | string | Nonblank; at most 255 characters |
-| `latitude` | number | Inclusive range -90 to 90 |
-| `longitude` | number | Inclusive range -180 to 180 |
-| `timezone` | string | Nonblank; at most 32 characters; recognized Java region ID, such as `America/New_York` or `UTC` |
-
-```json
-{
-  "name": "Riverside Court",
-  "address": "1 Riverside Drive, New York, NY",
-  "latitude": 40.812345,
-  "longitude": -73.961234,
-  "timezone": "America/New_York"
-}
-```
-
-There is no external-user field on venue submissions. The client identity comes
-from the API key, not the request body. Length validation runs before surrounding
-whitespace is stripped from the name, address, and timezone. Coordinates use Java `Double` values and are
-stored as PostgreSQL `DOUBLE PRECISION` values; no address geocoding is performed.
-Timezone names are case-sensitive; a fixed offset such as `+02:00` is rejected.
-
-#### Response and side effects
-
-HTTP 201:
-
-```json
-{"message":"Venue created.","data":{"id":123}}
-```
-
-The returned ID is database-generated. One venue row is inserted, including the
-submitting client and a database-generated creation timestamp. Repeating the same
-request creates a separate venue; names and addresses are not deduplicated.
-
-The operation creates no sports, prices, or opening intervals. Consequently, a
-new venue can be retrieved with `GET /v1/venues/123` and reviewed immediately,
-but will not appear in sport searches until an operator supplies its sport
-offerings and opening hours in the database. There is no public endpoint for
-adding these offerings or hours in this iteration. Test fixtures provide them.
-
-### Operation 9: Rate Venue
-
-`POST /v1/venues/{venueId}/reviews`
-
-Creates or updates a review for an existing venue. Requires the same authorization
-and JSON content-type headers as operation 8. `venueId` is a signed 64-bit integer
-identifying an existing venue; an unknown ID returns 404.
-
-#### Request
-
-| Field | Type | Rules |
-| --- | --- | --- |
-| `externalUserID` | string | Required, nonblank, at most 128 characters; spelling and capitalization are exact |
-| `rating` | number | Required; integer representation from 1 through 5; decimal tokens (including `4.0`) are rejected during deserialization |
-| `comment` | string | Required, nonblank, at most 2,000 characters |
-| `sportId` | integer or null | Optional; if supplied, must be positive and offered at this venue |
-
-```json
-{
-  "externalUserID": "member-42",
-  "rating": 5,
-  "comment": "Clean court with plenty of space."
-}
-```
-
-Omit `sportId` or set it to `null` to review the whole venue. For a sport-specific
-review, add its numeric ID, for example `"sportId": 9001`. A registered sport
-that is not offered at the selected venue is rejected, just like an unknown sport.
-
-`externalUserID` is the calling client's user identifier. Naisa does not register
-or authenticate the external user. Identifiers are preserved exactly, including
-case and surrounding whitespace. `member-42` and ` member-42 ` identify different
-users. Comments are stripped of surrounding whitespace after length validation.
-
-#### Response and side effects
-
-HTTP 200 for both creation and update:
-
-```json
-{"message":"Review saved.","data":{"id":456}}
-```
-
-Ratings use Java `Short` and PostgreSQL `SMALLINT`, with validation restricting
-them to 1-5. Prices and budgets retain their decimal types.
-
-A review is identified by the tuple `(client, externalUserID, venue, sport)`.
-Repeating this tuple replaces the rating and comment and returns the same ID;
-the creation timestamp is retained and the update timestamp is refreshed by the
-database. Different clients, external users, venues, and sport scopes have
-independent reviews. The whole-venue scope is distinct from every sport scope.
-There is no review-retrieval endpoint in this iteration; the response contains
-only the saved review ID, not the rating or comment.
-
-The service locks the venue row before looking up the review and holds the lock
-until the transaction ends. Writes to the same venue are serialized. The database
-also enforces uniqueness, including the external user and treating a null sport
-as one scope. Migration `V4__include_external_user_in_review_scope.sql` fixes the
-older constraint that incorrectly allowed only one user per client/venue/sport.
-
-### Errors for Operations 8 and 9
-
-Errors use the shared capsule, for example:
-
-```json
-{"message":"Request validation failed.","errorCode":"request.validation_failed"}
-```
-
-Clients should branch on `errorCode` and HTTP status, rather than matching
-human-readable messages. Both operations
-validate the body before executing business logic. Rejected requests do not
-create or modify venues or reviews.
-
-| Status | `errorCode` | Applies to / cause |
-| --- | --- | --- |
-| 400 | `request.invalid_body` | Both: missing/malformed JSON or a value that cannot be deserialized; rating decimal tokens or values outside SMALLINT also fail here |
-| 400 | `request.validation_failed` | Both: missing/null required fields, blank text, excessive length, or a constraint violation |
-| 400 | `venue.invalid_timezone` | Add venue: unrecognized timezone after trimming |
-| 400 | `request.invalid_parameter` | Rate venue: path venue ID cannot be parsed as a 64-bit integer |
-| 400 | `venue.sport_not_offered` | Rate venue: specified sport is absent from the venue |
-| 401 | `authorization.no_api_key_provided` | Both: missing Authorization header |
-| 401 | `authorization.invalid_authorization_header` | Both: malformed header, including a missing `Bearer ` prefix |
-| 401 | `client.invalid_api_key` | Both: API key is not recognized |
-| 404 | `venue.not_found` | Rate venue: venue ID does not exist |
-| 500 | `server.internal_error` | Both: unexpected application or persistence failure |
-
-These are the supported application-level outcomes for POST requests to these
-routes. Unsupported methods or media types are not part of these contracts;
-the current catch-all exception handler may translate framework errors into 500.
-
-### Submission Walkthrough and Bad Usage
-
-Use a running service and a disposable test database. These examples use a POSIX
-shell and `curl`; in Windows PowerShell use `curl.exe` with equivalent quoting,
-or use the provided Postman collection.
-
-1. Request a client key:
-
-   ```sh
-   curl -X POST http://localhost:8080/v1/clients
-   ```
-
-   Copy `data.apiKey` into `API_KEY` in your shell.
-
-2. Create a venue:
-
-   ```sh
-   curl -X POST http://localhost:8080/v1/venues \
-     -H "Authorization: Bearer $API_KEY" -H 'Content-Type: application/json' \
-     -d '{"name":"Riverside Court","address":"1 Riverside Drive","latitude":40.812345,"longitude":-73.961234,"timezone":"America/New_York"}'
-   ```
-
-   Save `data.id` as `VENUE_ID`, then retrieve it using
-   `GET /v1/venues/{venueId}` with the same Authorization header.
-
-3. Review the whole venue:
-
-   ```sh
-   curl -X POST "http://localhost:8080/v1/venues/$VENUE_ID/reviews" \
-     -H "Authorization: Bearer $API_KEY" -H 'Content-Type: application/json' \
-     -d '{"externalUserID":"member-42","rating":5,"comment":"Excellent court."}'
-   ```
-
-   Repeat with rating 3 and a changed comment. HTTP 200 returns the same review
-   ID. Use a different `externalUserID` to create a separate review.
-
-4. To review an offered sport, load the API test seed described in
-   [development.md](./development.md#testing-venue-submissions-operations-8-and-9),
-   then post to `/v1/venues/9001/reviews` with `"sportId":9001`. Use a fresh client
-   key for each demo run. This sport review is independent of a whole-venue review
-   by the same user at venue 9001.
-
-Examples that should fail:
-
-- Rating a venue before it exists: 404 `venue.not_found`.
-- Sending `externalUserId` instead of `externalUserID`: 400
-  `request.validation_failed` because the required field is missing.
-- Sending rating 2.5, 4.0, or a value outside SMALLINT: 400 `request.invalid_body`.
-- Sending rating 0 or 6, a blank comment, or a nonpositive sport ID: 400
-  `request.validation_failed`.
-- Reviewing a sport on a newly submitted venue before registering its offering:
-  400 `venue.sport_not_offered`.
-- Supplying latitude 91 or a missing address: 400 `request.validation_failed`.
-- Supplying `america/new_york` or `Mars/Olympus`: 400 `venue.invalid_timezone`.
-- Omitting the API key: 401. A new client key also creates a new review namespace,
-  so it cannot be used to update the original client's review.
-
-No required ordering exists between unrelated reviews or venue creations. The
-required dependencies are: obtain a client key before either operation; create
-or select a venue before reviewing it; register an offering before reviewing a
-specific sport.
