@@ -12,8 +12,9 @@ import lombok.Setter;
 /**
  * Carries the information required to submit a venue.
  *
- * <p>The calling client supplies the venue's coordinates. Authentication supplies the submitting
- * client identity separately. This request does not create sports, prices, or opening intervals.
+ * <p>The calling client supplies its own external user identifier and the venue's coordinates.
+ * Authentication supplies the client identity separately. This request does not create sports,
+ * prices, or opening intervals.
  *
  * <p>The timezone must fit the database column and identify a timezone recognized by the
  * application. Its meaning is checked by the service after field validation succeeds.
