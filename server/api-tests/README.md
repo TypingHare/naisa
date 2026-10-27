@@ -65,7 +65,10 @@ failures. Database postconditions passed. The saved report records 118 covered
 branches out of 150 application branches (78.7%).
 
 Newman writes JUnit XML to `server/target/api-tests/results.xml`. Service logs are
-in `server/target/api-tests/server.log`. JaCoCo 0.8.14 instruments the Java 21
+in `server/target/api-tests/server.log`, and database startup logs are in
+`server/target/api-tests/database.log`. The runner waits for PostgreSQL to accept
+TCP connections after its temporary initialization server has stopped.
+JaCoCo 0.8.14 instruments the Java 21
 application with its Java agent. The runner stops that application to flush
 execution data and runs `jacoco:report` against the same compiled classes.
 

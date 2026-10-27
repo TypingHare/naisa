@@ -11,6 +11,8 @@ network_name="${run_name}-network"
 port="${API_TEST_PORT:-18080}"
 
 cleanup() {
+  mkdir -p target/api-tests
+  docker logs "$db_name" > target/api-tests/database.log 2>&1 || true
   docker logs "$app_name" > target/api-tests/server.log 2>&1 || true
   docker rm -f -v "$app_name" "$db_name" >/dev/null 2>&1 || true
   docker network rm "$network_name" >/dev/null 2>&1 || true
@@ -26,11 +28,28 @@ docker network create "$network_name" >/dev/null
 docker run -d --name "$db_name" --network "$network_name" --network-alias db \
   -e POSTGRES_DB=naisa_api_tests -e POSTGRES_USER=naisa -e POSTGRES_PASSWORD=api_test_only \
   postgres:17-alpine >/dev/null
+database_ready=false
 for attempt in {1..60}; do
-  if docker exec "$db_name" pg_isready -U naisa -d naisa_api_tests >/dev/null 2>&1; then break; fi
+  # The image starts a temporary socket-only server during database initialization.
+  # Wait for TCP, which is available only when the final server has started.
+  if docker exec "$db_name" pg_isready -h 127.0.0.1 -t 1 \
+    -U naisa -d naisa_api_tests >/dev/null 2>&1; then
+    database_ready=true
+    break
+  fi
+  if [ "$(docker inspect -f '{{.State.Running}}' "$db_name")" != true ]; then
+    echo 'PostgreSQL container stopped during startup.' >&2
+    docker logs "$db_name" >&2
+    exit 1
+  fi
   sleep 1
 done
-docker exec "$db_name" pg_isready -U naisa -d naisa_api_tests
+if [ "$database_ready" != true ]; then
+  echo 'PostgreSQL did not become ready for TCP connections.' >&2
+  docker logs "$db_name" >&2
+  exit 1
+fi
+echo 'PostgreSQL is ready for TCP connections.'
 
 docker run -d --name "$app_name" --network "$network_name" \
   -p "127.0.0.1:${port}:8080" -v "$server_dir/target:/app" \
