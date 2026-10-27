@@ -4,6 +4,14 @@ This document describes the API contracts for Operations 1, 2, 3, 5, 6, and 7. A
 endpoints require authorization and use the standard `Capsule` response format.
 See [architecture.md](./architecture.md) for details.
 
+Coordinates use double-precision values and must be finite and within the stated
+latitude and longitude ranges, including coordinates inside group locations.
+JSON fields representing integers reject decimal tokens instead of truncating
+them. In particular, venue ratings must be integer tokens from 1 through 5;
+fractional, decimal-form (for example, `4.0`), and overflowing ratings return
+HTTP 400 with `request.invalid_body`. Missing ratings and integers outside
+1 through 5 return HTTP 400 with `request.validation_failed`.
+
 ### Operations 1 and 3: Find Venues
 
 `GET /v1/venues`
