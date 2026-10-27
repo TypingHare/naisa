@@ -80,10 +80,12 @@ do not capture:
 | Andrew Hsu, Codex | Venue information, individual/group search, and alternative-search unit suites | [PR #35](https://github.com/TypingHare/naisa/pull/35), [PR #36](https://github.com/TypingHare/naisa/pull/36), [PR #37](https://github.com/TypingHare/naisa/pull/37), [PR #38](https://github.com/TypingHare/naisa/pull/38) |
 
 See [AI usage](AI-Usage.md) for tool disclosures. This source-based retrospective
-supports the team task record, but does not claim that a GitHub Project/Issue
-tracker exists or that mentor access has been verified. Review activity,
-planning, untagged documentation, and task completion dates must be recorded
-from their own evidence rather than inferred from author tags.
+is now backed by 13 assigned, completed [GitHub task issues](../README.md#project-management).
+Those records were created after implementation and link to source and merged-PR
+evidence. They do not imply that issues existed during development. Mentor and
+Instructor access still needs verification. Review activity, planning, untagged
+documentation, and task completion dates must be recorded from their own evidence
+rather than inferred from author tags.
 
 ## Complete Java author-tag inventory
 
