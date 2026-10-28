@@ -1,11 +1,11 @@
 package com.naisa.service;
 
-import com.naisa.common.VenueDistance;
+import com.google.common.math.Stats;
 import com.naisa.exception.VenueException;
+import com.naisa.model.common.EarthCoordinate;
 import com.naisa.model.dto.AddVenueRequest;
 import com.naisa.model.dto.FindAlternativesRequest;
 import com.naisa.model.dto.FindVenuesRequest;
-import com.naisa.model.dto.GroupMemberLocation;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.dto.SearchConstraint;
 import com.naisa.model.entity.Client;
@@ -25,12 +25,15 @@ import com.naisa.repository.ReviewRepository;
 import com.naisa.repository.SportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
+import com.naisa.util.Beans;
+import com.naisa.util.EarthCoordinates;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -157,83 +160,115 @@ public class VenueService {
    */
   @Transactional(readOnly = true)
   public List<FindVenueResponse> findVenues(final FindVenuesRequest request) {
-    final LocalDateTime requestedAt =
-        validateSearchRequest(request, LocalDateTime.now(SEARCH_TIMEZONE));
+    final LocalDateTime requestedAt = LocalDateTime.of(request.getDate(), request.getTime());
+    validateSearchRequestTime(requestedAt);
+    validateSearchSport(request.getSportId());
 
-    final List<GroupMemberLocation> locations = searchLocations(request);
-    final double centerLatitude =
-        locations.stream().mapToDouble(GroupMemberLocation::getLatitude).average().orElseThrow();
-    final double centerLongitude =
-        locations.stream().mapToDouble(GroupMemberLocation::getLongitude).average().orElseThrow();
-    final List<VenueSport> offerings =
-        venueSportRepository.findBySportIdAndPriceLessThanEqual(
-            request.getSportId(), request.getBudget());
-    final List<FindVenueResponse> nearbyVenues = new ArrayList<>();
-    for (final VenueSport offering : offerings) {
-      final Venue venue = offering.getVenue();
-      final double distanceKm =
-          VenueDistance.calculateDistanceKm(
-              centerLatitude, centerLongitude, venue.getLatitude(), venue.getLongitude());
-      if (BigDecimal.valueOf(distanceKm).compareTo(request.getMaxDistance()) <= 0) {
-        final List<Double> memberDistances =
-            locations.stream()
-                .map(
-                    location ->
-                        VenueDistance.calculateDistanceKm(
-                            location.getLatitude(),
-                            location.getLongitude(),
-                            venue.getLatitude(),
-                            venue.getLongitude()))
-                .toList();
-        final FindVenueResponse result =
-            new FindVenueResponse(
-                venue.getId(),
-                venue.getName(),
-                distanceKm,
-                offering.getPrice(),
-                offering.getIsIndoor(),
-                true);
-        result.setMemberDistancesKm(memberDistances);
-        result.setAverageDistanceKm(
-            memberDistances.stream().mapToDouble(Double::doubleValue).average().orElseThrow());
-        nearbyVenues.add(result);
-      }
-    }
+    final List<EarthCoordinate> memberCoordinates = request.getCoordinates();
+    final EarthCoordinate centerCoordinate = EarthCoordinates.calculateCenter(memberCoordinates);
+    final List<VenueSport> affordableVenues =
+        getAffordableVenueSupportingSport(request.getSportId(), request.getBudget());
+    final List<FindVenueResponse> nearbyVenues =
+        getNearbyVenues(
+            affordableVenues,
+            centerCoordinate,
+            memberCoordinates,
+            request.getMaxDistance().doubleValue());
+
     if (nearbyVenues.isEmpty()) {
       return List.of();
     }
 
+    // Create a map that maps venue IDs to their interval lists.
     final List<Long> venueIds = nearbyVenues.stream().map(FindVenueResponse::getVenueId).toList();
     final Map<Long, List<OpeningInterval>> intervalsByVenue =
         openingIntervalRepository.findByVenueIdIn(venueIds).stream()
             .collect(Collectors.groupingBy(interval -> interval.getVenue().getId()));
 
-    return nearbyVenues.stream()
-        .filter(
-            venue ->
-                intervalsByVenue.getOrDefault(venue.getVenueId(), List.of()).stream()
-                    .anyMatch(interval -> isOpenAt(interval, requestedAt)))
-        .sorted(
-            Comparator.comparingDouble(FindVenueResponse::getAverageDistanceKm)
-                .thenComparing(FindVenueResponse::getVenueId))
+    // Filter the nearby venues (FindVenueResponse instances), so that venues that are not open at
+    // the requested time get filtered out.
+    final List<FindVenueResponse> openNearbyVenues = new ArrayList<>();
+    for (final FindVenueResponse nearbyVenue : nearbyVenues) {
+      final List<OpeningInterval> intervals =
+          intervalsByVenue.getOrDefault(nearbyVenue.getVenueId(), List.of());
+      if (intervals.stream().anyMatch(interval -> isOpenAt(interval, requestedAt))) {
+        openNearbyVenues.add(nearbyVenue);
+      }
+    }
+
+    // For all nearby venues, sort them based on their average distances in ascending order.
+    return openNearbyVenues.stream()
+        .sorted(Comparator.comparingDouble(FindVenueResponse::getAverageDistanceKm))
         .toList();
   }
 
   /**
-   * Converts a single coordinate pair to a one-member list, or uses the supplied member list.
+   * Gets affordable venues ({@code VenueSport} instances) that support a given sport.
    *
-   * @param request search parameters that have passed field validation
-   * @return locations in member order
-   * @author Andrew Hsu, Codex
+   * <p>This function retrieves all venues that (1) support the given sport and (2) have an hourly
+   * price lower than the given budget.
+   *
+   * @param sportId the ID of the sport the venue should support
+   * @param budget the budget of the hourly price of the venue
+   * @return a list of affordable venues ({@code VenueSport} instances) that support the sport
+   * @author James Chen
    */
-  private static List<GroupMemberLocation> searchLocations(final FindVenuesRequest request) {
-    if (request.getLocations() != null) {
-      return request.getLocations();
+  public List<VenueSport> getAffordableVenueSupportingSport(
+      final long sportId, final BigDecimal budget) {
+    return venueSportRepository.findBySportIdAndPriceLessThanEqual(sportId, budget);
+  }
+
+  /**
+   * Gets nearby venues.
+   *
+   * @param venueSports a list of {@code VenueSport} instances to filter
+   * @param centerCoordinate the center coordinate of all members
+   * @param memberCoordinates the member coordinates
+   * @param maxDistance the max distance it supports
+   * @return a list of nearby venues that meet the requirements
+   * @author James Chen
+   */
+  public List<FindVenueResponse> getNearbyVenues(
+      final List<VenueSport> venueSports,
+      final EarthCoordinate centerCoordinate,
+      final Collection<EarthCoordinate> memberCoordinates,
+      final double maxDistance) {
+    final List<FindVenueResponse> nearbyVenues = new ArrayList<>();
+    for (final VenueSport venueSport : venueSports) {
+      final Venue venue = venueSport.getVenue();
+      final EarthCoordinate venueCoordinate = EarthCoordinates.createFrom(venue);
+      final double distanceKm =
+          EarthCoordinates.calculateDistanceKm(centerCoordinate, venueCoordinate);
+
+      // Skip this venue if the distance from the center to the venue is greater than the max
+      // distance allowed.
+      if (distanceKm > maxDistance) {
+        continue;
+      }
+
+      // Calculate the distances to the venue for all members.
+      final List<Double> memberDistancesKm = new ArrayList<>();
+      for (final EarthCoordinate memberCoordinate : memberCoordinates) {
+        memberDistancesKm.add(
+            EarthCoordinates.calculateDistanceKm(memberCoordinate, venueCoordinate));
+      }
+
+      nearbyVenues.add(
+          Beans.create(
+              FindVenueResponse.class,
+              (it) -> {
+                it.setVenueId(venue.getId());
+                it.setName(venue.getName());
+                it.setDistanceKm(distanceKm);
+                it.setAverageDistanceKm(Stats.meanOf(memberDistancesKm));
+                it.setMemberDistancesKm(memberDistancesKm);
+                it.setHourlyPrice(venueSport.getPrice());
+                it.setIsIndoor(venueSport.getIsIndoor());
+                it.setAvailable(true);
+              }));
     }
-    final GroupMemberLocation location = new GroupMemberLocation();
-    location.setLatitude(request.getLatitude());
-    location.setLongitude(request.getLongitude());
-    return List.of(location);
+
+    return nearbyVenues;
   }
 
   /**
@@ -263,23 +298,27 @@ public class VenueService {
             : request.getBudget();
 
     final List<FindVenueResponse> nearbyVenues = new ArrayList<>();
+    final EarthCoordinate coordinate =
+        EarthCoordinates.create(request.getLatitude(), request.getLongitude());
     for (final VenueSport offering : venueSportRepository.findBySportId(request.getSportId())) {
       final Venue venue = offering.getVenue();
-      final double distanceKm =
-          VenueDistance.calculateDistanceKm(
-              request.getLatitude(),
-              request.getLongitude(),
-              venue.getLatitude(),
-              venue.getLongitude());
+      final EarthCoordinate venueCoordinate =
+          EarthCoordinates.create(venue.getLatitude(), venue.getLongitude());
+      final double distanceKm = EarthCoordinates.calculateDistanceKm(coordinate, venueCoordinate);
+
       if (BigDecimal.valueOf(distanceKm).compareTo(maximumDistance) <= 0) {
         nearbyVenues.add(
-            new FindVenueResponse(
-                venue.getId(),
-                venue.getName(),
-                distanceKm,
-                offering.getPrice(),
-                offering.getIsIndoor(),
-                true));
+            Beans.create(
+                FindVenueResponse.class,
+                (it) -> {
+                  it.setVenueId(venue.getId());
+                  it.setName(venue.getName());
+                  it.setDistanceKm(distanceKm);
+                  it.setAverageDistanceKm(distanceKm);
+                  it.setHourlyPrice(offering.getPrice());
+                  it.setIsIndoor(offering.getIsIndoor());
+                  it.setAvailable(true);
+                }));
       }
     }
     if (nearbyVenues.isEmpty()) {
@@ -334,6 +373,19 @@ public class VenueService {
                 .thenComparing(alternative -> alternative.getVenue().getVenueId()))
         .limit(ALTERNATIVE_RESULT_LIMIT)
         .toList();
+  }
+
+  private void validateSearchRequestTime(final LocalDateTime requestedAt) {
+    final LocalDateTime now = LocalDateTime.now(SEARCH_TIMEZONE);
+    if (requestedAt.isBefore(now)) {
+      throw VenueException.REQUEST_IN_PAST.clone();
+    }
+  }
+
+  private void validateSearchSport(final Long sportId) {
+    if (!sportRepository.existsById(sportId)) {
+      throw VenueException.SPORT_NOT_FOUND.clone();
+    }
   }
 
   /**

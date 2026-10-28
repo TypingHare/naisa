@@ -1,5 +1,6 @@
 package com.naisa.model.vo;
 
+import com.naisa.util.EarthCoordinates.WithLatitudeAndLongitude;
 import java.beans.JavaBean;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -16,7 +17,7 @@ import lombok.Setter;
 @JavaBean
 @Getter
 @Setter
-public class VenueInfoResponse {
+public class VenueInfoResponse implements WithLatitudeAndLongitude {
   private Long venueId;
   private String name;
   private String address;

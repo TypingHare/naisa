@@ -1,7 +1,7 @@
 package com.naisa.service;
 
-import com.naisa.common.VenueDistance;
 import com.naisa.exception.VenueException;
+import com.naisa.model.common.EarthCoordinate;
 import com.naisa.model.dto.VenueComparisonRequest;
 import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Venue;
@@ -12,6 +12,7 @@ import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.SportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
+import com.naisa.util.EarthCoordinates;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -89,6 +90,7 @@ public class VenueComparisonService {
       throw VenueException.SPORT_NOT_FOUND.clone();
     }
 
+    final EarthCoordinate requestCoordinate = EarthCoordinates.createFrom(request);
     final List<VenueComparisonItem> items = new ArrayList<>();
     for (final Long venueId : venueIds) {
       final Venue venue =
@@ -100,14 +102,11 @@ public class VenueComparisonService {
               .orElseThrow(VenueException.SPORT_NOT_OFFERED::clone);
 
       final VenueComparisonItem item = new VenueComparisonItem();
+      final EarthCoordinate venueCoordinate = EarthCoordinates.createFrom(venue);
+
       item.setVenueId(venueId);
       item.setName(venue.getName());
-      item.setDistanceKm(
-          VenueDistance.calculateDistanceKm(
-              request.getLatitude(),
-              request.getLongitude(),
-              venue.getLatitude(),
-              venue.getLongitude()));
+      item.setDistanceKm(EarthCoordinates.calculateDistanceKm(requestCoordinate, venueCoordinate));
       item.setHourlyPrice(offering.getPrice());
       item.setIsIndoor(offering.getIsIndoor());
       item.setOpenNow(isOpenNow(venue));

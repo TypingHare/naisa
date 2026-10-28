@@ -5,10 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.naisa.model.common.EarthCoordinate;
 import com.naisa.model.dto.AddVenueRequest;
 import com.naisa.model.dto.FindAlternativesRequest;
-import com.naisa.model.dto.FindVenuesRequest;
-import com.naisa.model.dto.GroupMemberLocation;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.dto.VenueComparisonRequest;
 import com.naisa.model.entity.Client;
@@ -16,6 +15,7 @@ import com.naisa.model.entity.Review;
 import com.naisa.model.entity.Venue;
 import com.naisa.service.ClientService;
 import com.naisa.service.VenueService;
+import com.naisa.util.Beans;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.Validator;
 import java.util.List;
@@ -34,7 +34,7 @@ import tools.jackson.databind.json.JsonMapper;
  * Verifies numeric request binding, validation, and persistence using the application's JSON
  * mapper.
  *
- * @author Vincent Lai, Codex
+ * @author Vincent Lai, Codex, James Chen, Codex
  */
 @SpringBootTest
 class NumericRequestTest {
@@ -47,16 +47,15 @@ class NumericRequestTest {
   /**
    * Checks coordinate bounds and nonfinite values on every request bean that carries coordinates.
    *
-   * @author Vincent Lai, Codex
+   * @author Vincent Lai, Codex, James Chen, Codex
    */
   @Test
   void validatesDoubleCoordinates() {
     final List<Object> requests =
         List.of(
             new AddVenueRequest(),
-            new FindVenuesRequest(),
             new FindAlternativesRequest(),
-            new GroupMemberLocation(),
+            Beans.create(EarthCoordinate.class, it -> {}),
             new VenueComparisonRequest());
     for (final Object request : requests) {
       final BeanWrapper wrapper = new BeanWrapperImpl(request);

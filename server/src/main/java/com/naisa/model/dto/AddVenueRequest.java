@@ -1,5 +1,6 @@
 package com.naisa.model.dto;
 
+import com.naisa.util.EarthCoordinates.WithLatitudeAndLongitude;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -23,7 +24,7 @@ import lombok.Setter;
 @JavaBean
 @Getter
 @Setter
-public class AddVenueRequest {
+public class AddVenueRequest implements WithLatitudeAndLongitude {
   @NotBlank
   @Size(max = 255)
   private String name;

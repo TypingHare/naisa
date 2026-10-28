@@ -1,5 +1,6 @@
-package com.naisa.model.dto;
+package com.naisa.model.common;
 
+import com.naisa.util.EarthCoordinates.WithLatitudeAndLongitude;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -8,14 +9,16 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Carries the coordinates of one member in a group venue search.
+ * Represents an earth coordinate.
  *
- * @author Andrew Hsu, Codex, Vincent Lai, Codex
+ * @author James Chen
+ * @see <a href="https://en.wikipedia.org/wiki/Geographic_coordinate_system">Geographic coordinate
+ *     system</a>
  */
 @JavaBean
 @Getter
 @Setter
-public class GroupMemberLocation {
+public final class EarthCoordinate implements WithLatitudeAndLongitude {
   @NotNull
   @DecimalMin("-90")
   @DecimalMax("90")
