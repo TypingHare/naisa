@@ -31,6 +31,9 @@ or agents they used, separated by commas:
  */
 ```
 
+Note that if an author uses AI tools only to add or edit Javadoc and comments,
+including the names of those tools in the `@author` tag is optional.
+
 The name of each tool or agent must appear immediately after the name of the
 author who used it. If two developers use the same AI agent (e.g., Codex), then
 the agent's name can appear twice in the `@author` tag. For example:
@@ -40,6 +43,17 @@ the agent's name can appear twice in the `@author` tag. For example:
  * Description of a class or method.
  *
  * @author James Chen, Codex, Vincent Lai, Claude Code, Andrew Hsu, Codex
+ */
+```
+
+If an author uses multiple AI tools to edit a class or method, they must list
+them all:
+
+```java
+/**
+ * Description of a class or method.
+ *
+ * @author James Chen, Codex, Claude Code
  */
 ```
 
@@ -59,8 +73,8 @@ or later is installed in your environment.
 
 #### Testing Venue Submissions (Operations 8 and 9)
 
-Use Java 21 and the included Maven wrapper. Commands below run from `server`;
-on Windows replace `./mvnw` with `.\mvnw.cmd`. Dependency/plugin versions are
+Use Java 21 and the included Maven wrapper. Commands below run from `server`; on
+Windows replace `./mvnw` with `.\mvnw.cmd`. Dependency/plugin versions are
 configured in `pom.xml`. JUnit Jupiter and Mockito are provided by the Spring
 Boot test starter; Maven Surefire runs the tests. Tests are grouped into nested
 `AddVenue` and `RateVenue` classes with shared setup and mocked repositories.
@@ -96,8 +110,8 @@ psql -h localhost -U YOUR_TEST_USER -d YOUR_TEST_DATABASE -v ON_ERROR_STOP=1 -f 
 ```
 
 This fixture writes IDs in the 9000 range and removes crowd reports on those
-fixture venues. It must not run against a database containing valuable data.
-The submission suite does not require the operations 5-7 collection to run first.
+fixture venues. It must not run against a database containing valuable data. The
+submission suite does not require the operations 5-7 collection to run first.
 
 Import `api-tests/naisa-venue-submissions.postman_collection.json` into Postman
 and run the entire collection, in order, using Collection Runner. Alternatively,
@@ -145,16 +159,17 @@ To check style, including test sources, and generate coverage:
 ```
 
 Checkstyle uses `google_checks.xml`; PMD uses `.pmd/ruleset.xml`. Test reports
-are in `target/surefire-reports`, Checkstyle XML in `target/checkstyle-result.xml`,
-and JaCoCo HTML/XML in `target/site/jacoco`. These generated files are ignored by
-Git. A submission must explicitly preserve required final reports outside
-`target`; this focused suite alone does not establish whole-project 55% coverage.
-The verified development snapshot for this change is preserved in
-`server/reports/venue-submissions/` (repository-relative), including a summary,
-full Java-suite JaCoCo XML, separate API-only JaCoCo XML, clean Checkstyle XML,
-and both Newman JUnit reports. The saved full Java suite exceeds 55% branch
-coverage; the focused submission tests cover both target methods' branches.
-`checked-source-sha256.json` records SHA-256 hashes of the checked Java sources
-and build/style configuration, normalized to UTF-8 text with LF endings.
-Verify those files match the final release checkout, and rerun and replace
-the reports after any source/configuration changes before tagging a release.
+are in `target/surefire-reports`, Checkstyle XML in
+`target/checkstyle-result.xml`, and JaCoCo HTML/XML in `target/site/jacoco`.
+These generated files are ignored by Git. A submission must explicitly preserve
+required final reports outside `target`; this focused suite alone does not
+establish whole-project 55% coverage. The verified development snapshot for this
+change is preserved in `server/reports/venue-submissions/`
+(repository-relative), including a summary, full Java-suite JaCoCo XML, separate
+API-only JaCoCo XML, clean Checkstyle XML, and both Newman JUnit reports. The
+saved full Java suite exceeds 55% branch coverage; the focused submission tests
+cover both target methods' branches. `checked-source-sha256.json` records
+SHA-256 hashes of the checked Java sources and build/style configuration,
+normalized to UTF-8 text with LF endings. Verify those files match the final
+release checkout, and rerun and replace the reports after any
+source/configuration changes before tagging a release.
