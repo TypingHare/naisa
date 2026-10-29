@@ -1,7 +1,8 @@
 package com.naisa.model.dto;
 
+import com.naisa.model.common.EarthCoordinate;
+import com.naisa.util.EarthCoordinates.WithLatitudeAndLongitude;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -35,7 +36,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @JavaBean
 @Getter
 @Setter
-public class FindVenuesRequest {
+public class FindVenuesRequest implements WithLatitudeAndLongitude {
   @DecimalMin("-90")
   @DecimalMax("90")
   private Double latitude;
@@ -45,7 +46,7 @@ public class FindVenuesRequest {
   private Double longitude;
 
   @Size(min = 1, max = 10)
-  private List<@NotNull @Valid GroupMemberLocation> locations;
+  private List<@NotNull @Valid EarthCoordinate> coordinates;
 
   @NotNull @Positive private Long sportId;
 
@@ -64,17 +65,4 @@ public class FindVenuesRequest {
   @NotNull
   @DecimalMin("0")
   private BigDecimal budget = BigDecimal.ZERO;
-
-  /**
-   * Requires one coordinate pair or a location list, with no mixture of the two forms.
-   *
-   * @return true when exactly one complete location form is supplied
-   */
-  @AssertTrue(message = "Supply latitude and longitude, or locations, but not both.")
-  public boolean isLocationSelectionValid() {
-    if (locations != null) {
-      return latitude == null && longitude == null;
-    }
-    return latitude != null && longitude != null;
-  }
 }

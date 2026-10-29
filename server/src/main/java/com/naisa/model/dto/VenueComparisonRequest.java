@@ -1,5 +1,6 @@
 package com.naisa.model.dto;
 
+import com.naisa.util.EarthCoordinates.WithLatitudeAndLongitude;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -19,7 +20,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class VenueComparisonRequest {
+public class VenueComparisonRequest implements WithLatitudeAndLongitude {
   @NotNull
   @Size(min = 2, max = 5)
   private List<@NotNull @Positive Long> venueIds;
