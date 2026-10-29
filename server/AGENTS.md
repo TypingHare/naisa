@@ -5,10 +5,13 @@ In this document, "you" refers to the AI agent reading this document, and
 "developer" refers to the human collaborating with you.
 
 This project requires all developers to clearly include the name of the agent
-they use (e.g., Codex, Claude Code, Gemini) in the `@author` Javadoc tag. You
-can check the developer's full name by running the `git config get user.name`
-command. Your name should appear immediately after the developer's full name.
-Specific requirements can be found in `../docs/server/development.md`.
+they use (e.g., Codex, Claude Code, Gemini) in the `@author` Javadoc tag
+whenever generating or editing executable code. You can find the developer's
+full name by running the `git config get user.name` command. Your name should
+appear immediately after the developer's full name. When asked to add or edit
+comments, such as to fix typos or grammatical errors, you do not have to include
+your name in the `@author` tag. Specific requirements can be found in
+`../docs/server/development.md`.
 
 You are allowed to write commit messages for the developer, but you are normally
 not allowed to write pull request descriptions for them. If the developer asks
@@ -38,12 +41,20 @@ Because this is just a COURSE PROJECT, you do not have to take security very
 seriously. Avoid writing hard-to-understand code to protect the application from
 attacks or abuse by clients and users.
 
-Before every commit, make sure you run `google-java-format` and `make lint`. If
-`google-java-format` is not installed, ask the developer to install it.
+Before every commit, make sure you run `google-java-format` on all changed Java
+files and run `make lint`. If `google-java-format` is not installed, ask the
+developer to install it.
+
+Before every commit, make sure you run `prettier` on all changed Markdown files.
+If `prettier` is not installed, ask the developer to install it.
 
 The code you generate should be human-readable and maintainable. You are
 encouraged to use Java streams to reduce the number of lines of code, but avoid
-overusing them at the expense of readability.
+overusing them at the expense of readability. Keep in mind that all nontrivial
+functions (e.g., large service functions) must be easy to read. If a code
+snippet is hard to understand but can be summarized in one sentence (e.g.,
+"filter out venues that are too far away"), you should encapsulate it in a
+separate function.
 
 Do not make assumptions when creating data structure classes. In this project,
 JavaBean classes, including their attribute names and types, need to be
