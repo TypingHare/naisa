@@ -1,9 +1,9 @@
-package com.naisa.common;
+package com.naisa.constant;
 
 /**
  * Defines constants related to venues.
  *
- * @author Emily Wang
+ * @author Emily Wang, James Chen
  */
 public final class VenueConstant {
   /** Number of hours a crowd report is considered recent. */

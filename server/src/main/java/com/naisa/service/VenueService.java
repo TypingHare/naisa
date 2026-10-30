@@ -45,13 +45,12 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Coordinates venue searches, information, creation, and user reviews through repositories.
+ * Basic venue service.
  *
- * <p>Callers supply an authenticated client and a request that has passed field validation. The
- * service checks business rules, records client-scoped user identities, and controls transaction
- * boundaries. External user accounts are managed by the calling clients.
+ * <p>This class includes a collection of basic and reusable service functions that are used by
+ * higher-level service classes.
  *
- * @author Vincent Lai, Codex, Andrew Hsu, Codex
+ * @author Vincent Lai, Codex, Andrew Hsu, Codex, James Chen
  */
 @Service
 public class VenueService {
@@ -160,21 +159,19 @@ public class VenueService {
    */
   @Transactional(readOnly = true)
   public List<FindVenueResponse> findVenues(final FindVenuesRequest request) {
+    final Long sportId = request.getSportId();
     final LocalDateTime requestedAt = LocalDateTime.of(request.getDate(), request.getTime());
+    validateSearchSport(sportId);
     validateSearchRequestTime(requestedAt);
-    validateSearchSport(request.getSportId());
 
     final List<EarthCoordinate> memberCoordinates = request.getCoordinates();
-    final EarthCoordinate centerCoordinate = EarthCoordinates.calculateCenter(memberCoordinates);
     final List<VenueSport> affordableVenues =
-        getAffordableVenueSupportingSport(request.getSportId(), request.getBudget());
+        getAffordableVenueSupportingSport(sportId, request.getBudget());
     final List<FindVenueResponse> nearbyVenues =
         getNearbyVenues(
-            affordableVenues,
-            centerCoordinate,
-            memberCoordinates,
-            request.getMaxDistance().doubleValue());
+            affordableVenues, memberCoordinates, request.getMaxDistance().doubleValue());
 
+    // If no eligible nearby venues found, return an empty list early.
     if (nearbyVenues.isEmpty()) {
       return List.of();
     }
@@ -222,7 +219,6 @@ public class VenueService {
    * Gets nearby venues.
    *
    * @param venueSports a list of {@code VenueSport} instances to filter
-   * @param centerCoordinate the center coordinate of all members
    * @param memberCoordinates the member coordinates
    * @param maxDistance the max distance it supports
    * @return a list of nearby venues that meet the requirements
@@ -230,21 +226,12 @@ public class VenueService {
    */
   public List<FindVenueResponse> getNearbyVenues(
       final List<VenueSport> venueSports,
-      final EarthCoordinate centerCoordinate,
       final Collection<EarthCoordinate> memberCoordinates,
       final double maxDistance) {
     final List<FindVenueResponse> nearbyVenues = new ArrayList<>();
     for (final VenueSport venueSport : venueSports) {
       final Venue venue = venueSport.getVenue();
       final EarthCoordinate venueCoordinate = EarthCoordinates.createFrom(venue);
-      final double distanceKm =
-          EarthCoordinates.calculateDistanceKm(centerCoordinate, venueCoordinate);
-
-      // Skip this venue if the distance from the center to the venue is greater than the max
-      // distance allowed.
-      if (distanceKm > maxDistance) {
-        continue;
-      }
 
       // Calculate the distances to the venue for all members.
       final List<Double> memberDistancesKm = new ArrayList<>();
@@ -259,7 +246,6 @@ public class VenueService {
               (it) -> {
                 it.setVenueId(venue.getId());
                 it.setName(venue.getName());
-                it.setDistanceKm(distanceKm);
                 it.setAverageDistanceKm(Stats.meanOf(memberDistancesKm));
                 it.setMemberDistancesKm(memberDistancesKm);
                 it.setHourlyPrice(venueSport.getPrice());

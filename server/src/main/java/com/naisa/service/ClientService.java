@@ -39,6 +39,8 @@ public final class ClientService {
   /**
    * Creates a client.
    *
+   * <p>The created {@code Client} instance contains a unique API key.
+   *
    * @return the created client
    * @author James Chen
    */
