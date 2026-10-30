@@ -6,20 +6,21 @@ import com.naisa.exception.VenueException;
 import com.naisa.interceptor.AuthorizationInterceptor;
 import com.naisa.model.dto.AddVenueRequest;
 import com.naisa.model.dto.FindAlternativesRequest;
-import com.naisa.model.dto.FindVenuesRequest;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.dto.ReportCrowdRequest;
 import com.naisa.model.dto.VenueComparisonRequest;
+import com.naisa.model.dto.VenueSearchRequest;
 import com.naisa.model.entity.Client;
 import com.naisa.model.vo.CrowdStatusResponse;
 import com.naisa.model.vo.FindAlternativeResponse;
-import com.naisa.model.vo.FindVenueResponse;
 import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.model.vo.ResourceIdResponse;
 import com.naisa.model.vo.VenueComparisonResponse;
 import com.naisa.model.vo.VenueInfoResponse;
+import com.naisa.model.vo.VenueSearchResponse;
 import com.naisa.service.CrowdReportService;
 import com.naisa.service.VenueComparisonService;
+import com.naisa.service.VenueSearchService;
 import com.naisa.service.VenueService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -48,6 +49,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/venues")
 public class VenueController {
   private final VenueService venueService;
+  private final VenueSearchService venueSearchService;
   private final CrowdReportService crowdReportService;
   private final VenueComparisonService venueComparisonService;
 
@@ -61,9 +63,11 @@ public class VenueController {
    */
   public VenueController(
       final VenueService venueService,
+      final VenueSearchService venueSearchService,
       final CrowdReportService crowdReportService,
       final VenueComparisonService venueComparisonService) {
     this.venueService = venueService;
+    this.venueSearchService = venueSearchService;
     this.crowdReportService = crowdReportService;
     this.venueComparisonService = venueComparisonService;
   }
@@ -97,9 +101,9 @@ public class VenueController {
    */
   @AuthorizationRequired
   @GetMapping
-  public ResponseEntity<Capsule<List<FindVenueResponse>>> findVenues(
-      @Valid @ModelAttribute final FindVenuesRequest request) {
-    final List<FindVenueResponse> results = venueService.findVenues(request);
+  public ResponseEntity<Capsule<List<VenueSearchResponse>>> findVenues(
+      @Valid @ModelAttribute final VenueSearchRequest request) {
+    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
     final String message =
         results.isEmpty() ? "No venues match the search parameters." : "Venues found.";
     return ResponseEntity.ok(new Capsule<>(message, results));

@@ -10,15 +10,14 @@ import lombok.Setter;
 /**
  * Carries the original search parameters and the changes permitted by the client.
  *
- * <p>Inherits field validation and the zero-budget default from {@link FindVenuesRequest}.
- * The service must keep values unchanged unless their constraints appear in {@code allowedChanges}.
+ * <p>Inherits field validation and the zero-budget default from {@link VenueSearchRequest}. The
+ * service must keep values unchanged unless their constraints appear in {@code allowedChanges}.
  *
  * @author Andrew Hsu, Codex
  */
 @JavaBean
 @Getter
 @Setter
-public class FindAlternativesRequest extends FindVenuesRequest {
-  @NotEmpty
-  private Set<@NotNull SearchConstraint> allowedChanges;
+public class FindAlternativesRequest extends VenueSearchRequest {
+  @NotEmpty private Set<@NotNull SearchConstraint> allowedChanges;
 }

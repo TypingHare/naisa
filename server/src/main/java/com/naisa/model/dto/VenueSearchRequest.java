@@ -1,9 +1,7 @@
 package com.naisa.model.dto;
 
 import com.naisa.model.common.EarthCoordinate;
-import com.naisa.util.EarthCoordinates.WithLatitudeAndLongitude;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -20,10 +18,11 @@ import org.springframework.format.annotation.DateTimeFormat;
 /**
  * Carries the query parameters for a venue search.
  *
- * <p>Supply either latitude and longitude for one origin, or indexed locations for 1 to 10 members.
- * Do not mix the two forms. List indices identify members in the response. Maximum distance is in
- * kilometers from the average latitude and longitude. Budget is the maximum hourly price and
- * defaults to zero. Coordinates must be finite and within their valid ranges.
+ * <p>Supply between 1 and 10 locations as geographic coordinates. List indices identify members in
+ * the {@code VenueSearchResponse}.
+ *
+ * <p>{@code maxDistance} is in kilometers. {@code budget} is the maximum hourly price and defaults
+ * to zero.
  *
  * <p>The date uses YYYY-MM-DD format, parsed with the Java pattern uuuu-MM-dd. The time uses a
  * 24-hour clock. The standard parser accepts HH:mm and ISO local times with seconds and fractional
@@ -31,20 +30,13 @@ import org.springframework.format.annotation.DateTimeFormat;
  * validation succeeds, the service must reject a combined date and time that is in the past and
  * check that the sport exists.
  *
- * @author Andrew Hsu, Codex, Vincent Lai, Codex
+ * @author Andrew Hsu, Codex, Vincent Lai, Codex, James Chen
  */
 @JavaBean
 @Getter
 @Setter
-public class FindVenuesRequest implements WithLatitudeAndLongitude {
-  @DecimalMin("-90")
-  @DecimalMax("90")
-  private Double latitude;
-
-  @DecimalMin("-180")
-  @DecimalMax("180")
-  private Double longitude;
-
+public class VenueSearchRequest {
+  @NotNull
   @Size(min = 1, max = 10)
   private List<@NotNull @Valid EarthCoordinate> coordinates;
 

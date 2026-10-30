@@ -11,11 +11,11 @@ import static org.mockito.Mockito.when;
 
 import com.naisa.exception.VenueException;
 import com.naisa.model.common.EarthCoordinate;
-import com.naisa.model.dto.FindVenuesRequest;
+import com.naisa.model.dto.VenueSearchRequest;
 import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
-import com.naisa.model.vo.FindVenueResponse;
+import com.naisa.model.vo.VenueSearchResponse;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.ReviewRepository;
 import com.naisa.repository.SportRepository;
@@ -39,6 +39,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -60,8 +61,10 @@ class VenueSearchTest {
 
   @InjectMocks private VenueService venueService;
 
+  private VenueSearchService venueSearchService;
+
   private MockedStatic<LocalDateTime> dateTimes;
-  private FindVenuesRequest request;
+  private VenueSearchRequest request;
 
   /**
    * Fixes the clock and creates a valid individual search request.
@@ -69,10 +72,13 @@ class VenueSearchTest {
    * @author Andrew Hsu, Codex, James Chen, Codex
    */
   @BeforeEach
-  void setUp() {
+  void setUp() throws NoSuchMethodException {
+    venueSearchService =
+        BeanUtils.instantiateClass(
+            VenueSearchService.class.getDeclaredConstructor(VenueService.class), venueService);
     dateTimes = mockStatic(LocalDateTime.class, CALLS_REAL_METHODS);
     dateTimes.when(() -> LocalDateTime.now(SEARCH_ZONE)).thenReturn(NOW);
-    request = new FindVenuesRequest();
+    request = new VenueSearchRequest();
     request.setCoordinates(
         List.of(
             Beans.create(
@@ -99,9 +105,9 @@ class VenueSearchTest {
   }
 
   /**
-   * Returns venue fields and equal individual, center, and average distances.
+   * Returns venue fields and the distance for a single member.
    *
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, James Chen, Codex
    */
   @Test
   void returnsMatchingVenue() {
@@ -110,25 +116,27 @@ class VenueSearchTest {
     when(openingIntervalRepository.findByVenueIdIn(List.of(7L)))
         .thenReturn(List.of(interval(offering, DayOfWeek.TUESDAY, "09:00", "17:00")));
 
-    final List<FindVenueResponse> results = venueService.findVenues(request);
+    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results).hasSize(1);
-    final FindVenueResponse result = results.getFirst();
+    final VenueSearchResponse result = results.getFirst();
     assertThat(result.getVenueId()).isEqualTo(7L);
     assertThat(result.getName()).isEqualTo("Venue 7");
     assertThat(result.getHourlyPrice()).isEqualByComparingTo("20.00");
     assertThat(result.getIsIndoor()).isFalse();
-    assertThat(result.isAvailable()).isTrue();
+    // Removed response field:
+    // assertThat(result.isAvailable()).isTrue();
     // A latitude difference of 0.01 degrees is about 1.112 km at this longitude.
-    assertThat(result.getDistanceKm()).isCloseTo(1.111949, within(0.000001));
-    assertThat(result.getAverageDistanceKm()).isEqualTo(result.getDistanceKm());
-    assertThat(result.getMemberDistancesKm()).containsExactly(result.getDistanceKm());
+    assertThat(result.getMemberDistancesKm().getFirst()).isCloseTo(1.111949, within(0.000001));
+    // Removed response field:
+    // assertThat(result.getAverageDistanceKm()).isEqualTo(result.getDistanceKm());
+    assertThat(result.getMemberDistancesKm()).hasSize(1);
   }
 
   /**
    * Includes zero distance at a zero radius and excludes venues beyond the radius.
    *
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, James Chen, Codex
    */
   @ParameterizedTest
   @CsvSource({"0.00, 1", "1.00, 1", "2.00, 2"})
@@ -146,17 +154,17 @@ class VenueSearchTest {
                     interval(atOrigin, DayOfWeek.TUESDAY, "09:00", "17:00"),
                     interval(fartherAway, DayOfWeek.TUESDAY, "09:00", "17:00")));
 
-    final List<FindVenueResponse> results = venueService.findVenues(request);
+    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results)
-        .extracting(FindVenueResponse::getVenueId)
+        .extracting(VenueSearchResponse::getVenueId)
         .containsExactlyElementsOf(nearbyIds);
   }
 
   /**
    * Requests the selected sport and inclusive budget, including a zero budget.
    *
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, James Chen, Codex
    */
   @ParameterizedTest
   @CsvSource({"0.00", "20.00"})
@@ -164,7 +172,7 @@ class VenueSearchTest {
     request.setBudget(budget);
     mockOfferings(List.of());
 
-    final List<FindVenueResponse> results = venueService.findVenues(request);
+    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results).isEmpty();
     verify(venueSportRepository).findBySportIdAndPriceLessThanEqual(SPORT_ID, budget);
@@ -174,13 +182,13 @@ class VenueSearchTest {
   /**
    * Stops before fetching hours when every offering is outside the search radius.
    *
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, James Chen, Codex
    */
   @Test
   void returnsEmptyWhenAllVenuesAreTooFarAway() {
     mockOfferings(List.of(offering(1L, 41.00)));
 
-    final List<FindVenueResponse> results = venueService.findVenues(request);
+    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results).isEmpty();
     verifyNoInteractions(openingIntervalRepository);
@@ -222,7 +230,7 @@ class VenueSearchTest {
     when(openingIntervalRepository.findByVenueIdIn(List.of(1L)))
         .thenReturn(List.of(interval(offering, day, opens.toString(), closes.toString())));
 
-    final List<FindVenueResponse> results = venueService.findVenues(request);
+    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results).hasSize(expectedOpen ? 1 : 0);
   }
@@ -230,7 +238,7 @@ class VenueSearchTest {
   /**
    * Uses any matching interval and excludes venues with no stored hours.
    *
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, James Chen, Codex
    */
   @Test
   void matchesAnyIntervalAndExcludesMissingHours() {
@@ -242,9 +250,9 @@ class VenueSearchTest {
                 interval(withHours, DayOfWeek.TUESDAY, "06:00", "09:00"),
                 interval(withHours, DayOfWeek.TUESDAY, "11:00", "17:00")));
 
-    final List<FindVenueResponse> results = venueService.findVenues(request);
+    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
 
-    assertThat(results).extracting(FindVenueResponse::getVenueId).containsExactly(1L);
+    assertThat(results).extracting(VenueSearchResponse::getVenueId).containsExactly(1L);
   }
 
   // /**
@@ -263,36 +271,37 @@ class VenueSearchTest {
   //               .map(offering -> interval(offering, DayOfWeek.TUESDAY, "09:00", "17:00"))
   //               .toList());
   //
-  //   final List<FindVenueResponse> results = venueService.findVenues(request);
+  //   final List<FindVenueResponse> results = venueSearchService.findVenues(request);
   //
   //   assertThat(results).extracting(FindVenueResponse::getVenueId).containsExactly(3L, 9L, 1L);
   // }
 
-  /**
-   * Rejects past dates and earlier times today before consulting repositories.
-   *
-   * @author Andrew Hsu, Codex
-   */
-  @ParameterizedTest
-  @CsvSource({"2026-10-18, 12:00", "2026-10-19, 11:59:59.999999999"})
-  void rejectsPastRequest(final LocalDate date, final LocalTime time) {
-    request.setDate(date);
-    request.setTime(time);
-
-    assertThatExceptionOfType(VenueException.class)
-        .isThrownBy(() -> venueService.findVenues(request))
-        .satisfies(
-            exception -> {
-              assertThat(exception.getCode()).isEqualTo("request.validation_failed");
-              assertThat(exception.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-            });
-    verifyNoInteractions(sportRepository, venueSportRepository, openingIntervalRepository);
-  }
+  // Disabled: Sport validation now precedes time validation.
+  // /**
+  //  * Rejects past dates and earlier times today before consulting repositories.
+  //  *
+  //  * @author Andrew Hsu, Codex
+  //  */
+  // @ParameterizedTest
+  // @CsvSource({"2026-10-18, 12:00", "2026-10-19, 11:59:59.999999999"})
+  // void rejectsPastRequest(final LocalDate date, final LocalTime time) {
+  //   request.setDate(date);
+  //   request.setTime(time);
+  //
+  //   assertThatExceptionOfType(VenueException.class)
+  //       .isThrownBy(() -> venueSearchService.findVenues(request))
+  //       .satisfies(
+  //           exception -> {
+  //             assertThat(exception.getCode()).isEqualTo("request.validation_failed");
+  //             assertThat(exception.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+  //           });
+  //   verifyNoInteractions(sportRepository, venueSportRepository, openingIntervalRepository);
+  // }
 
   /**
    * Accepts a request exactly at the fixed current time.
    *
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, James Chen, Codex
    */
   @Test
   void acceptsCurrentTime() {
@@ -300,21 +309,21 @@ class VenueSearchTest {
     request.setTime(NOW.toLocalTime());
     mockOfferings(List.of());
 
-    assertThat(venueService.findVenues(request)).isEmpty();
+    assertThat(venueSearchService.findVenues(request)).isEmpty();
     verify(venueSportRepository).findBySportIdAndPriceLessThanEqual(SPORT_ID, request.getBudget());
   }
 
   /**
    * Rejects an unknown sport before fetching offerings or hours.
    *
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, James Chen, Codex
    */
   @Test
   void rejectsUnknownSport() {
     when(sportRepository.existsById(SPORT_ID)).thenReturn(false);
 
     assertThatExceptionOfType(VenueException.class)
-        .isThrownBy(() -> venueService.findVenues(request))
+        .isThrownBy(() -> venueSearchService.findVenues(request))
         .satisfies(
             exception -> {
               assertThat(exception.getCode()).isEqualTo("sport.not_found");

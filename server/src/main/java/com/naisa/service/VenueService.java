@@ -1,13 +1,12 @@
 package com.naisa.service;
 
-import com.google.common.math.Stats;
 import com.naisa.exception.VenueException;
 import com.naisa.model.common.EarthCoordinate;
 import com.naisa.model.dto.AddVenueRequest;
 import com.naisa.model.dto.FindAlternativesRequest;
-import com.naisa.model.dto.FindVenuesRequest;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.dto.SearchConstraint;
+import com.naisa.model.dto.VenueSearchRequest;
 import com.naisa.model.entity.Client;
 import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Review;
@@ -15,11 +14,11 @@ import com.naisa.model.entity.Sport;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
 import com.naisa.model.vo.FindAlternativeResponse;
-import com.naisa.model.vo.FindVenueResponse;
 import com.naisa.model.vo.ResourceIdResponse;
 import com.naisa.model.vo.VenueInfoResponse;
 import com.naisa.model.vo.VenueInfoResponse.OpeningIntervalInfo;
 import com.naisa.model.vo.VenueInfoResponse.SportInfo;
+import com.naisa.model.vo.VenueSearchResponse;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.ReviewRepository;
 import com.naisa.repository.SportRepository;
@@ -68,11 +67,11 @@ public class VenueService {
   private final OpeningIntervalRepository openingIntervalRepository;
 
   /**
-   * Creates the service with the repositories required for venue searches and submissions.
+   * Creates a VenueService instance.
    *
    * @param venueRepository repository for venue records
    * @param venueSportRepository repository for sports offered at venues
-   * @param reviewRepository repository for user ratings and comments
+   * @param reviewRepository repository for user reviews
    * @param sportRepository repository for registered sports
    * @param openingIntervalRepository repository for venue opening hours
    * @author Vincent Lai, Codex, Andrew Hsu, Codex
@@ -88,6 +87,129 @@ public class VenueService {
     this.reviewRepository = reviewRepository;
     this.sportRepository = sportRepository;
     this.openingIntervalRepository = openingIntervalRepository;
+  }
+
+  /**
+   * Gets affordable venues ({@code VenueSport} instances) that support a given sport.
+   *
+   * <p>This function retrieves all venues that (1) support the given sport and (2) have an hourly
+   * price less than or equal to the given budget.
+   *
+   * @param sportId the ID of the sport the venue should support
+   * @param budget the maximum hourly price for the venue
+   * @return a list of affordable venues ({@code VenueSport} instances) that support the sport
+   * @author James Chen
+   */
+  public List<VenueSport> getAffordableVenueSupportingSport(
+      final long sportId, final BigDecimal budget) {
+    return venueSportRepository.findBySportIdAndPriceLessThanEqual(sportId, budget);
+  }
+
+  /**
+   * Filters nearby venues.
+   *
+   * <p>This function checks each given {@code VenueSport} instance to determine whether all members
+   * are within the maximum distance of the venue. A venue is considered "nearby" if and only if its
+   * distance from every member is less than or equal to {@code maxDistance}.
+   *
+   * @param venueSports a list of {@code VenueSport} instances to filter
+   * @param memberCoordinates the member coordinates
+   * @param maxDistance the maximum distance from each member to the venue, in kilometers
+   * @return a list of nearby venues that meet the requirements
+   * @author James Chen
+   */
+  public List<VenueSearchResponse> filterNearbyVenues(
+      final List<VenueSport> venueSports,
+      final Collection<EarthCoordinate> memberCoordinates,
+      final double maxDistance) {
+    final List<VenueSearchResponse> nearbyVenues = new ArrayList<>();
+    for (final VenueSport venueSport : venueSports) {
+      final Venue venue = venueSport.getVenue();
+      final EarthCoordinate venueCoordinate = EarthCoordinates.createFrom(venue);
+
+      // Calculate the distances to the venue for all members. Skip the venue if any member is
+      // farther away than the maximum distance.
+      boolean someoneIsTooFarAway = false;
+      final List<Double> memberDistancesKm = new ArrayList<>();
+      for (final EarthCoordinate memberCoordinate : memberCoordinates) {
+        final double distance =
+            EarthCoordinates.calculateDistanceKm(memberCoordinate, venueCoordinate);
+        if (distance > maxDistance) {
+          someoneIsTooFarAway = true;
+          break;
+        }
+
+        memberDistancesKm.add(distance);
+      }
+      if (someoneIsTooFarAway) {
+        continue;
+      }
+
+      nearbyVenues.add(
+          Beans.create(
+              VenueSearchResponse.class,
+              (it) -> {
+                it.setVenueId(venue.getId());
+                it.setName(venue.getName());
+                it.setMemberDistancesKm(memberDistancesKm);
+                it.setHourlyPrice(venueSport.getPrice());
+                it.setIsIndoor(venueSport.getIsIndoor());
+                it.setHasLighting(venueSport.getHasLighting());
+              }));
+    }
+
+    return nearbyVenues;
+  }
+
+  /**
+   * Gets a table mapping venue IDs to opening intervals.
+   *
+   * @param venueIdList a list of venue IDs whose opening intervals to retrieve
+   * @return a table mapping venue IDs to opening intervals ({@code OpeningInterval} instances)
+   * @author James Chen
+   */
+  public Map<Long, List<OpeningInterval>> getIntervalListsByVenueId(final List<Long> venueIdList) {
+    return openingIntervalRepository.findByVenueIdIn(venueIdList).stream()
+        .collect(Collectors.groupingBy(interval -> interval.getVenue().getId()));
+  }
+
+  /**
+   * Checks whether the requested local date and time fall within the given opening interval.
+   *
+   * @param interval an opening interval to check
+   * @param requestedAt the requested local date and time
+   * @return true if the requested time falls within the opening interval; false otherwise
+   * @author Andrew Hsu, Codex, James Chen
+   */
+  public boolean isOpenAt(final OpeningInterval interval, final LocalDateTime requestedAt) {
+    final int daysSinceOpening =
+        Math.floorMod(
+            requestedAt.getDayOfWeek().getValue() - interval.getDayOfWeek().getValue(), 7);
+    final LocalDateTime opensAt =
+        requestedAt.toLocalDate().minusDays(daysSinceOpening).atTime(interval.getOpensAt());
+    LocalDateTime closesAt = opensAt.toLocalDate().atTime(interval.getClosesAt());
+    if (!interval.getClosesAt().isAfter(interval.getOpensAt())) {
+      closesAt = closesAt.plusDays(1);
+    }
+    return !requestedAt.isBefore(opensAt) && requestedAt.isBefore(closesAt);
+  }
+
+  /**
+   * Checks whether the requested local date and time fall within any given opening interval.
+   *
+   * @param intervals a list of opening intervals to check
+   * @param requestedAt the requested local date and time
+   * @return true if the requested time falls within any opening interval; false otherwise
+   * @author James Chen
+   */
+  public boolean isOpenAt(final List<OpeningInterval> intervals, final LocalDateTime requestedAt) {
+    for (final OpeningInterval openingInterval : intervals) {
+      if (isOpenAt(openingInterval, requestedAt)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -145,119 +267,6 @@ public class VenueService {
   }
 
   /**
-   * Finds open venues for one origin or a group within the requested radius and hourly budget.
-   *
-   * <p>The request must have passed field validation. The center is the average latitude and
-   * longitude. The radius limits distance from this center, not from each member. Member distances
-   * follow input order. Results are sorted by average member distance, then venue identifier. A
-   * single origin uses the same calculation and filters as a group.
-   *
-   * @param request validated search query parameters
-   * @return matching venues, or an empty list when none match
-   * @throws VenueException if the requested time is in the past or the sport does not exist
-   * @author Andrew Hsu, Codex, Vincent Lai, Codex
-   */
-  @Transactional(readOnly = true)
-  public List<FindVenueResponse> findVenues(final FindVenuesRequest request) {
-    final Long sportId = request.getSportId();
-    final LocalDateTime requestedAt = LocalDateTime.of(request.getDate(), request.getTime());
-    validateSearchSport(sportId);
-    validateSearchRequestTime(requestedAt);
-
-    final List<EarthCoordinate> memberCoordinates = request.getCoordinates();
-    final List<VenueSport> affordableVenues =
-        getAffordableVenueSupportingSport(sportId, request.getBudget());
-    final List<FindVenueResponse> nearbyVenues =
-        getNearbyVenues(
-            affordableVenues, memberCoordinates, request.getMaxDistance().doubleValue());
-
-    // If no eligible nearby venues found, return an empty list early.
-    if (nearbyVenues.isEmpty()) {
-      return List.of();
-    }
-
-    // Create a map that maps venue IDs to their interval lists.
-    final List<Long> venueIds = nearbyVenues.stream().map(FindVenueResponse::getVenueId).toList();
-    final Map<Long, List<OpeningInterval>> intervalsByVenue =
-        openingIntervalRepository.findByVenueIdIn(venueIds).stream()
-            .collect(Collectors.groupingBy(interval -> interval.getVenue().getId()));
-
-    // Filter the nearby venues (FindVenueResponse instances), so that venues that are not open at
-    // the requested time get filtered out.
-    final List<FindVenueResponse> openNearbyVenues = new ArrayList<>();
-    for (final FindVenueResponse nearbyVenue : nearbyVenues) {
-      final List<OpeningInterval> intervals =
-          intervalsByVenue.getOrDefault(nearbyVenue.getVenueId(), List.of());
-      if (intervals.stream().anyMatch(interval -> isOpenAt(interval, requestedAt))) {
-        openNearbyVenues.add(nearbyVenue);
-      }
-    }
-
-    // For all nearby venues, sort them based on their average distances in ascending order.
-    return openNearbyVenues.stream()
-        .sorted(Comparator.comparingDouble(FindVenueResponse::getAverageDistanceKm))
-        .toList();
-  }
-
-  /**
-   * Gets affordable venues ({@code VenueSport} instances) that support a given sport.
-   *
-   * <p>This function retrieves all venues that (1) support the given sport and (2) have an hourly
-   * price lower than the given budget.
-   *
-   * @param sportId the ID of the sport the venue should support
-   * @param budget the budget of the hourly price of the venue
-   * @return a list of affordable venues ({@code VenueSport} instances) that support the sport
-   * @author James Chen
-   */
-  public List<VenueSport> getAffordableVenueSupportingSport(
-      final long sportId, final BigDecimal budget) {
-    return venueSportRepository.findBySportIdAndPriceLessThanEqual(sportId, budget);
-  }
-
-  /**
-   * Gets nearby venues.
-   *
-   * @param venueSports a list of {@code VenueSport} instances to filter
-   * @param memberCoordinates the member coordinates
-   * @param maxDistance the max distance it supports
-   * @return a list of nearby venues that meet the requirements
-   * @author James Chen
-   */
-  public List<FindVenueResponse> getNearbyVenues(
-      final List<VenueSport> venueSports,
-      final Collection<EarthCoordinate> memberCoordinates,
-      final double maxDistance) {
-    final List<FindVenueResponse> nearbyVenues = new ArrayList<>();
-    for (final VenueSport venueSport : venueSports) {
-      final Venue venue = venueSport.getVenue();
-      final EarthCoordinate venueCoordinate = EarthCoordinates.createFrom(venue);
-
-      // Calculate the distances to the venue for all members.
-      final List<Double> memberDistancesKm = new ArrayList<>();
-      for (final EarthCoordinate memberCoordinate : memberCoordinates) {
-        memberDistancesKm.add(
-            EarthCoordinates.calculateDistanceKm(memberCoordinate, venueCoordinate));
-      }
-
-      nearbyVenues.add(
-          Beans.create(
-              FindVenueResponse.class,
-              (it) -> {
-                it.setVenueId(venue.getId());
-                it.setName(venue.getName());
-                it.setAverageDistanceKm(Stats.meanOf(memberDistancesKm));
-                it.setMemberDistancesKm(memberDistancesKm);
-                it.setHourlyPrice(venueSport.getPrice());
-                it.setIsIndoor(venueSport.getIsIndoor());
-                it.setAvailable(true);
-              }));
-    }
-
-    return nearbyVenues;
-  }
-
-  /**
    * Finds alternatives by changing only the search values permitted by the client.
    *
    * <p>The request must already have passed field validation. A nearby sport offering is checked
@@ -271,6 +280,7 @@ public class VenueService {
    */
   @Transactional(readOnly = true)
   public List<FindAlternativeResponse> findAlternatives(final FindAlternativesRequest request) {
+    // TODO: This function has known issues and will be fixed in the future.
     final LocalDateTime now = LocalDateTime.now(SEARCH_TIMEZONE);
     final LocalDateTime requestedAt = validateSearchRequest(request, now);
     final Set<SearchConstraint> allowedChanges = request.getAllowedChanges();
@@ -283,27 +293,24 @@ public class VenueService {
             ? request.getBudget().add(ALTERNATIVE_BUDGET_INCREASE)
             : request.getBudget();
 
-    final List<FindVenueResponse> nearbyVenues = new ArrayList<>();
+    final List<VenueSearchResponse> nearbyVenues = new ArrayList<>();
     final EarthCoordinate coordinate =
-        EarthCoordinates.create(request.getLatitude(), request.getLongitude());
+        EarthCoordinates.createFrom(request.getCoordinates().getFirst());
     for (final VenueSport offering : venueSportRepository.findBySportId(request.getSportId())) {
       final Venue venue = offering.getVenue();
-      final EarthCoordinate venueCoordinate =
-          EarthCoordinates.create(venue.getLatitude(), venue.getLongitude());
+      final EarthCoordinate venueCoordinate = EarthCoordinates.createFrom(venue);
       final double distanceKm = EarthCoordinates.calculateDistanceKm(coordinate, venueCoordinate);
 
       if (BigDecimal.valueOf(distanceKm).compareTo(maximumDistance) <= 0) {
         nearbyVenues.add(
             Beans.create(
-                FindVenueResponse.class,
+                VenueSearchResponse.class,
                 (it) -> {
                   it.setVenueId(venue.getId());
                   it.setName(venue.getName());
-                  it.setDistanceKm(distanceKm);
-                  it.setAverageDistanceKm(distanceKm);
                   it.setHourlyPrice(offering.getPrice());
                   it.setIsIndoor(offering.getIsIndoor());
-                  it.setAvailable(true);
+                  it.setHasLighting(offering.getHasLighting());
                 }));
       }
     }
@@ -311,7 +318,7 @@ public class VenueService {
       throw VenueException.NO_NEARBY_VENUES.clone();
     }
 
-    final List<FindVenueResponse> affordableVenues =
+    final List<VenueSearchResponse> affordableVenues =
         nearbyVenues.stream()
             .filter(venue -> venue.getHourlyPrice().compareTo(maximumBudget) <= 0)
             .toList();
@@ -319,13 +326,13 @@ public class VenueService {
       return List.of();
     }
     final List<Long> venueIds =
-        affordableVenues.stream().map(FindVenueResponse::getVenueId).toList();
+        affordableVenues.stream().map(VenueSearchResponse::getVenueId).toList();
     final Map<Long, List<OpeningInterval>> intervalsByVenue =
         openingIntervalRepository.findByVenueIdIn(venueIds).stream()
             .collect(Collectors.groupingBy(interval -> interval.getVenue().getId()));
     final List<LocalDateTime> suggestedTimes = suggestDateTimes(request, now);
     final List<FindAlternativeResponse> alternatives = new ArrayList<>();
-    for (final FindVenueResponse venue : affordableVenues) {
+    for (final VenueSearchResponse venue : affordableVenues) {
       final List<OpeningInterval> intervals =
           intervalsByVenue.getOrDefault(venue.getVenueId(), List.of());
       for (final LocalDateTime suggestedAt : suggestedTimes) {
@@ -335,7 +342,7 @@ public class VenueService {
                   venue,
                   suggestedAt.toLocalDate(),
                   suggestedAt.toLocalTime(),
-                  request.getMaxDistance().max(BigDecimal.valueOf(venue.getDistanceKm())),
+                  request.getMaxDistance(),
                   request.getBudget().max(venue.getHourlyPrice())));
         }
       }
@@ -354,23 +361,36 @@ public class VenueService {
                             .abs())
                 .thenComparing(FindAlternativeResponse::getDate)
                 .thenComparing(FindAlternativeResponse::getTime)
-                .thenComparingDouble(alternative -> alternative.getVenue().getDistanceKm())
                 .thenComparing(alternative -> alternative.getVenue().getHourlyPrice())
                 .thenComparing(alternative -> alternative.getVenue().getVenueId()))
         .limit(ALTERNATIVE_RESULT_LIMIT)
         .toList();
   }
 
-  private void validateSearchRequestTime(final LocalDateTime requestedAt) {
-    final LocalDateTime now = LocalDateTime.now(SEARCH_TIMEZONE);
-    if (requestedAt.isBefore(now)) {
-      throw VenueException.REQUEST_IN_PAST.clone();
+  /**
+   * Ensures a sport ID exists.
+   *
+   * @param sportId the sport ID to check
+   * @throws VenueException if the sport ID does not exist
+   * @author James Chen
+   */
+  public void ensureSportIdExists(final Long sportId) {
+    if (!sportRepository.existsById(sportId)) {
+      throw VenueException.SPORT_NOT_FOUND.clone();
     }
   }
 
-  private void validateSearchSport(final Long sportId) {
-    if (!sportRepository.existsById(sportId)) {
-      throw VenueException.SPORT_NOT_FOUND.clone();
+  /**
+   * Checks that the requested search time is not in the past.
+   *
+   * @param requestedAt the search request time to validate
+   * @throws VenueException if the search request time is in the past
+   * @author James Chen
+   */
+  public void validateSearchRequestTime(final LocalDateTime requestedAt) {
+    final LocalDateTime now = LocalDateTime.now(SEARCH_TIMEZONE);
+    if (requestedAt.isBefore(now)) {
+      throw VenueException.REQUEST_IN_PAST.clone();
     }
   }
 
@@ -384,7 +404,7 @@ public class VenueService {
    * @author Andrew Hsu, Codex
    */
   private LocalDateTime validateSearchRequest(
-      final FindVenuesRequest request, final LocalDateTime now) {
+      final VenueSearchRequest request, final LocalDateTime now) {
     final LocalDateTime requestedAt = LocalDateTime.of(request.getDate(), request.getTime());
     if (requestedAt.isBefore(now)) {
       throw VenueException.REQUEST_IN_PAST.clone();
@@ -439,7 +459,7 @@ public class VenueService {
    * @author Andrew Hsu, Codex
    */
   private static int countChangedConstraints(
-      final FindVenuesRequest request, final FindAlternativeResponse alternative) {
+      final VenueSearchRequest request, final FindAlternativeResponse alternative) {
     int changes = 0;
     if (!request.getDate().equals(alternative.getDate())) {
       changes++;
@@ -454,27 +474,6 @@ public class VenueService {
       changes++;
     }
     return changes;
-  }
-
-  /**
-   * Checks whether a weekly opening interval contains the requested local date and time.
-   *
-   * @param interval stored opening interval
-   * @param requestedAt requested date and time in New York
-   * @return true from opening time up to, but excluding, closing time
-   * @author Andrew Hsu, Codex
-   */
-  private static boolean isOpenAt(final OpeningInterval interval, final LocalDateTime requestedAt) {
-    final int daysSinceOpening =
-        Math.floorMod(
-            requestedAt.getDayOfWeek().getValue() - interval.getDayOfWeek().getValue(), 7);
-    final LocalDateTime opensAt =
-        requestedAt.toLocalDate().minusDays(daysSinceOpening).atTime(interval.getOpensAt());
-    LocalDateTime closesAt = opensAt.toLocalDate().atTime(interval.getClosesAt());
-    if (!interval.getClosesAt().isAfter(interval.getOpensAt())) {
-      closesAt = closesAt.plusDays(1);
-    }
-    return !requestedAt.isBefore(opensAt) && requestedAt.isBefore(closesAt);
   }
 
   /**
@@ -572,11 +571,10 @@ public class VenueService {
   /**
    * Gets a sport instance by a venue ID and a sport ID.
    *
-   * <p>If the sport isn't offered by the Venue, it throws {@code VenueException.SPORT_NOT_OFFERED}.
-   *
    * @param venueId the ID of the venue to search for
    * @param sportId the ID of the sport to search for
    * @return the sport instance that matches both given IDs; result must not be {@code null}
+   * @throws VenueException if the sport isn't offered by the venue
    * @author James Chen.
    */
   public Sport getVenueSport(final Long venueId, final Long sportId) {

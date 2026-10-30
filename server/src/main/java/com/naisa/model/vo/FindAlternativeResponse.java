@@ -10,8 +10,8 @@ import lombok.Setter;
 /**
  * Describes a venue and the suggested search values that make it a valid alternative.
  *
- * <p>The date and time use America/New_York. Maximum distance is in kilometers, and budget is
- * the maximum hourly price in dollars. The nested venue contains the actual distance and price.
+ * <p>The date and time use America/New_York. Maximum distance is in kilometers, and budget is the
+ * maximum hourly price in dollars. The nested venue contains the actual distance and price.
  *
  * @author Andrew Hsu, Codex
  */
@@ -19,7 +19,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class FindAlternativeResponse {
-  private FindVenueResponse venue;
+  private VenueSearchResponse venue;
   private LocalDate date;
   private LocalTime time;
   private BigDecimal maxDistance;
@@ -36,7 +36,7 @@ public class FindAlternativeResponse {
    * @author Andrew Hsu, Codex
    */
   public FindAlternativeResponse(
-      final FindVenueResponse venue,
+      final VenueSearchResponse venue,
       final LocalDate date,
       final LocalTime time,
       final BigDecimal maxDistance,

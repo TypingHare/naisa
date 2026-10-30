@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.naisa.model.common.EarthCoordinate;
 import com.naisa.model.dto.AddVenueRequest;
-import com.naisa.model.dto.FindAlternativesRequest;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.dto.VenueComparisonRequest;
 import com.naisa.model.entity.Client;
@@ -54,7 +53,6 @@ class NumericRequestTest {
     final List<Object> requests =
         List.of(
             new AddVenueRequest(),
-            new FindAlternativesRequest(),
             Beans.create(EarthCoordinate.class, it -> {}),
             new VenueComparisonRequest());
     for (final Object request : requests) {

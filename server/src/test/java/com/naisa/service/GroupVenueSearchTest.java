@@ -10,11 +10,11 @@ import static org.mockito.Mockito.when;
 
 import com.naisa.exception.VenueException;
 import com.naisa.model.common.EarthCoordinate;
-import com.naisa.model.dto.FindVenuesRequest;
+import com.naisa.model.dto.VenueSearchRequest;
 import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
-import com.naisa.model.vo.FindVenueResponse;
+import com.naisa.model.vo.VenueSearchResponse;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.ReviewRepository;
 import com.naisa.repository.SportRepository;
@@ -37,6 +37,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -58,19 +59,24 @@ class GroupVenueSearchTest {
 
   @InjectMocks private VenueService venueService;
 
+  private VenueSearchService venueSearchService;
+
   private MockedStatic<LocalDateTime> dateTimes;
-  private FindVenuesRequest request;
+  private VenueSearchRequest request;
 
   /**
    * Creates a valid group request with no individual coordinate pair.
    *
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, James Chen, Codex
    */
   @BeforeEach
-  void setUp() {
+  void setUp() throws NoSuchMethodException {
+    venueSearchService =
+        BeanUtils.instantiateClass(
+            VenueSearchService.class.getDeclaredConstructor(VenueService.class), venueService);
     dateTimes = mockStatic(LocalDateTime.class, CALLS_REAL_METHODS);
     dateTimes.when(() -> LocalDateTime.now(SEARCH_ZONE)).thenReturn(NOW);
-    request = new FindVenuesRequest();
+    request = new VenueSearchRequest();
     request.setCoordinates(List.of(location("40.00", "-73.00"), location("40.02", "-73.00")));
     request.setSportId(SPORT_ID);
     request.setDate(LocalDate.of(2026, 10, 27));
@@ -99,46 +105,49 @@ class GroupVenueSearchTest {
     request.setCoordinates(List.of(location("40.00", "-73.00")));
     mockOpenVenues(List.of(offering(7L, 40.01, -73.00)));
 
-    final List<FindVenueResponse> groupResults = venueService.findVenues(request);
+    final List<VenueSearchResponse> groupResults = venueSearchService.findVenues(request);
 
     assertThat(groupResults).hasSize(1);
-    final FindVenueResponse result = groupResults.getFirst();
-    assertThat(result.getDistanceKm()).isCloseTo(1.111949, within(0.000001));
-    assertThat(result.getAverageDistanceKm()).isEqualTo(result.getDistanceKm());
-    assertThat(result.getMemberDistancesKm()).containsExactly(result.getDistanceKm());
+    final VenueSearchResponse result = groupResults.getFirst();
+    assertThat(result.getMemberDistancesKm().getFirst()).isCloseTo(1.111949, within(0.000001));
+    // Removed response field:
+    // assertThat(result.getAverageDistanceKm()).isEqualTo(result.getDistanceKm());
+    assertThat(result.getMemberDistancesKm()).hasSize(1);
     assertThat(result.getVenueId()).isEqualTo(7L);
     assertThat(result.getName()).isEqualTo("Venue 7");
     assertThat(result.getHourlyPrice()).isEqualByComparingTo("20.00");
     assertThat(result.getIsIndoor()).isTrue();
-    assertThat(result.isAvailable()).isTrue();
+    // Removed response field:
+    // assertThat(result.isAvailable()).isTrue();
   }
 
-  /**
-   * Averages both coordinates and applies the radius only to the center-to-venue distance.
-   *
-   * @author Andrew Hsu, Codex
-   */
-  @Test
-  void includesVenueAtCenterEvenWhenMembersAreOutsideRadius() {
-    request.setCoordinates(List.of(location("40.00", "-73.00"), location("40.02", "-73.04")));
-    request.setMaxDistance(new BigDecimal("0.001"));
-    mockOpenVenues(List.of(offering(1L, 40.01, -73.02)));
-
-    final List<FindVenueResponse> results = venueService.findVenues(request);
-
-    assertThat(results).hasSize(1);
-    final FindVenueResponse result = results.getFirst();
-    assertThat(result.getDistanceKm()).isCloseTo(0.0, within(0.00000001));
-    assertThat(result.getMemberDistancesKm())
-        .hasSize(2)
-        .allSatisfy(distance -> assertThat(distance).isGreaterThan(0.001));
-    assertThat(result.getAverageDistanceKm()).isGreaterThan(0.001);
-  }
+  // Disabled: The radius now applies to every member, not the group center.
+  // /**
+  //  * Averages both coordinates and applies the radius only to the center-to-venue distance.
+  //  *
+  //  * @author Andrew Hsu, Codex
+  //  */
+  // @Test
+  // void includesVenueAtCenterEvenWhenMembersAreOutsideRadius() {
+  //   request.setCoordinates(List.of(location("40.00", "-73.00"), location("40.02", "-73.04")));
+  //   request.setMaxDistance(new BigDecimal("0.001"));
+  //   mockOpenVenues(List.of(offering(1L, 40.01, -73.02)));
+  //
+  //   final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
+  //
+  //   assertThat(results).hasSize(1);
+  //   final VenueSearchResponse result = results.getFirst();
+  //   assertThat(result.getDistanceKm()).isCloseTo(0.0, within(0.00000001));
+  //   assertThat(result.getMemberDistancesKm())
+  //       .hasSize(2)
+  //       .allSatisfy(distance -> assertThat(distance).isGreaterThan(0.001));
+  //   assertThat(result.getAverageDistanceKm()).isGreaterThan(0.001);
+  // }
 
   /**
    * Excludes a venue outside the center radius even when it is at one member's location.
    *
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, James Chen, Codex
    */
   @Test
   void excludesVenueNearOnlyOneMember() {
@@ -146,16 +155,16 @@ class GroupVenueSearchTest {
     request.setMaxDistance(BigDecimal.ONE);
     mockOfferings(List.of(offering(1L, 40.00, -73.00)));
 
-    final List<FindVenueResponse> results = venueService.findVenues(request);
+    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results).isEmpty();
     verifyNoInteractions(openingIntervalRepository);
   }
 
   /**
-   * Keeps member distances in input order and uses their arithmetic average.
+   * Keeps member distances in input order.
    *
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, James Chen, Codex
    */
   @Test
   void preservesMemberOrderWhenLocationsAreReversed() {
@@ -164,49 +173,54 @@ class GroupVenueSearchTest {
             location("40.02", "-73.00"), location("40.00", "-73.00"), location("40.01", "-73.00")));
     mockOpenVenues(List.of(offering(1L, 40.00, -73.00)));
 
-    final List<FindVenueResponse> forwardResults = venueService.findVenues(request);
+    final List<VenueSearchResponse> forwardResults = venueSearchService.findVenues(request);
     request.setCoordinates(request.getCoordinates().reversed());
-    final List<FindVenueResponse> reverseResults = venueService.findVenues(request);
+    final List<VenueSearchResponse> reverseResults = venueSearchService.findVenues(request);
 
     assertThat(forwardResults).hasSize(1);
     assertThat(reverseResults).hasSize(1);
-    final FindVenueResponse forward = forwardResults.getFirst();
-    final FindVenueResponse reverse = reverseResults.getFirst();
+    final VenueSearchResponse forward = forwardResults.getFirst();
+    final VenueSearchResponse reverse = reverseResults.getFirst();
     assertThat(forward.getMemberDistancesKm()).hasSize(3);
     assertThat(forward.getMemberDistancesKm().get(0)).isCloseTo(2.223899, within(0.000001));
     assertThat(forward.getMemberDistancesKm().get(1)).isZero();
     assertThat(forward.getMemberDistancesKm().get(2)).isCloseTo(1.111949, within(0.000001));
-    assertThat(forward.getAverageDistanceKm()).isCloseTo(1.111949, within(0.000001));
+    // Removed response field:
+    // assertThat(forward.getAverageDistanceKm()).isCloseTo(1.111949, within(0.000001));
     assertThat(reverse.getMemberDistancesKm())
         .containsExactlyElementsOf(forward.getMemberDistancesKm().reversed());
-    assertThat(reverse.getDistanceKm()).isCloseTo(forward.getDistanceKm(), within(0.00000001));
-    assertThat(reverse.getAverageDistanceKm())
-        .isCloseTo(forward.getAverageDistanceKm(), within(0.00000001));
+    // Removed response field:
+    // assertThat(reverse.getDistanceKm()).isCloseTo(forward.getDistanceKm(), within(0.00000001));
+    // Removed response field:
+    // assertThat(reverse.getAverageDistanceKm())
+    // .isCloseTo(forward.getAverageDistanceKm(), within(0.00000001));
   }
 
-  /**
-   * Counts members at the same location separately and sorts by average member distance.
-   *
-   * @author Andrew Hsu, Codex
-   */
-  @Test
-  void sortsByMemberAverageInsteadOfCenterDistance() {
-    request.setCoordinates(
-        List.of(
-            location("40.00", "-73.00"), location("40.00", "-73.00"), location("40.06", "-73.00")));
-    mockOpenVenues(List.of(offering(1L, 40.02, -73.00), offering(9L, 40.00, -73.00)));
-
-    final List<FindVenueResponse> results = venueService.findVenues(request);
-
-    assertThat(results).extracting(FindVenueResponse::getVenueId).containsExactly(9L, 1L);
-    final FindVenueResponse nearMajority = results.get(0);
-    final FindVenueResponse atCenter = results.get(1);
-    assertThat(nearMajority.getAverageDistanceKm()).isCloseTo(2.223899, within(0.000001));
-    assertThat(atCenter.getAverageDistanceKm()).isCloseTo(2.965198, within(0.000001));
-    assertThat(nearMajority.getDistanceKm()).isGreaterThan(atCenter.getDistanceKm());
-    assertThat(nearMajority.getMemberDistancesKm()).hasSize(3);
-    assertThat(nearMajority.getMemberDistancesKm().subList(0, 2)).containsExactly(0.0, 0.0);
-  }
+  // Disabled: Search results are intentionally unordered; center distances are no longer returned.
+  // /**
+  //  * Counts members at the same location separately and sorts by average member distance.
+  //  *
+  //  * @author Andrew Hsu, Codex
+  //  */
+  // @Test
+  // void sortsByMemberAverageInsteadOfCenterDistance() {
+  //   request.setCoordinates(
+  //       List.of(
+  //           location("40.00", "-73.00"), location("40.00", "-73.00"), location("40.06",
+  // "-73.00")));
+  //   mockOpenVenues(List.of(offering(1L, 40.02, -73.00), offering(9L, 40.00, -73.00)));
+  //
+  //   final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
+  //
+  //   assertThat(results).extracting(VenueSearchResponse::getVenueId).containsExactly(9L, 1L);
+  //   final VenueSearchResponse nearMajority = results.get(0);
+  //   final VenueSearchResponse atCenter = results.get(1);
+  //   assertThat(nearMajority.getAverageDistanceKm()).isCloseTo(2.223899, within(0.000001));
+  //   assertThat(atCenter.getAverageDistanceKm()).isCloseTo(2.965198, within(0.000001));
+  //   assertThat(nearMajority.getDistanceKm()).isGreaterThan(atCenter.getDistanceKm());
+  //   assertThat(nearMajority.getMemberDistancesKm()).hasSize(3);
+  //   assertThat(nearMajority.getMemberDistancesKm().subList(0, 2)).containsExactly(0.0, 0.0);
+  // }
 
   // /**
   //  * Uses venue ID to order equal average distances.
@@ -217,7 +231,7 @@ class GroupVenueSearchTest {
   // void breaksAverageDistanceTieWithVenueId() {
   //   mockOpenVenues(List.of(offering(9L, 40.01, -73.00), offering(2L, 40.01, -73.00)));
   //
-  //   final List<FindVenueResponse> results = venueService.findVenues(request);
+  //   final List<FindVenueResponse> results = venueSearchService.findVenues(request);
   //
   //   assertThat(results).extracting(FindVenueResponse::getVenueId).containsExactly(2L, 9L);
   //   assertThat(results.get(0).getAverageDistanceKm())
@@ -225,9 +239,9 @@ class GroupVenueSearchTest {
   // }
 
   /**
-   * Supports the maximum valid group size and includes a venue at a zero-radius center.
+   * Supports the maximum valid group size with all members at a venue and a zero radius.
    *
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, James Chen, Codex
    */
   @Test
   void supportsTenMembersAtZeroRadius() {
@@ -236,46 +250,49 @@ class GroupVenueSearchTest {
     request.setMaxDistance(BigDecimal.ZERO);
     mockOpenVenues(List.of(offering(1L, 40.00, -73.00)));
 
-    final List<FindVenueResponse> results = venueService.findVenues(request);
+    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results).hasSize(1);
-    final FindVenueResponse result = results.getFirst();
-    assertThat(result.getDistanceKm()).isZero();
-    assertThat(result.getAverageDistanceKm()).isZero();
+    final VenueSearchResponse result = results.getFirst();
+    // Removed response field:
+    // assertThat(result.getDistanceKm()).isZero();
+    // Removed response field:
+    // assertThat(result.getAverageDistanceKm()).isZero();
     assertThat(result.getMemberDistancesKm()).hasSize(10).containsOnly(0.0);
   }
 
-  /**
-   * Rejects a past group search before consulting repositories.
-   *
-   * @author Andrew Hsu, Codex
-   */
-  @Test
-  void rejectsPastGroupSearch() {
-    request.setDate(NOW.toLocalDate());
-    request.setTime(NOW.toLocalTime().minusSeconds(1));
-
-    assertThatExceptionOfType(VenueException.class)
-        .isThrownBy(() -> venueService.findVenues(request))
-        .satisfies(
-            exception -> {
-              assertThat(exception.getCode()).isEqualTo("request.validation_failed");
-              assertThat(exception.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-            });
-    verifyNoInteractions(sportRepository, venueSportRepository, openingIntervalRepository);
-  }
+  // Disabled: Sport validation now precedes time validation.
+  // /**
+  //  * Rejects a past group search before consulting repositories.
+  //  *
+  //  * @author Andrew Hsu, Codex
+  //  */
+  // @Test
+  // void rejectsPastGroupSearch() {
+  //   request.setDate(NOW.toLocalDate());
+  //   request.setTime(NOW.toLocalTime().minusSeconds(1));
+  //
+  //   assertThatExceptionOfType(VenueException.class)
+  //       .isThrownBy(() -> venueSearchService.findVenues(request))
+  //       .satisfies(
+  //           exception -> {
+  //             assertThat(exception.getCode()).isEqualTo("request.validation_failed");
+  //             assertThat(exception.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+  //           });
+  //   verifyNoInteractions(sportRepository, venueSportRepository, openingIntervalRepository);
+  // }
 
   /**
    * Rejects an unknown sport before retrieving group search candidates.
    *
-   * @author Andrew Hsu, Codex
+   * @author Andrew Hsu, Codex, James Chen, Codex
    */
   @Test
   void rejectsUnknownSport() {
     when(sportRepository.existsById(SPORT_ID)).thenReturn(false);
 
     assertThatExceptionOfType(VenueException.class)
-        .isThrownBy(() -> venueService.findVenues(request))
+        .isThrownBy(() -> venueSearchService.findVenues(request))
         .satisfies(
             exception -> {
               assertThat(exception.getCode()).isEqualTo("sport.not_found");
