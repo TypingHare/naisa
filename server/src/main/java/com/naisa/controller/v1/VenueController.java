@@ -16,10 +16,11 @@ import com.naisa.model.vo.FindAlternativeResponse;
 import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.model.vo.ResourceIdResponse;
 import com.naisa.model.vo.VenueComparisonResponse;
-import com.naisa.model.vo.VenueInfoResponse;
 import com.naisa.model.vo.VenueSearchResponse;
+import com.naisa.model.vo.VenueVo;
 import com.naisa.service.CrowdReportService;
 import com.naisa.service.VenueComparisonService;
+import com.naisa.service.VenueRetrievalService;
 import com.naisa.service.VenueSearchService;
 import com.naisa.service.VenueService;
 import jakarta.validation.Valid;
@@ -50,6 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class VenueController {
   private final VenueService venueService;
   private final VenueSearchService venueSearchService;
+  private final VenueRetrievalService venueRetrievalService;
   private final CrowdReportService crowdReportService;
   private final VenueComparisonService venueComparisonService;
 
@@ -64,16 +66,18 @@ public class VenueController {
   public VenueController(
       final VenueService venueService,
       final VenueSearchService venueSearchService,
+      final VenueRetrievalService venueRetrievalService,
       final CrowdReportService crowdReportService,
       final VenueComparisonService venueComparisonService) {
     this.venueService = venueService;
     this.venueSearchService = venueSearchService;
+    this.venueRetrievalService = venueRetrievalService;
     this.crowdReportService = crowdReportService;
     this.venueComparisonService = venueComparisonService;
   }
 
   /**
-   * Returns a venue's location, offered sports, and weekly opening intervals.
+   * Returns a venue value object.
    *
    * @param venueId identifier taken from the request path
    * @return HTTP 200 with the venue details inside a capsule
@@ -82,10 +86,10 @@ public class VenueController {
    */
   @AuthorizationRequired
   @GetMapping("/{venueId}")
-  public ResponseEntity<Capsule<VenueInfoResponse>> getVenueInfo(
+  public ResponseEntity<Capsule<VenueVo>> getVenueInfo(
       @PathVariable("venueId") final Long venueId) {
-    final VenueInfoResponse result = venueService.getVenueInfo(venueId);
-    return ResponseEntity.ok(new Capsule<>("Venue information retrieved.", result));
+    final VenueVo venueVo = venueRetrievalService.getVenueVo(venueId);
+    return ResponseEntity.ok(new Capsule<>("Venue retrieved.", venueVo));
   }
 
   /**

@@ -14,10 +14,9 @@ import com.naisa.model.entity.Sport;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
 import com.naisa.model.vo.FindAlternativeResponse;
+import com.naisa.model.vo.OpeningIntervalVo;
 import com.naisa.model.vo.ResourceIdResponse;
-import com.naisa.model.vo.VenueInfoResponse;
-import com.naisa.model.vo.VenueInfoResponse.OpeningIntervalInfo;
-import com.naisa.model.vo.VenueInfoResponse.SportInfo;
+import com.naisa.model.vo.SportVo;
 import com.naisa.model.vo.VenueSearchResponse;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.ReviewRepository;
@@ -87,6 +86,69 @@ public class VenueService {
     this.reviewRepository = reviewRepository;
     this.sportRepository = sportRepository;
     this.openingIntervalRepository = openingIntervalRepository;
+  }
+
+  /**
+   * Retrieves a venue by its ID.
+   *
+   * @param venueId the ID of the venue to retrieve
+   * @return the venue associated with the given ID
+   * @throws VenueException if the venue does not exist
+   * @author James Chen
+   */
+  public Venue getVenue(final Long venueId) {
+    return venueRepository.findById(venueId).orElseThrow(VenueException.NOT_FOUND::clone);
+  }
+
+  /**
+   * Retrieves all sports ({@code SportVo} instances) that a specific venue supports.
+   *
+   * @param venueId the ID of the venue
+   * @return a list of sports ({@code SportVo} instances) supported by the venue
+   * @author James Chen
+   */
+  public List<SportVo> getSportVos(final Long venueId) {
+    final List<VenueSport> venueSports = venueSportRepository.findByVenueId(venueId);
+    final List<SportVo> sports = new ArrayList<>();
+    for (final VenueSport venueSport : venueSports) {
+      sports.add(
+          Beans.create(
+              SportVo.class,
+              (it) -> {
+                it.setSportId(venueSport.getSport().getId());
+                it.setName(venueSport.getSport().getName());
+                it.setHourlyPrice(venueSport.getPrice());
+                it.setIsIndoor(venueSport.getIsIndoor());
+                it.setHasLighting(venueSport.getHasLighting());
+              }));
+    }
+
+    return sports;
+  }
+
+  /**
+   * Retrieves all opening intervals associated with a specified venue.
+   *
+   * @param venueId the ID of the venue
+   * @return a list of opening intervals ({@code OpeningIntervalVo} instances) associated with the
+   *     venue
+   * @author James Chen
+   */
+  public List<OpeningIntervalVo> getOpeningIntervalVos(final Long venueId) {
+    final List<OpeningIntervalVo> openingIntervalVos = new ArrayList<>();
+    final List<OpeningInterval> openingIntervals = openingIntervalRepository.findByVenueId(venueId);
+    for (final OpeningInterval openingInterval : openingIntervals) {
+      openingIntervalVos.add(
+          Beans.create(
+              OpeningIntervalVo.class,
+              (it) -> {
+                it.setDayOfWeek(openingInterval.getDayOfWeek());
+                it.setOpensAt(openingInterval.getOpensAt());
+                it.setClosesAt(openingInterval.getClosesAt());
+              }));
+    }
+
+    return openingIntervalVos;
   }
 
   /**
@@ -210,60 +272,6 @@ public class VenueService {
     }
 
     return false;
-  }
-
-  /**
-   * Retrieves a venue's location, offered sports, and weekly opening intervals.
-   *
-   * <p>Sports are sorted by sport ID. Intervals are sorted by weekday, Monday first, then by
-   * opening and closing time. Missing sports or intervals produce empty lists. Hours are returned
-   * in the venue's local time, including overnight intervals. Current availability is not checked.
-   *
-   * @param venueId identifier of the venue
-   * @return the venue details with its sports and opening intervals
-   * @throws VenueException if the venue does not exist
-   * @author Andrew Hsu, Codex, Vincent Lai, Codex
-   */
-  @Transactional(readOnly = true)
-  public VenueInfoResponse getVenueInfo(final Long venueId) {
-    final Venue venue =
-        venueRepository.findById(venueId).orElseThrow(VenueException.NOT_FOUND::clone);
-    final VenueInfoResponse response = new VenueInfoResponse();
-    response.setVenueId(venue.getId());
-    response.setName(venue.getName());
-    response.setAddress(venue.getAddress());
-    response.setLatitude(venue.getLatitude());
-    response.setLongitude(venue.getLongitude());
-    response.setTimezone(venue.getTimezone());
-    response.setSports(
-        venueSportRepository.findByVenueId(venueId).stream()
-            .map(
-                offering -> {
-                  final SportInfo sport = new SportInfo();
-                  sport.setSportId(offering.getSport().getId());
-                  sport.setName(offering.getSport().getName());
-                  sport.setHourlyPrice(offering.getPrice());
-                  sport.setIsIndoor(offering.getIsIndoor());
-                  return sport;
-                })
-            .sorted(Comparator.comparing(SportInfo::getSportId))
-            .toList());
-    response.setOpeningIntervals(
-        openingIntervalRepository.findByVenueId(venueId).stream()
-            .map(
-                interval -> {
-                  final OpeningIntervalInfo hours = new OpeningIntervalInfo();
-                  hours.setDayOfWeek(interval.getDayOfWeek());
-                  hours.setOpensAt(interval.getOpensAt());
-                  hours.setClosesAt(interval.getClosesAt());
-                  return hours;
-                })
-            .sorted(
-                Comparator.comparing(OpeningIntervalInfo::getDayOfWeek)
-                    .thenComparing(OpeningIntervalInfo::getOpensAt)
-                    .thenComparing(OpeningIntervalInfo::getClosesAt))
-            .toList());
-    return response;
   }
 
   /**
