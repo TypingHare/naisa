@@ -6,11 +6,21 @@ import com.naisa.repository.ClientRepository;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 
-/** Represents a client service. */
+/**
+ * Represents a client service.
+ *
+ * @author James Chen
+ */
 @Service
 public final class ClientService {
   private final ClientRepository clientRepository;
 
+  /**
+   * Creates a {@code ClientService} instance.
+   *
+   * @param clientRepository repository for client records
+   * @author James Chen
+   */
   private ClientService(final ClientRepository clientRepository) {
     this.clientRepository = clientRepository;
   }
