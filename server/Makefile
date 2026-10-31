@@ -5,6 +5,9 @@ MVN = ./mvnw
 all:
 	$(MVN) package
 
+format:
+	$(MVN) spotless:apply
+
 lint:
 	$(MVN) checkstyle:check
 	$(MVN) pmd:check -Dpmd.printFailingErrors=true

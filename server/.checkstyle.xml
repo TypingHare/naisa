@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+    Formatting checks compatible with .eclipse-formatter.xml and Checkstyle 9.3.
+    Run spotless:check as well: this file is not a replacement for the formatter.
+
+    Eclipse controls tabs, four-column indentation, continuation indentation,
+    the 100-column wrapping target, blank lines, and Javadoc layout. Checkstyle's
+    Indentation and LineLength checks cannot exactly reproduce those rules.
+    In particular, Eclipse may leave long strings, URLs, and imports unwrapped.
+
+    No naming, import ordering, documentation content, or code-design rules are
+    inferred from a formatter profile. FileTabCharacter is deliberately absent
+    because this profile uses tabs. NewlineAtEndOfFile is absent because Eclipse
+    is configured not to add a missing final newline.
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="warning"/>
+    <property name="fileExtensions" value="java"/>
+    <property name="tabWidth" value="4"/>
+
+    <module name="TreeWalker">
+        <!-- Honor the same formatting escape hatch as Eclipse. -->
+        <module name="SuppressionCommentFilter">
+            <property name="offCommentFormat" value="@formatter:off"/>
+            <property name="onCommentFormat" value="@formatter:on"/>
+        </module>
+
+        <!-- Opening braces stay on the declaration or control-statement line. -->
+        <module name="LeftCurly">
+            <property name="option" value="eol"/>
+        </module>
+
+        <!-- Keep else, catch, and finally on the preceding closing-brace line. -->
+        <module name="RightCurly">
+            <property name="option" value="same"/>
+            <property name="tokens"
+                value="LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE"/>
+        </module>
+
+        <!-- Other declaration and loop bodies end on a separate line. -->
+        <module name="RightCurly">
+            <property name="option" value="alone"/>
+            <property name="tokens"
+                value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, ANNOTATION_DEF, RECORD_DEF,
+                    METHOD_DEF, CTOR_DEF, COMPACT_CTOR_DEF, STATIC_INIT, INSTANCE_INIT,
+                    LITERAL_FOR, LITERAL_WHILE"/>
+        </module>
+
+        <!-- Spaces around binary operators, control keywords, and block braces. -->
+        <module name="WhitespaceAround">
+            <property name="ignoreEnhancedForColon" value="false"/>
+        </module>
+        <module name="WhitespaceAfter">
+            <property name="tokens" value="COMMA, SEMI, TYPECAST"/>
+        </module>
+
+        <!-- No spaces inside parentheses, including casts and wrapped parameters. -->
+        <module name="ParenPad">
+            <property name="option" value="nospace"/>
+        </module>
+        <module name="TypecastParenPad">
+            <property name="option" value="nospace"/>
+        </module>
+        <module name="MethodParamPad">
+            <property name="option" value="nospace"/>
+            <property name="allowLineBreaks" value="false"/>
+            <property name="tokens"
+                value="CTOR_DEF, LITERAL_NEW, METHOD_CALL, METHOD_DEF, SUPER_CTOR_CALL,
+                    ENUM_CONSTANT_DEF, RECORD_DEF"/>
+        </module>
+
+        <!-- Punctuation and unary operators stay attached to their operands. -->
+        <module name="NoWhitespaceBefore">
+            <property name="tokens" value="COMMA, SEMI, POST_INC, POST_DEC, DOT, METHOD_REF"/>
+            <property name="allowLineBreaks" value="true"/>
+        </module>
+        <module name="NoWhitespaceAfter">
+            <property name="tokens"
+                value="AT, INC, DEC, UNARY_MINUS, UNARY_PLUS, BNOT, LNOT, DOT, ARRAY_DECLARATOR,
+                    INDEX_OP"/>
+            <property name="allowLineBreaks" value="true"/>
+        </module>
+        <module name="NoWhitespaceBeforeCaseDefaultColon"/>
+        <module name="GenericWhitespace"/>
+
+        <!-- Eclipse places wrapped binary operators before the next operand. -->
+        <module name="OperatorWrap">
+            <property name="option" value="nl"/>
+            <property name="tokens"
+                value="BAND, BOR, BSR, BXOR, DIV, EQUAL, GE, GT, LAND, LE, LOR, LT,
+                    MINUS, MOD, NOT_EQUAL, PLUS, QUESTION, COLON, SL, SR, STAR"/>
+        </module>
+        <module name="OperatorWrap">
+            <property name="option" value="eol"/>
+            <property name="tokens"
+                value="ASSIGN, BAND_ASSIGN, BOR_ASSIGN, BSR_ASSIGN, BXOR_ASSIGN, DIV_ASSIGN,
+                    MINUS_ASSIGN, MOD_ASSIGN, PLUS_ASSIGN, SL_ASSIGN, SR_ASSIGN, STAR_ASSIGN"/>
+        </module>
+        <module name="SeparatorWrap">
+            <property name="tokens" value="DOT"/>
+            <property name="option" value="nl"/>
+        </module>
+        <module name="SeparatorWrap">
+            <property name="tokens" value="COMMA, SEMI"/>
+            <property name="option" value="eol"/>
+        </module>
+    </module>
+</module>
