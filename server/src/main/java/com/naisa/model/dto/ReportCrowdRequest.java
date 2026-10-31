@@ -9,9 +9,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Represents a request to report the crowd level at a venue.
+ * Parameters for reporting the crowd level at a venue.
  *
- * <p>The report may apply to a specific sport or the entire venue.
+ * <p>A null sport ID selects the entire venue; otherwise, the report applies to that sport.
  *
  * @author Emily Wang, Codex
  */
@@ -27,6 +27,5 @@ public class ReportCrowdRequest {
   @Pattern(regexp = "EMPTY|LIGHT|MODERATE|BUSY|PACKED")
   private String crowdLevel;
 
-  @Positive
-  private Long sportId;
+  @Positive private Long sportId;
 }

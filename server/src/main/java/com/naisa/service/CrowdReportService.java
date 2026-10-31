@@ -1,6 +1,6 @@
 package com.naisa.service;
 
-import com.naisa.common.VenueConstant;
+import com.naisa.constant.VenueConstant;
 import com.naisa.exception.VenueException;
 import com.naisa.model.dto.ReportCrowdRequest;
 import com.naisa.model.entity.Client;

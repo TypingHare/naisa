@@ -4,23 +4,28 @@ import com.naisa.common.Capsule;
 import com.naisa.common.annotation.AuthorizationRequired;
 import com.naisa.exception.VenueException;
 import com.naisa.interceptor.AuthorizationInterceptor;
-import com.naisa.model.dto.AddVenueRequest;
-import com.naisa.model.dto.FindAlternativesRequest;
-import com.naisa.model.dto.FindVenuesRequest;
+import com.naisa.model.dto.CompareVenuesRequest;
+import com.naisa.model.dto.CreateVenueRequest;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.dto.ReportCrowdRequest;
-import com.naisa.model.dto.VenueComparisonRequest;
+import com.naisa.model.dto.SearchAlternativeVenuesRequest;
+import com.naisa.model.dto.SearchVenuesRequest;
 import com.naisa.model.entity.Client;
+import com.naisa.model.entity.Review;
+import com.naisa.model.entity.Venue;
+import com.naisa.model.vo.AlternativeVenueResponse;
+import com.naisa.model.vo.CompareVenuesResponse;
 import com.naisa.model.vo.CrowdStatusResponse;
-import com.naisa.model.vo.FindAlternativeResponse;
-import com.naisa.model.vo.FindVenueResponse;
 import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.model.vo.ResourceIdResponse;
-import com.naisa.model.vo.VenueComparisonResponse;
-import com.naisa.model.vo.VenueInfoResponse;
+import com.naisa.model.vo.VenueResponse;
+import com.naisa.model.vo.VenueSearchResultResponse;
 import com.naisa.service.CrowdReportService;
 import com.naisa.service.VenueComparisonService;
+import com.naisa.service.VenueRetrievalService;
+import com.naisa.service.VenueSearchService;
 import com.naisa.service.VenueService;
+import com.naisa.util.Beans;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -48,6 +53,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/venues")
 public class VenueController {
   private final VenueService venueService;
+  private final VenueSearchService venueSearchService;
+  private final VenueRetrievalService venueRetrievalService;
   private final CrowdReportService crowdReportService;
   private final VenueComparisonService venueComparisonService;
 
@@ -61,15 +68,19 @@ public class VenueController {
    */
   public VenueController(
       final VenueService venueService,
+      final VenueSearchService venueSearchService,
+      final VenueRetrievalService venueRetrievalService,
       final CrowdReportService crowdReportService,
       final VenueComparisonService venueComparisonService) {
     this.venueService = venueService;
+    this.venueSearchService = venueSearchService;
+    this.venueRetrievalService = venueRetrievalService;
     this.crowdReportService = crowdReportService;
     this.venueComparisonService = venueComparisonService;
   }
 
   /**
-   * Returns a venue's location, offered sports, and weekly opening intervals.
+   * Returns a venue value object.
    *
    * @param venueId identifier taken from the request path
    * @return HTTP 200 with the venue details inside a capsule
@@ -78,10 +89,10 @@ public class VenueController {
    */
   @AuthorizationRequired
   @GetMapping("/{venueId}")
-  public ResponseEntity<Capsule<VenueInfoResponse>> getVenueInfo(
+  public ResponseEntity<Capsule<VenueResponse>> getVenueInfo(
       @PathVariable("venueId") final Long venueId) {
-    final VenueInfoResponse result = venueService.getVenueInfo(venueId);
-    return ResponseEntity.ok(new Capsule<>("Venue information retrieved.", result));
+    final VenueResponse venueVo = venueRetrievalService.getVenueVo(venueId);
+    return ResponseEntity.ok(new Capsule<>("Venue retrieved.", venueVo));
   }
 
   /**
@@ -97,9 +108,9 @@ public class VenueController {
    */
   @AuthorizationRequired
   @GetMapping
-  public ResponseEntity<Capsule<List<FindVenueResponse>>> findVenues(
-      @Valid @ModelAttribute final FindVenuesRequest request) {
-    final List<FindVenueResponse> results = venueService.findVenues(request);
+  public ResponseEntity<Capsule<List<VenueSearchResultResponse>>> findVenues(
+      @Valid @ModelAttribute final SearchVenuesRequest request) {
+    final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
     final String message =
         results.isEmpty() ? "No venues match the search parameters." : "Venues found.";
     return ResponseEntity.ok(new Capsule<>(message, results));
@@ -116,9 +127,9 @@ public class VenueController {
    */
   @AuthorizationRequired
   @GetMapping("/alternatives")
-  public ResponseEntity<Capsule<List<FindAlternativeResponse>>> findAlternatives(
-      @Valid @ModelAttribute final FindAlternativesRequest request) {
-    final List<FindAlternativeResponse> results = venueService.findAlternatives(request);
+  public ResponseEntity<Capsule<List<AlternativeVenueResponse>>> findAlternatives(
+      @Valid @ModelAttribute final SearchAlternativeVenuesRequest request) {
+    final List<AlternativeVenueResponse> results = venueService.findAlternatives(request);
     final String message =
         results.isEmpty() ? "No alternatives match the permitted changes." : "Alternatives found.";
     return ResponseEntity.ok(new Capsule<>(message, results));
@@ -141,8 +152,14 @@ public class VenueController {
   @PostMapping
   public ResponseEntity<Capsule<ResourceIdResponse>> addVenue(
       @RequestAttribute(AuthorizationInterceptor.REQUEST_ATTRIBUTE_CLIENT) final Client client,
-      @Valid @RequestBody final AddVenueRequest request) {
-    final ResourceIdResponse result = venueService.addVenue(client, request);
+      @Valid @RequestBody final CreateVenueRequest request) {
+    final Venue venue = venueService.addVenue(client, request);
+    final ResourceIdResponse result =
+        Beans.create(
+            ResourceIdResponse.class,
+            (it) -> {
+              it.setId(venue.getId());
+            });
     return ResponseEntity.status(HttpStatus.CREATED).body(new Capsule<>("Venue created.", result));
   }
 
@@ -166,7 +183,13 @@ public class VenueController {
       @RequestAttribute(AuthorizationInterceptor.REQUEST_ATTRIBUTE_CLIENT) final Client client,
       @PathVariable("venueId") final Long venueId,
       @Valid @RequestBody final RateVenueRequest request) {
-    final ResourceIdResponse result = venueService.rateVenue(client, venueId, request);
+    final Review review = venueService.rateVenue(client, venueId, request);
+    final ResourceIdResponse result =
+        Beans.create(
+            ResourceIdResponse.class,
+            (it) -> {
+              it.setId(review.getId());
+            });
     return ResponseEntity.ok(new Capsule<>("Review saved.", result));
   }
 
@@ -225,9 +248,9 @@ public class VenueController {
    */
   @AuthorizationRequired
   @GetMapping("/comparison")
-  public ResponseEntity<Capsule<VenueComparisonResponse>> getVenueComparison(
-      @Valid @ModelAttribute final VenueComparisonRequest request) {
-    final VenueComparisonResponse result = venueComparisonService.compare(request);
+  public ResponseEntity<Capsule<CompareVenuesResponse>> getVenueComparison(
+      @Valid @ModelAttribute final CompareVenuesRequest request) {
+    final CompareVenuesResponse result = venueComparisonService.compare(request);
     return ResponseEntity.ok(new Capsule<>("Venues compared.", result));
   }
 }

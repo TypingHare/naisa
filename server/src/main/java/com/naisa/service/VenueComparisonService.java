@@ -1,17 +1,18 @@
 package com.naisa.service;
 
-import com.naisa.common.VenueDistance;
 import com.naisa.exception.VenueException;
-import com.naisa.model.dto.VenueComparisonRequest;
+import com.naisa.model.common.EarthCoordinate;
+import com.naisa.model.dto.CompareVenuesRequest;
 import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
-import com.naisa.model.vo.VenueComparisonItem;
+import com.naisa.model.vo.CompareVenuesResponse;
 import com.naisa.model.vo.VenueComparisonResponse;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.SportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
+import com.naisa.util.EarthCoordinates;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -79,7 +80,7 @@ public class VenueComparisonService {
    * @author Emily Wang, Codex, Claude Code, Andrew Hsu, Codex, Vincent Lai, Codex
    */
   @Transactional(readOnly = true)
-  public VenueComparisonResponse compare(final VenueComparisonRequest request) {
+  public CompareVenuesResponse compare(final CompareVenuesRequest request) {
     final List<Long> venueIds = request.getVenueIds();
     if (new HashSet<>(venueIds).size() != venueIds.size()) {
       throw VenueException.DUPLICATE_IDS.clone();
@@ -89,7 +90,8 @@ public class VenueComparisonService {
       throw VenueException.SPORT_NOT_FOUND.clone();
     }
 
-    final List<VenueComparisonItem> items = new ArrayList<>();
+    final EarthCoordinate requestCoordinate = EarthCoordinates.createFrom(request);
+    final List<VenueComparisonResponse> items = new ArrayList<>();
     for (final Long venueId : venueIds) {
       final Venue venue =
           venueRepository.findById(venueId).orElseThrow(VenueException.NOT_FOUND::clone);
@@ -99,15 +101,12 @@ public class VenueComparisonService {
               .findByVenueIdAndSportId(venueId, request.getSportId())
               .orElseThrow(VenueException.SPORT_NOT_OFFERED::clone);
 
-      final VenueComparisonItem item = new VenueComparisonItem();
+      final VenueComparisonResponse item = new VenueComparisonResponse();
+      final EarthCoordinate venueCoordinate = EarthCoordinates.createFrom(venue);
+
       item.setVenueId(venueId);
       item.setName(venue.getName());
-      item.setDistanceKm(
-          VenueDistance.calculateDistanceKm(
-              request.getLatitude(),
-              request.getLongitude(),
-              venue.getLatitude(),
-              venue.getLongitude()));
+      item.setDistanceKm(EarthCoordinates.calculateDistanceKm(requestCoordinate, venueCoordinate));
       item.setHourlyPrice(offering.getPrice());
       item.setIsIndoor(offering.getIsIndoor());
       item.setOpenNow(isOpenNow(venue));
@@ -117,14 +116,14 @@ public class VenueComparisonService {
     }
 
     items.sort(
-        Comparator.comparingDouble(VenueComparisonItem::getDistanceKm)
-            .thenComparing(VenueComparisonItem::getVenueId));
+        Comparator.comparingDouble(VenueComparisonResponse::getDistanceKm)
+            .thenComparing(VenueComparisonResponse::getVenueId));
 
     final Long cheapestVenueId =
         items.stream()
             .min(
-                Comparator.comparing(VenueComparisonItem::getHourlyPrice)
-                    .thenComparing(VenueComparisonItem::getVenueId))
+                Comparator.comparing(VenueComparisonResponse::getHourlyPrice)
+                    .thenComparing(VenueComparisonResponse::getVenueId))
             .orElseThrow()
             .getVenueId();
 
@@ -133,13 +132,13 @@ public class VenueComparisonService {
             .filter(item -> item.getCrowdLevel() != null)
             .min(
                 Comparator.comparingInt(
-                        (VenueComparisonItem item) ->
+                        (VenueComparisonResponse item) ->
                             CROWD_LEVEL_ORDER.indexOf(item.getCrowdLevel()))
-                    .thenComparing(VenueComparisonItem::getVenueId))
-            .map(VenueComparisonItem::getVenueId)
+                    .thenComparing(VenueComparisonResponse::getVenueId))
+            .map(VenueComparisonResponse::getVenueId)
             .orElse(null);
 
-    final VenueComparisonResponse response = new VenueComparisonResponse();
+    final CompareVenuesResponse response = new CompareVenuesResponse();
     response.setVenues(items);
     response.setNearestVenueId(items.get(0).getVenueId());
     response.setCheapestVenueId(cheapestVenueId);

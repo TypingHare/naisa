@@ -1,16 +1,15 @@
 package com.naisa.model.vo;
 
 import java.beans.JavaBean;
-import java.util.List;
+import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Represents the result of comparing venues.
+ * Describes one venue's distance, hourly price, availability, and crowd level in a comparison.
  *
- * <p>Venues are sorted by distance, nearest first. The nearest, cheapest, and least crowded venue
- * IDs are provided separately. The least crowded venue ID is null if no venue has recent crowd
- * reports.
+ * <p>Distance is in kilometers. Opening status is null when hours are unavailable; crowd level is
+ * null when recent reports are unavailable.
  *
  * @author Emily Wang, Codex
  */
@@ -18,8 +17,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public class VenueComparisonResponse {
-  private List<VenueComparisonItem> venues;
-  private Long nearestVenueId;
-  private Long cheapestVenueId;
-  private Long leastCrowdedVenueId;
+  private Long venueId;
+  private String name;
+  private double distanceKm;
+  private BigDecimal hourlyPrice;
+  private Boolean isIndoor;
+  private Boolean openNow;
+  private String crowdLevel;
 }

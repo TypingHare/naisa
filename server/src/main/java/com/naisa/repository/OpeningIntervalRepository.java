@@ -16,7 +16,13 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface OpeningIntervalRepository extends JpaRepository<OpeningInterval, Long> {
-
+  /**
+   * Retrieves all opening intervals for the venue with the given ID.
+   *
+   * @param venueId the ID of the venue
+   * @return opening intervals belonging to the venue
+   * @author James Chen
+   */
   List<OpeningInterval> findByVenueId(Long venueId);
 
   /**

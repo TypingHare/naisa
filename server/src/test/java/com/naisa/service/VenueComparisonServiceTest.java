@@ -10,12 +10,12 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import com.naisa.exception.VenueException;
-import com.naisa.model.dto.VenueComparisonRequest;
+import com.naisa.model.dto.CompareVenuesRequest;
 import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
+import com.naisa.model.vo.CompareVenuesResponse;
 import com.naisa.model.vo.CrowdStatusResponse;
-import com.naisa.model.vo.VenueComparisonItem;
 import com.naisa.model.vo.VenueComparisonResponse;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.SportRepository;
@@ -66,8 +66,8 @@ class VenueComparisonServiceTest {
    *
    * @author Emily Wang, Claude Code, Vincent Lai, Codex
    */
-  private static VenueComparisonRequest request(final Long... venueIds) {
-    final VenueComparisonRequest request = new VenueComparisonRequest();
+  private static CompareVenuesRequest request(final Long... venueIds) {
+    final CompareVenuesRequest request = new CompareVenuesRequest();
     request.setVenueIds(List.of(venueIds));
     request.setSportId(SPORT_ID);
     request.setLatitude(40.0);
@@ -147,11 +147,11 @@ class VenueComparisonServiceTest {
       mockVenue(2L, 40.01, "25.00", null, List.of());
       mockVenue(3L, 40.05, "10.00", null, List.of());
 
-      final VenueComparisonResponse response = venueComparisonService.compare(request(1L, 2L, 3L));
+      final CompareVenuesResponse response = venueComparisonService.compare(request(1L, 2L, 3L));
 
       assertEquals(
           List.of(2L, 3L, 1L),
-          response.getVenues().stream().map(VenueComparisonItem::getVenueId).toList());
+          response.getVenues().stream().map(VenueComparisonResponse::getVenueId).toList());
       assertEquals(2L, response.getNearestVenueId());
       assertEquals(3L, response.getCheapestVenueId());
     }
@@ -162,7 +162,7 @@ class VenueComparisonServiceTest {
       mockVenue(5L, 40.01, "20.00", null, List.of());
       mockVenue(2L, 40.05, "20.00", null, List.of());
 
-      final VenueComparisonResponse response = venueComparisonService.compare(request(5L, 2L));
+      final CompareVenuesResponse response = venueComparisonService.compare(request(5L, 2L));
 
       assertEquals(2L, response.getCheapestVenueId());
     }
@@ -184,7 +184,7 @@ class VenueComparisonServiceTest {
       mockVenue(2L, 40.02, "10.00", "BUSY", List.of());
       mockVenue(3L, 40.03, "10.00", "LIGHT", List.of());
 
-      final VenueComparisonResponse response = venueComparisonService.compare(request(1L, 2L, 3L));
+      final CompareVenuesResponse response = venueComparisonService.compare(request(1L, 2L, 3L));
 
       assertEquals(3L, response.getLeastCrowdedVenueId());
       assertNull(response.getVenues().get(0).getCrowdLevel());
@@ -196,7 +196,7 @@ class VenueComparisonServiceTest {
       mockVenue(5L, 40.01, "10.00", "LIGHT", List.of());
       mockVenue(2L, 40.02, "10.00", "LIGHT", List.of());
 
-      final VenueComparisonResponse response = venueComparisonService.compare(request(5L, 2L));
+      final CompareVenuesResponse response = venueComparisonService.compare(request(5L, 2L));
 
       assertEquals(2L, response.getLeastCrowdedVenueId());
     }
@@ -207,7 +207,7 @@ class VenueComparisonServiceTest {
       mockVenue(1L, 40.01, "10.00", null, List.of());
       mockVenue(2L, 40.02, "10.00", null, List.of());
 
-      final VenueComparisonResponse response = venueComparisonService.compare(request(1L, 2L));
+      final CompareVenuesResponse response = venueComparisonService.compare(request(1L, 2L));
 
       assertNull(response.getLeastCrowdedVenueId());
     }
@@ -242,7 +242,7 @@ class VenueComparisonServiceTest {
       try (MockedStatic<ZonedDateTime> times =
           mockStatic(ZonedDateTime.class, CALLS_REAL_METHODS)) {
         times.when(() -> ZonedDateTime.now(ZoneId.of("UTC"))).thenReturn(fixedTime);
-        final List<VenueComparisonItem> venues =
+        final List<VenueComparisonResponse> venues =
             venueComparisonService.compare(request(1L, 2L, 3L)).getVenues();
         assertTrue(venues.get(0).getOpenNow());
         assertFalse(venues.get(1).getOpenNow());
