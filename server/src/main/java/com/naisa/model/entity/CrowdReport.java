@@ -20,11 +20,13 @@ import org.hibernate.generator.EventType;
 /**
  * Represents a crowd report entity.
  *
- * <p>The {@code crowd_reports} table stores reports indicating the crowd level at a venue at a
+ * <p>
+ * The {@code crowd_reports} table stores reports indicating the crowd level at a venue at a
  * specific moment.
  *
- * <p>Each report is submitted by an end user whose ID is provided by a validated client. This
- * service does not maintain any user data.
+ * <p>
+ * Each report is submitted by an end user whose ID is provided by a validated client. This service
+ * does not maintain any user data.
  *
  * @author James Chen, Vincent Lai
  */
@@ -34,33 +36,33 @@ import org.hibernate.generator.EventType;
 @Getter
 @Setter
 public class CrowdReport {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "id", nullable = false, updatable = false)
-  private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id", nullable = false, updatable = false)
+	private Long id;
 
-  @ManyToOne
-  @JoinColumn(name = "client_id", nullable = false)
-  private Client client;
+	@ManyToOne
+	@JoinColumn(name = "client_id", nullable = false)
+	private Client client;
 
-  @Column(name = "external_user_id", length = 128, nullable = false)
-  @Size(max = 128, message = "External user ID must not exceed 128 characters.")
-  private String externalUserId;
+	@Column(name = "external_user_id", length = 128, nullable = false)
+	@Size(max = 128, message = "External user ID must not exceed 128 characters.")
+	private String externalUserId;
 
-  @ManyToOne
-  @JoinColumn(name = "venue_id", nullable = false)
-  private Venue venue;
+	@ManyToOne
+	@JoinColumn(name = "venue_id", nullable = false)
+	private Venue venue;
 
-  @ManyToOne
-  @JoinColumn(name = "sport_id")
-  private Sport sport;
+	@ManyToOne
+	@JoinColumn(name = "sport_id")
+	private Sport sport;
 
-  @Column(name = "crowd_level", length = 8, nullable = false)
-  @Size(max = 8, message = "Crowd level string must not exceed 8 characters.")
-  private String crowdLevel;
+	@Column(name = "crowd_level", length = 8, nullable = false)
+	@Size(max = 8, message = "Crowd level string must not exceed 8 characters.")
+	private String crowdLevel;
 
-  @Generated(event = EventType.INSERT)
-  @ColumnDefault("CURRENT_TIMESTAMP")
-  @Column(name = "created_at", nullable = false)
-  private Instant createdAt;
+	@Generated(event = EventType.INSERT)
+	@ColumnDefault("CURRENT_TIMESTAMP")
+	@Column(name = "created_at", nullable = false)
+	private Instant createdAt;
 }

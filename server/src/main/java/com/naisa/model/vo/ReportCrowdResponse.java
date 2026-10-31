@@ -6,15 +6,15 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Represents the result of reporting a venue's crowd level.
+ * Describes a submitted crowd report.
  *
  * @author Emily Wang
  */
-@JavaBean 
-@Getter 
-@Setter 
+@JavaBean
+@Getter
+@Setter
 public class ReportCrowdResponse {
-  private Long reportId;
-  private String crowdLevel;
-  private Instant createdAt;
+	private Long reportId;
+	private String crowdLevel;
+	private Instant createdAt;
 }

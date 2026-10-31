@@ -12,28 +12,29 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Represents the client controller.
  *
- * <p>This controller provides a single method, {@code issueApiKey()}, that creates a client and
- * issues an API key.
+ * <p>
+ * This controller provides a single method, {@code issueApiKey()}, that creates a client and issues
+ * an API key.
  */
 @RestController
 @RequestMapping("/v1/clients")
 public class ClientController {
-  private final ClientService clientService;
+	private final ClientService clientService;
 
-  public ClientController(final ClientService clientService) {
-    this.clientService = clientService;
-  }
+	public ClientController(final ClientService clientService) {
+		this.clientService = clientService;
+	}
 
-  /**
-   * Creates a client by issuing an API key.
-   *
-   * @return a response entity containing the created client.
-   * @author James Chen
-   */
-  @PostMapping
-  public ResponseEntity<Capsule<Client>> issueApiKey() {
-    final Client createdClient = clientService.createClient();
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(new Capsule<>("API key has been issued.", createdClient));
-  }
+	/**
+	 * Creates a client by issuing an API key.
+	 *
+	 * @return a response entity containing the created client.
+	 * @author James Chen
+	 */
+	@PostMapping
+	public ResponseEntity<Capsule<Client>> issueApiKey() {
+		final Client createdClient = clientService.createClient();
+		return ResponseEntity.status(HttpStatus.CREATED)
+			.body(new Capsule<>("API key has been issued.", createdClient));
+	}
 }

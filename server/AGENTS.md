@@ -38,8 +38,8 @@ Because this is just a COURSE PROJECT, you do not have to take security very
 seriously. Avoid writing hard-to-understand code to protect the application from
 attacks or abuse by clients and users.
 
-Before every commit, make sure you run `google-java-format` and `make lint`. If
-`google-java-format` is not installed, ask the developer to install it.
+Before every commit, make sure you run `make format` to format the codebase and
+`make lint` to lint it.
 
 The code you generate should be human-readable and maintainable. You are
 encouraged to use Java streams to reduce the number of lines of code, but avoid

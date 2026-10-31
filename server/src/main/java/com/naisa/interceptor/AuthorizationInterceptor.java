@@ -17,108 +17,111 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * This interceptor verifies user authorization when required.
  *
- * <p>Before the controller method (also known as the handler method) handles the request, this
+ * <p>
+ * Before the controller method (also known as the handler method) handles the request, this
  * interceptor checks whether the method is annotated with {@code AuthorizationRequired}. If so, it
  * extracts the API key from the "Authorization" header and checks whether a client is associated
  * with that key.
  *
- * <p>A valid Authorization header value must start with "Bearer ". If the header is invalid, the
+ * <p>
+ * A valid Authorization header value must start with "Bearer ". If the header is invalid, the
  * interceptor builds a response and prevents the controller method from handling the request. The
  * response contains a capsule with the error code {@code ERROR_CODE_INVALID_AUTHORIZATION_HEADER}.
  *
- * <p>If the API key is missing or is not associated with any client, the interceptor builds a
- * response and prevents the controller method from handling the request. The response contains a
- * capsule with the error code {@code ERROR_CODE_NO_API_KEY_PROVIDED}.
+ * <p>
+ * If the API key is missing or is not associated with any client, the interceptor builds a response
+ * and prevents the controller method from handling the request. The response contains a capsule
+ * with the error code {@code ERROR_CODE_NO_API_KEY_PROVIDED}.
  *
  * @author James Chen
  */
 @Component
 public class AuthorizationInterceptor implements HandlerInterceptor {
-  private ClientService clientService;
+	private ClientService clientService;
 
-  public static final String ERROR_CODE_INVALID_AUTHORIZATION_HEADER =
-      "authorization.invalid_authorization_header";
+	public static final String ERROR_CODE_INVALID_AUTHORIZATION_HEADER = "authorization.invalid_authorization_header";
 
-  public static final String ERROR_CODE_NO_API_KEY_PROVIDED = "authorization.no_api_key_provided";
+	public static final String ERROR_CODE_NO_API_KEY_PROVIDED = "authorization.no_api_key_provided";
 
-  private static final String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
+	private static final String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
 
-  public static final String REQUEST_ATTRIBUTE_CLIENT = "client";
+	public static final String REQUEST_ATTRIBUTE_CLIENT = "client";
 
-  private AuthorizationInterceptor(final ClientService clientService) {
-    this.clientService = clientService;
-  }
+	private AuthorizationInterceptor(final ClientService clientService) {
+		this.clientService = clientService;
+	}
 
-  /**
-   * Authenticates requests whose handler requires a client API key.
-   *
-   * <p>A successfully authenticated client is attached to the request so that endpoint handlers can
-   * attribute submitted data without accepting a client identifier from the request body. Requests
-   * with missing or invalid credentials receive an unauthorized response and do not reach the
-   * handler. Handlers without the authorization annotation are allowed to proceed.
-   *
-   * @param request incoming request containing the authorization header
-   * @param response response used to report an authentication failure
-   * @param handler selected request handler
-   * @return {@code true} when processing may continue; {@code false} after an authentication
-   *     failure
-   * @throws Exception if response writing or subsequent interceptor processing fails
-   * @author James Chen, Vincent Lai, Codex
-   */
-  @Override
-  public boolean preHandle(
-      final HttpServletRequest request, final HttpServletResponse response, final Object handler)
-      throws Exception {
-    if (handler instanceof HandlerMethod method) {
-      if (method.hasMethodAnnotation(AuthorizationRequired.class)) {
-        final String authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader == null) {
-          final Capsule<Object> capsule =
-              new Capsule<>("No API key provided.", null, ERROR_CODE_NO_API_KEY_PROVIDED);
-          buildResponse(response, capsule);
-          return false;
-        }
+	/**
+	 * Authenticates requests whose handler requires a client API key.
+	 *
+	 * <p>
+	 * A successfully authenticated client is attached to the request so that endpoint handlers can
+	 * attribute submitted data without accepting a client identifier from the request body.
+	 * Requests with missing or invalid credentials receive an unauthorized response and do not
+	 * reach the handler. Handlers without the authorization annotation are allowed to proceed.
+	 *
+	 * @param request  incoming request containing the authorization header
+	 * @param response response used to report an authentication failure
+	 * @param handler  selected request handler
+	 * @return {@code true} when processing may continue; {@code false} after an authentication
+	 *         failure
+	 * @throws Exception if response writing or subsequent interceptor processing fails
+	 * @author James Chen, Vincent Lai, Codex
+	 */
+	@Override
+	public boolean preHandle(
+		final HttpServletRequest request,
+		final HttpServletResponse response,
+		final Object handler
+	) throws Exception {
+		if (handler instanceof HandlerMethod method) {
+			if (method.hasMethodAnnotation(AuthorizationRequired.class)) {
+				final String authorizationHeader = request.getHeader("Authorization");
+				if (authorizationHeader == null) {
+					final Capsule<Object> capsule = new Capsule<>("No API key provided.", null,
+						ERROR_CODE_NO_API_KEY_PROVIDED);
+					buildResponse(response, capsule);
+					return false;
+				}
 
-        final int authorizationHeaderPrefixLength = AUTHORIZATION_HEADER_PREFIX.length();
-        if (authorizationHeader.length() <= authorizationHeaderPrefixLength
-            || !authorizationHeader
-                .substring(0, authorizationHeaderPrefixLength)
-                .equals(AUTHORIZATION_HEADER_PREFIX)) {
-          final Capsule<Object> capsule =
-              new Capsule<>(
-                  "Invalid Authorization header.", null, ERROR_CODE_INVALID_AUTHORIZATION_HEADER);
-          buildResponse(response, capsule);
-          return false;
-        }
+				final int authorizationHeaderPrefixLength = AUTHORIZATION_HEADER_PREFIX.length();
+				if (authorizationHeader.length() <= authorizationHeaderPrefixLength
+					|| !authorizationHeader.substring(0, authorizationHeaderPrefixLength)
+						.equals(AUTHORIZATION_HEADER_PREFIX)) {
+					final Capsule<Object> capsule = new Capsule<>("Invalid Authorization header.",
+						null, ERROR_CODE_INVALID_AUTHORIZATION_HEADER);
+					buildResponse(response, capsule);
+					return false;
+				}
 
-        final String apiKey =
-            authorizationHeader.substring(AUTHORIZATION_HEADER_PREFIX.length()).trim();
-        try {
-          final Client client = clientService.getClientByApiKey(apiKey);
-          request.setAttribute(REQUEST_ATTRIBUTE_CLIENT, client);
-        } catch (ClientException e) {
-          buildResponse(response, Capsule.fromServiceException(e));
-          return false;
-        }
-      }
-    }
+				final String apiKey = authorizationHeader
+					.substring(AUTHORIZATION_HEADER_PREFIX.length()).trim();
+				try {
+					final Client client = clientService.getClientByApiKey(apiKey);
+					request.setAttribute(REQUEST_ATTRIBUTE_CLIENT, client);
+				} catch (ClientException e) {
+					buildResponse(response, Capsule.fromServiceException(e));
+					return false;
+				}
+			}
+		}
 
-    return HandlerInterceptor.super.preHandle(request, response, handler);
-  }
+		return HandlerInterceptor.super.preHandle(request, response, handler);
+	}
 
-  /**
-   * Writes the capsule as a UTF-8 JSON response with HTTP status 401 (Unauthorized).
-   *
-   * @param response the servlet response to populate
-   * @param capsule the response payload to serialize as JSON
-   * @throws IOException if writing the response body fails
-   */
-  private void buildResponse(final HttpServletResponse response, final Capsule<Object> capsule)
-      throws IOException {
-    final String body = new ObjectMapper().writeValueAsString(capsule);
-    response.setStatus(HttpStatus.UNAUTHORIZED.value());
-    response.setCharacterEncoding("UTF-8");
-    response.setContentType("application/json");
-    response.getWriter().write(body);
-  }
+	/**
+	 * Writes the capsule as a UTF-8 JSON response with HTTP status 401 (Unauthorized).
+	 *
+	 * @param response the servlet response to populate
+	 * @param capsule  the response payload to serialize as JSON
+	 * @throws IOException if writing the response body fails
+	 */
+	private void buildResponse(final HttpServletResponse response, final Capsule<Object> capsule)
+		throws IOException {
+		final String body = new ObjectMapper().writeValueAsString(capsule);
+		response.setStatus(HttpStatus.UNAUTHORIZED.value());
+		response.setCharacterEncoding("UTF-8");
+		response.setContentType("application/json");
+		response.getWriter().write(body);
+	}
 }

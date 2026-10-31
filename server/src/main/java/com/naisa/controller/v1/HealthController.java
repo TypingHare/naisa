@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Represents the health controller.
  *
- * <p>This controller provides a single method, {@code check()}, that allows clients to easily check
+ * <p>
+ * This controller provides a single method, {@code check()}, that allows clients to easily check
  * whether the server is currently running.
  *
  * @author James Chen
@@ -18,13 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/v1/health")
 public class HealthController {
-  /**
-   * Checks whether the service is running.
-   *
-   * @return a response entity with no content
-   */
-  @GetMapping
-  public ResponseEntity<Capsule<Object>> check() {
-    return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Capsule<>("", null));
-  }
+	/**
+	 * Checks whether the service is running.
+	 *
+	 * @return a response entity with no content
+	 */
+	@GetMapping
+	public ResponseEntity<Capsule<Object>> check() {
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Capsule<>("", null));
+	}
 }

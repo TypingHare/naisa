@@ -12,34 +12,32 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Carries a user's rating and written feedback about a venue or one of its sports.
+ * Parameters for rating a venue or a sport offered at that venue.
  *
- * <p>An omitted or null sport identifier selects the entire venue. A supplied identifier selects a
- * sport offered at that venue. The external user identifier is scoped to the authenticated client.
+ * <p>
+ * Ratings range from 1 to 5 and require a comment. A null sport ID selects the entire venue. The
+ * external user ID is scoped to the authenticated client.
  *
- * <p>Ratings must be whole numbers from one through five, and comments must contain non-whitespace
- * text. Ratings use {@link Short}, matching PostgreSQL's SMALLINT column. JSON decimal numbers are
- * rejected during deserialization so that fractional ratings cannot be silently truncated.
- *
- * @author Vincent Lai, Codex
+ * @author Vincent Lai, Codex, James Chen
  */
 @JavaBean
 @Getter
 @Setter
 public class RateVenueRequest {
-  @JsonProperty("externalUserID")
-  @NotBlank
-  @Size(max = 128)
-  private String externalUserId;
+	@JsonProperty("externalUserID")
+	@NotBlank
+	@Size(max = 128)
+	private String externalUserId;
 
-  @Positive private Long sportId;
+	@Positive
+	private Long sportId;
 
-  @NotNull
-  @Min(1)
-  @Max(5)
-  private Short rating;
+	@NotNull
+	@Min(1)
+	@Max(5)
+	private Short rating;
 
-  @NotBlank
-  @Size(max = 2000)
-  private String comment;
+	@NotBlank
+	@Size(max = 2000)
+	private String comment;
 }
