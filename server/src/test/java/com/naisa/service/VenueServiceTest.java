@@ -10,7 +10,7 @@ import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Sport;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
-import com.naisa.model.vo.VenueVo;
+import com.naisa.model.vo.VenueResponse;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.ReviewRepository;
 import com.naisa.repository.SportRepository;
@@ -155,7 +155,7 @@ class VenueServiceTest {
       when(openingIntervalRepository.findByVenueId(VENUE_ID))
           .thenReturn(noHours ? List.of() : List.of(interval(DayOfWeek.MONDAY, 9, 17)));
 
-      final VenueVo response = venueRetrievalService.getVenueVo(VENUE_ID);
+      final VenueResponse response = venueRetrievalService.getVenueVo(VENUE_ID);
 
       assertThat(response.getVenueId()).isEqualTo(VENUE_ID);
       assertThat(response.getSports()).hasSize(noSports ? 0 : 1);

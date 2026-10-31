@@ -2,22 +2,21 @@ package com.naisa.service;
 
 import com.naisa.exception.VenueException;
 import com.naisa.model.common.EarthCoordinate;
-import com.naisa.model.dto.AddVenueRequest;
-import com.naisa.model.dto.FindAlternativesRequest;
+import com.naisa.model.dto.CreateVenueRequest;
 import com.naisa.model.dto.RateVenueRequest;
-import com.naisa.model.dto.SearchConstraint;
-import com.naisa.model.dto.VenueSearchRequest;
+import com.naisa.model.dto.SearchAlternativeVenuesRequest;
+import com.naisa.model.dto.SearchAlternativeVenuesRequest.SearchConstraint;
+import com.naisa.model.dto.SearchVenuesRequest;
 import com.naisa.model.entity.Client;
 import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Review;
 import com.naisa.model.entity.Sport;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
-import com.naisa.model.vo.FindAlternativeResponse;
-import com.naisa.model.vo.OpeningIntervalVo;
-import com.naisa.model.vo.ResourceIdResponse;
-import com.naisa.model.vo.SportVo;
-import com.naisa.model.vo.VenueSearchResponse;
+import com.naisa.model.vo.AlternativeVenueResponse;
+import com.naisa.model.vo.OpeningIntervalResponse;
+import com.naisa.model.vo.VenueSearchResultResponse;
+import com.naisa.model.vo.VenueSportResponse;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.ReviewRepository;
 import com.naisa.repository.SportRepository;
@@ -107,13 +106,13 @@ public class VenueService {
    * @return a list of sports ({@code SportVo} instances) supported by the venue
    * @author James Chen
    */
-  public List<SportVo> getSportVos(final Long venueId) {
+  public List<VenueSportResponse> getSportVos(final Long venueId) {
     final List<VenueSport> venueSports = venueSportRepository.findByVenueId(venueId);
-    final List<SportVo> sports = new ArrayList<>();
+    final List<VenueSportResponse> sports = new ArrayList<>();
     for (final VenueSport venueSport : venueSports) {
       sports.add(
           Beans.create(
-              SportVo.class,
+              VenueSportResponse.class,
               (it) -> {
                 it.setSportId(venueSport.getSport().getId());
                 it.setName(venueSport.getSport().getName());
@@ -134,13 +133,13 @@ public class VenueService {
    *     venue
    * @author James Chen
    */
-  public List<OpeningIntervalVo> getOpeningIntervalVos(final Long venueId) {
-    final List<OpeningIntervalVo> openingIntervalVos = new ArrayList<>();
+  public List<OpeningIntervalResponse> getOpeningIntervalVos(final Long venueId) {
+    final List<OpeningIntervalResponse> openingIntervalVos = new ArrayList<>();
     final List<OpeningInterval> openingIntervals = openingIntervalRepository.findByVenueId(venueId);
     for (final OpeningInterval openingInterval : openingIntervals) {
       openingIntervalVos.add(
           Beans.create(
-              OpeningIntervalVo.class,
+              OpeningIntervalResponse.class,
               (it) -> {
                 it.setDayOfWeek(openingInterval.getDayOfWeek());
                 it.setOpensAt(openingInterval.getOpensAt());
@@ -180,11 +179,11 @@ public class VenueService {
    * @return a list of nearby venues that meet the requirements
    * @author James Chen
    */
-  public List<VenueSearchResponse> filterNearbyVenues(
+  public List<VenueSearchResultResponse> filterNearbyVenues(
       final List<VenueSport> venueSports,
       final Collection<EarthCoordinate> memberCoordinates,
       final double maxDistance) {
-    final List<VenueSearchResponse> nearbyVenues = new ArrayList<>();
+    final List<VenueSearchResultResponse> nearbyVenues = new ArrayList<>();
     for (final VenueSport venueSport : venueSports) {
       final Venue venue = venueSport.getVenue();
       final EarthCoordinate venueCoordinate = EarthCoordinates.createFrom(venue);
@@ -209,7 +208,7 @@ public class VenueService {
 
       nearbyVenues.add(
           Beans.create(
-              VenueSearchResponse.class,
+              VenueSearchResultResponse.class,
               (it) -> {
                 it.setVenueId(venue.getId());
                 it.setName(venue.getName());
@@ -287,7 +286,8 @@ public class VenueService {
    * @author Andrew Hsu, Codex, Vincent Lai, Codex
    */
   @Transactional(readOnly = true)
-  public List<FindAlternativeResponse> findAlternatives(final FindAlternativesRequest request) {
+  public List<AlternativeVenueResponse> findAlternatives(
+      final SearchAlternativeVenuesRequest request) {
     // TODO: This function has known issues and will be fixed in the future.
     final LocalDateTime now = LocalDateTime.now(SEARCH_TIMEZONE);
     final LocalDateTime requestedAt = validateSearchRequest(request, now);
@@ -301,7 +301,7 @@ public class VenueService {
             ? request.getBudget().add(ALTERNATIVE_BUDGET_INCREASE)
             : request.getBudget();
 
-    final List<VenueSearchResponse> nearbyVenues = new ArrayList<>();
+    final List<VenueSearchResultResponse> nearbyVenues = new ArrayList<>();
     final EarthCoordinate coordinate =
         EarthCoordinates.createFrom(request.getCoordinates().getFirst());
     for (final VenueSport offering : venueSportRepository.findBySportId(request.getSportId())) {
@@ -312,7 +312,7 @@ public class VenueService {
       if (BigDecimal.valueOf(distanceKm).compareTo(maximumDistance) <= 0) {
         nearbyVenues.add(
             Beans.create(
-                VenueSearchResponse.class,
+                VenueSearchResultResponse.class,
                 (it) -> {
                   it.setVenueId(venue.getId());
                   it.setName(venue.getName());
@@ -326,7 +326,7 @@ public class VenueService {
       throw VenueException.NO_NEARBY_VENUES.clone();
     }
 
-    final List<VenueSearchResponse> affordableVenues =
+    final List<VenueSearchResultResponse> affordableVenues =
         nearbyVenues.stream()
             .filter(venue -> venue.getHourlyPrice().compareTo(maximumBudget) <= 0)
             .toList();
@@ -334,24 +334,27 @@ public class VenueService {
       return List.of();
     }
     final List<Long> venueIds =
-        affordableVenues.stream().map(VenueSearchResponse::getVenueId).toList();
+        affordableVenues.stream().map(VenueSearchResultResponse::getVenueId).toList();
     final Map<Long, List<OpeningInterval>> intervalsByVenue =
         openingIntervalRepository.findByVenueIdIn(venueIds).stream()
             .collect(Collectors.groupingBy(interval -> interval.getVenue().getId()));
     final List<LocalDateTime> suggestedTimes = suggestDateTimes(request, now);
-    final List<FindAlternativeResponse> alternatives = new ArrayList<>();
-    for (final VenueSearchResponse venue : affordableVenues) {
+    final List<AlternativeVenueResponse> alternatives = new ArrayList<>();
+    for (final VenueSearchResultResponse venue : affordableVenues) {
       final List<OpeningInterval> intervals =
           intervalsByVenue.getOrDefault(venue.getVenueId(), List.of());
       for (final LocalDateTime suggestedAt : suggestedTimes) {
         if (intervals.stream().anyMatch(interval -> isOpenAt(interval, suggestedAt))) {
           alternatives.add(
-              new FindAlternativeResponse(
-                  venue,
-                  suggestedAt.toLocalDate(),
-                  suggestedAt.toLocalTime(),
-                  request.getMaxDistance(),
-                  request.getBudget().max(venue.getHourlyPrice())));
+              Beans.create(
+                  AlternativeVenueResponse.class,
+                  (it) -> {
+                    it.setVenue(venue);
+                    it.setDate(suggestedAt.toLocalDate());
+                    it.setTime(suggestedAt.toLocalTime());
+                    it.setMaxDistance(request.getMaxDistance());
+                    it.setBudget(request.getBudget().max(venue.getHourlyPrice()));
+                  }));
         }
       }
     }
@@ -359,7 +362,7 @@ public class VenueService {
     return alternatives.stream()
         .sorted(
             Comparator.comparingInt(
-                    (FindAlternativeResponse alternative) ->
+                    (AlternativeVenueResponse alternative) ->
                         countChangedConstraints(request, alternative))
                 .thenComparing(
                     alternative ->
@@ -367,8 +370,8 @@ public class VenueService {
                                 requestedAt,
                                 LocalDateTime.of(alternative.getDate(), alternative.getTime()))
                             .abs())
-                .thenComparing(FindAlternativeResponse::getDate)
-                .thenComparing(FindAlternativeResponse::getTime)
+                .thenComparing(AlternativeVenueResponse::getDate)
+                .thenComparing(AlternativeVenueResponse::getTime)
                 .thenComparing(alternative -> alternative.getVenue().getHourlyPrice())
                 .thenComparing(alternative -> alternative.getVenue().getVenueId()))
         .limit(ALTERNATIVE_RESULT_LIMIT)
@@ -412,7 +415,7 @@ public class VenueService {
    * @author Andrew Hsu, Codex
    */
   private LocalDateTime validateSearchRequest(
-      final VenueSearchRequest request, final LocalDateTime now) {
+      final SearchVenuesRequest request, final LocalDateTime now) {
     final LocalDateTime requestedAt = LocalDateTime.of(request.getDate(), request.getTime());
     if (requestedAt.isBefore(now)) {
       throw VenueException.REQUEST_IN_PAST.clone();
@@ -432,7 +435,7 @@ public class VenueService {
    * @author Andrew Hsu, Codex
    */
   private static List<LocalDateTime> suggestDateTimes(
-      final FindAlternativesRequest request, final LocalDateTime now) {
+      final SearchAlternativeVenuesRequest request, final LocalDateTime now) {
     final int dateWindow =
         request.getAllowedChanges().contains(SearchConstraint.DATE)
             ? ALTERNATIVE_DATE_WINDOW_DAYS
@@ -467,7 +470,7 @@ public class VenueService {
    * @author Andrew Hsu, Codex
    */
   private static int countChangedConstraints(
-      final VenueSearchRequest request, final FindAlternativeResponse alternative) {
+      final SearchVenuesRequest request, final AlternativeVenueResponse alternative) {
     int changes = 0;
     if (!request.getDate().equals(alternative.getDate())) {
       changes++;
@@ -501,7 +504,7 @@ public class VenueService {
    * @author Vincent Lai, Codex
    */
   @Transactional
-  public ResourceIdResponse addVenue(final Client client, final AddVenueRequest request) {
+  public Venue addVenue(final Client client, final CreateVenueRequest request) {
     final String timezone = request.getTimezone().strip();
 
     if (!ZoneId.getAvailableZoneIds().contains(timezone)) {
@@ -516,8 +519,7 @@ public class VenueService {
     venue.setTimezone(timezone);
     venue.setCreatedByClient(client);
 
-    final Venue savedVenue = venueRepository.saveAndFlush(venue);
-    return new ResourceIdResponse(savedVenue.getId());
+    return venueRepository.saveAndFlush(venue);
   }
 
   /**
@@ -543,8 +545,7 @@ public class VenueService {
    * @author Vincent Lai, Codex
    */
   @Transactional(isolation = Isolation.READ_COMMITTED)
-  public ResourceIdResponse rateVenue(
-      final Client client, final Long venueId, final RateVenueRequest request) {
+  public Review rateVenue(final Client client, final Long venueId, final RateVenueRequest request) {
     final Venue venue =
         venueRepository.findByIdForUpdate(venueId).orElseThrow(VenueException.NOT_FOUND::clone);
 
@@ -572,8 +573,7 @@ public class VenueService {
     review.setRating(request.getRating());
     review.setCommentContent(request.getComment().strip());
 
-    final Review savedReview = reviewRepository.saveAndFlush(review);
-    return new ResourceIdResponse(savedReview.getId());
+    return reviewRepository.saveAndFlush(review);
   }
 
   /**

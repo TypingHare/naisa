@@ -9,12 +9,12 @@ import static org.mockito.Mockito.when;
 
 import com.naisa.exception.VenueException;
 import com.naisa.model.common.EarthCoordinate;
-import com.naisa.model.dto.FindAlternativesRequest;
-import com.naisa.model.dto.SearchConstraint;
+import com.naisa.model.dto.SearchAlternativeVenuesRequest;
+import com.naisa.model.dto.SearchAlternativeVenuesRequest.SearchConstraint;
 import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
-import com.naisa.model.vo.FindAlternativeResponse;
+import com.naisa.model.vo.AlternativeVenueResponse;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.ReviewRepository;
 import com.naisa.repository.SportRepository;
@@ -58,7 +58,7 @@ class VenueAlternativesTest {
   @InjectMocks private VenueService venueService;
 
   private MockedStatic<LocalDateTime> dateTimes;
-  private FindAlternativesRequest request;
+  private SearchAlternativeVenuesRequest request;
 
   /**
    * Fixes New York time and creates a valid request with one permitted change.
@@ -69,7 +69,7 @@ class VenueAlternativesTest {
   void setUp() {
     dateTimes = mockStatic(LocalDateTime.class, CALLS_REAL_METHODS);
     dateTimes.when(() -> LocalDateTime.now(SEARCH_ZONE)).thenReturn(NOW);
-    request = new FindAlternativesRequest();
+    request = new SearchAlternativeVenuesRequest();
     request.setCoordinates(
         List.of(
             Beans.create(
@@ -158,11 +158,11 @@ class VenueAlternativesTest {
       return;
     }
 
-    final List<FindAlternativeResponse> results = venueService.findAlternatives(request);
+    final List<AlternativeVenueResponse> results = venueService.findAlternatives(request);
 
     assertThat(results).hasSize("MATCH".equals(outcome) ? 1 : 0);
     if (!results.isEmpty()) {
-      final FindAlternativeResponse result = results.getFirst();
+      final AlternativeVenueResponse result = results.getFirst();
       assertThat(result.getBudget())
           .isEqualByComparingTo(new BigDecimal(price).max(request.getBudget()));
       assertThat(result.getMaxDistance())
@@ -253,13 +253,13 @@ class VenueAlternativesTest {
     mockOfferings(List.of(offering));
     mockHours(List.of(offering), List.of(interval(offering, DayOfWeek.MONDAY, "23:00", "02:00")));
 
-    final List<FindAlternativeResponse> results = venueService.findAlternatives(request);
+    final List<AlternativeVenueResponse> results = venueService.findAlternatives(request);
 
     assertThat(results).hasSize(expectedCount);
-    assertThat(results).extracting(FindAlternativeResponse::getDate).contains(date);
+    assertThat(results).extracting(AlternativeVenueResponse::getDate).contains(date);
     if (allowDate) {
       assertThat(results)
-          .extracting(FindAlternativeResponse::getDate)
+          .extracting(AlternativeVenueResponse::getDate)
           .contains(LocalDate.of(2026, 10, 26), LocalDate.of(2026, 10, 27));
     } else {
       assertThat(results).allSatisfy(result -> assertThat(result.getDate()).isEqualTo(date));

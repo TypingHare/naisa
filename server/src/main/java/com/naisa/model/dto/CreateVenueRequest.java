@@ -11,20 +11,16 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Carries the information required to submit a venue.
+ * Parameters for creating a venue.
  *
- * <p>The calling client supplies the venue's coordinates. Authentication supplies the submitting
- * client identity separately. This request does not create sports, prices, or opening intervals.
+ * <p>This request does not include sports or opening intervals.
  *
- * <p>The timezone must fit the database column and identify a timezone recognized by the
- * application. Its meaning is checked by the service after field validation succeeds.
- *
- * @author Vincent Lai, Codex
+ * @author Vincent Lai, Codex, James Chen
  */
 @JavaBean
 @Getter
 @Setter
-public class AddVenueRequest implements WithLatitudeAndLongitude {
+public class CreateVenueRequest implements WithLatitudeAndLongitude {
   @NotBlank
   @Size(max = 255)
   private String name;

@@ -16,26 +16,17 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 /**
- * Carries the query parameters for a venue search.
+ * Parameters for searching for venues for one to ten members.
  *
- * <p>Supply between 1 and 10 locations as geographic coordinates. List indices identify members in
- * the {@code VenueSearchResponse}.
- *
- * <p>{@code maxDistance} is in kilometers. {@code budget} is the maximum hourly price and defaults
- * to zero.
- *
- * <p>The date uses YYYY-MM-DD format, parsed with the Java pattern uuuu-MM-dd. The time uses a
- * 24-hour clock. The standard parser accepts HH:mm and ISO local times with seconds and fractional
- * seconds. All venues are in New York City, so date and time use America/New_York. After field
- * validation succeeds, the service must reject a combined date and time that is in the past and
- * check that the sport exists.
+ * <p>The maximum distance applies to each member and is measured in kilometers. The budget is the
+ * maximum hourly price and defaults to zero. Date and time use America/New_York.
  *
  * @author Andrew Hsu, Codex, Vincent Lai, Codex, James Chen
  */
 @JavaBean
 @Getter
 @Setter
-public class VenueSearchRequest {
+public class SearchVenuesRequest {
   @NotNull
   @Size(min = 1, max = 10)
   private List<@NotNull @Valid EarthCoordinate> coordinates;

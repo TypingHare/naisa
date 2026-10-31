@@ -10,11 +10,11 @@ import static org.mockito.Mockito.when;
 
 import com.naisa.exception.VenueException;
 import com.naisa.model.common.EarthCoordinate;
-import com.naisa.model.dto.VenueSearchRequest;
+import com.naisa.model.dto.SearchVenuesRequest;
 import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
-import com.naisa.model.vo.VenueSearchResponse;
+import com.naisa.model.vo.VenueSearchResultResponse;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.ReviewRepository;
 import com.naisa.repository.SportRepository;
@@ -62,7 +62,7 @@ class GroupVenueSearchTest {
   private VenueSearchService venueSearchService;
 
   private MockedStatic<LocalDateTime> dateTimes;
-  private VenueSearchRequest request;
+  private SearchVenuesRequest request;
 
   /**
    * Creates a valid group request with no individual coordinate pair.
@@ -76,7 +76,7 @@ class GroupVenueSearchTest {
             VenueSearchService.class.getDeclaredConstructor(VenueService.class), venueService);
     dateTimes = mockStatic(LocalDateTime.class, CALLS_REAL_METHODS);
     dateTimes.when(() -> LocalDateTime.now(SEARCH_ZONE)).thenReturn(NOW);
-    request = new VenueSearchRequest();
+    request = new SearchVenuesRequest();
     request.setCoordinates(List.of(location("40.00", "-73.00"), location("40.02", "-73.00")));
     request.setSportId(SPORT_ID);
     request.setDate(LocalDate.of(2026, 10, 27));
@@ -105,10 +105,10 @@ class GroupVenueSearchTest {
     request.setCoordinates(List.of(location("40.00", "-73.00")));
     mockOpenVenues(List.of(offering(7L, 40.01, -73.00)));
 
-    final List<VenueSearchResponse> groupResults = venueSearchService.findVenues(request);
+    final List<VenueSearchResultResponse> groupResults = venueSearchService.findVenues(request);
 
     assertThat(groupResults).hasSize(1);
-    final VenueSearchResponse result = groupResults.getFirst();
+    final VenueSearchResultResponse result = groupResults.getFirst();
     assertThat(result.getMemberDistancesKm().getFirst()).isCloseTo(1.111949, within(0.000001));
     // Removed response field:
     // assertThat(result.getAverageDistanceKm()).isEqualTo(result.getDistanceKm());
@@ -155,7 +155,7 @@ class GroupVenueSearchTest {
     request.setMaxDistance(BigDecimal.ONE);
     mockOfferings(List.of(offering(1L, 40.00, -73.00)));
 
-    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
+    final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results).isEmpty();
     verifyNoInteractions(openingIntervalRepository);
@@ -173,14 +173,14 @@ class GroupVenueSearchTest {
             location("40.02", "-73.00"), location("40.00", "-73.00"), location("40.01", "-73.00")));
     mockOpenVenues(List.of(offering(1L, 40.00, -73.00)));
 
-    final List<VenueSearchResponse> forwardResults = venueSearchService.findVenues(request);
+    final List<VenueSearchResultResponse> forwardResults = venueSearchService.findVenues(request);
     request.setCoordinates(request.getCoordinates().reversed());
-    final List<VenueSearchResponse> reverseResults = venueSearchService.findVenues(request);
+    final List<VenueSearchResultResponse> reverseResults = venueSearchService.findVenues(request);
 
     assertThat(forwardResults).hasSize(1);
     assertThat(reverseResults).hasSize(1);
-    final VenueSearchResponse forward = forwardResults.getFirst();
-    final VenueSearchResponse reverse = reverseResults.getFirst();
+    final VenueSearchResultResponse forward = forwardResults.getFirst();
+    final VenueSearchResultResponse reverse = reverseResults.getFirst();
     assertThat(forward.getMemberDistancesKm()).hasSize(3);
     assertThat(forward.getMemberDistancesKm().get(0)).isCloseTo(2.223899, within(0.000001));
     assertThat(forward.getMemberDistancesKm().get(1)).isZero();
@@ -250,10 +250,10 @@ class GroupVenueSearchTest {
     request.setMaxDistance(BigDecimal.ZERO);
     mockOpenVenues(List.of(offering(1L, 40.00, -73.00)));
 
-    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
+    final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results).hasSize(1);
-    final VenueSearchResponse result = results.getFirst();
+    final VenueSearchResultResponse result = results.getFirst();
     // Removed response field:
     // assertThat(result.getDistanceKm()).isZero();
     // Removed response field:

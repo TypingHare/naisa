@@ -6,14 +6,16 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Represents a sport offered at the venue described by a {@link VenueVo} instance.
+ * Describes a sport offered at a venue.
+ *
+ * <p>Null lighting availability means unknown.
  *
  * @author Andrew Hsu, Codex, James Chen
  */
 @JavaBean
 @Getter
 @Setter
-public class SportVo {
+public class VenueSportResponse {
   private Long sportId;
   private String name;
   private BigDecimal hourlyPrice;

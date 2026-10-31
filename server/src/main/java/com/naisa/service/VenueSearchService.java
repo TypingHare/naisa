@@ -2,10 +2,10 @@ package com.naisa.service;
 
 import com.naisa.exception.VenueException;
 import com.naisa.model.common.EarthCoordinate;
-import com.naisa.model.dto.VenueSearchRequest;
+import com.naisa.model.dto.SearchVenuesRequest;
 import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.VenueSport;
-import com.naisa.model.vo.VenueSearchResponse;
+import com.naisa.model.vo.VenueSearchResultResponse;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +44,7 @@ public class VenueSearchService {
    * @author Andrew Hsu, Codex, Vincent Lai, Codex, James Chen
    */
   @Transactional(readOnly = true)
-  public List<VenueSearchResponse> findVenues(final VenueSearchRequest request) {
+  public List<VenueSearchResultResponse> findVenues(final SearchVenuesRequest request) {
     final Long sportId = request.getSportId();
     final LocalDateTime requestedAt = LocalDateTime.of(request.getDate(), request.getTime());
     venueService.ensureSportIdExists(sportId);
@@ -55,7 +55,7 @@ public class VenueSearchService {
     final double maxDistance = request.getMaxDistance().doubleValue();
     final List<VenueSport> affordableVenues =
         venueService.getAffordableVenueSupportingSport(sportId, request.getBudget());
-    final List<VenueSearchResponse> nearbyVenues =
+    final List<VenueSearchResultResponse> nearbyVenues =
         venueService.filterNearbyVenues(affordableVenues, memberCoordinates, maxDistance);
 
     // If no eligible nearby venues are found, return an empty list early.
@@ -65,13 +65,13 @@ public class VenueSearchService {
 
     // Create a table mapping venue IDs to their interval lists.
     final List<Long> nearbyVenueIdList =
-        nearbyVenues.stream().map(VenueSearchResponse::getVenueId).toList();
+        nearbyVenues.stream().map(VenueSearchResultResponse::getVenueId).toList();
     final Map<Long, List<OpeningInterval>> intervalsByVenueId =
         venueService.getIntervalListsByVenueId(nearbyVenueIdList);
 
     // Filter out nearby venues that are not open at the requested time.
-    final List<VenueSearchResponse> openNearbyVenues = new ArrayList<>();
-    for (final VenueSearchResponse nearbyVenue : nearbyVenues) {
+    final List<VenueSearchResultResponse> openNearbyVenues = new ArrayList<>();
+    for (final VenueSearchResultResponse nearbyVenue : nearbyVenues) {
       final List<OpeningInterval> intervals =
           intervalsByVenueId.getOrDefault(nearbyVenue.getVenueId(), List.of());
       if (venueService.isOpenAt(intervals, requestedAt)) {

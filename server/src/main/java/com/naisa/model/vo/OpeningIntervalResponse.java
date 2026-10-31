@@ -7,14 +7,14 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Represents an opening interval for the venue described by a {@link VenueVo} instance.
+ * Describes one weekly opening interval in the venue's local time.
  *
  * @author Andrew Hsu, Codex, James Chen
  */
 @JavaBean
 @Getter
 @Setter
-public class OpeningIntervalVo {
+public class OpeningIntervalResponse {
   private DayOfWeek dayOfWeek;
   private LocalTime opensAt;
   private LocalTime closesAt;

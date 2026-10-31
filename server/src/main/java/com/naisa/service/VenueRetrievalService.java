@@ -1,9 +1,9 @@
 package com.naisa.service;
 
 import com.naisa.model.entity.Venue;
-import com.naisa.model.vo.OpeningIntervalVo;
-import com.naisa.model.vo.SportVo;
-import com.naisa.model.vo.VenueVo;
+import com.naisa.model.vo.OpeningIntervalResponse;
+import com.naisa.model.vo.VenueResponse;
+import com.naisa.model.vo.VenueSportResponse;
 import com.naisa.util.Beans;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -41,12 +41,13 @@ public class VenueRetrievalService {
    * @author Andrew Hsu, Codex, Vincent Lai, Codex, James Chen
    */
   @Transactional(readOnly = true)
-  public VenueVo getVenueVo(final Long venueId) {
+  public VenueResponse getVenueVo(final Long venueId) {
     final Venue venue = venueService.getVenue(venueId);
-    final List<SportVo> sportVos = venueService.getSportVos(venueId);
-    final List<OpeningIntervalVo> openIntervalVos = venueService.getOpeningIntervalVos(venueId);
+    final List<VenueSportResponse> sportVos = venueService.getSportVos(venueId);
+    final List<OpeningIntervalResponse> openIntervalVos =
+        venueService.getOpeningIntervalVos(venueId);
     return Beans.create(
-        VenueVo.class,
+        VenueResponse.class,
         (it) -> {
           it.setVenueId(venue.getId());
           it.setName(venue.getName());

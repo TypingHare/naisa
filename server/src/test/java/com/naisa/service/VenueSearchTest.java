@@ -11,11 +11,11 @@ import static org.mockito.Mockito.when;
 
 import com.naisa.exception.VenueException;
 import com.naisa.model.common.EarthCoordinate;
-import com.naisa.model.dto.VenueSearchRequest;
+import com.naisa.model.dto.SearchVenuesRequest;
 import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
-import com.naisa.model.vo.VenueSearchResponse;
+import com.naisa.model.vo.VenueSearchResultResponse;
 import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.ReviewRepository;
 import com.naisa.repository.SportRepository;
@@ -64,7 +64,7 @@ class VenueSearchTest {
   private VenueSearchService venueSearchService;
 
   private MockedStatic<LocalDateTime> dateTimes;
-  private VenueSearchRequest request;
+  private SearchVenuesRequest request;
 
   /**
    * Fixes the clock and creates a valid individual search request.
@@ -78,7 +78,7 @@ class VenueSearchTest {
             VenueSearchService.class.getDeclaredConstructor(VenueService.class), venueService);
     dateTimes = mockStatic(LocalDateTime.class, CALLS_REAL_METHODS);
     dateTimes.when(() -> LocalDateTime.now(SEARCH_ZONE)).thenReturn(NOW);
-    request = new VenueSearchRequest();
+    request = new SearchVenuesRequest();
     request.setCoordinates(
         List.of(
             Beans.create(
@@ -116,10 +116,10 @@ class VenueSearchTest {
     when(openingIntervalRepository.findByVenueIdIn(List.of(7L)))
         .thenReturn(List.of(interval(offering, DayOfWeek.TUESDAY, "09:00", "17:00")));
 
-    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
+    final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results).hasSize(1);
-    final VenueSearchResponse result = results.getFirst();
+    final VenueSearchResultResponse result = results.getFirst();
     assertThat(result.getVenueId()).isEqualTo(7L);
     assertThat(result.getName()).isEqualTo("Venue 7");
     assertThat(result.getHourlyPrice()).isEqualByComparingTo("20.00");
@@ -154,10 +154,10 @@ class VenueSearchTest {
                     interval(atOrigin, DayOfWeek.TUESDAY, "09:00", "17:00"),
                     interval(fartherAway, DayOfWeek.TUESDAY, "09:00", "17:00")));
 
-    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
+    final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results)
-        .extracting(VenueSearchResponse::getVenueId)
+        .extracting(VenueSearchResultResponse::getVenueId)
         .containsExactlyElementsOf(nearbyIds);
   }
 
@@ -172,7 +172,7 @@ class VenueSearchTest {
     request.setBudget(budget);
     mockOfferings(List.of());
 
-    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
+    final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results).isEmpty();
     verify(venueSportRepository).findBySportIdAndPriceLessThanEqual(SPORT_ID, budget);
@@ -188,7 +188,7 @@ class VenueSearchTest {
   void returnsEmptyWhenAllVenuesAreTooFarAway() {
     mockOfferings(List.of(offering(1L, 41.00)));
 
-    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
+    final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results).isEmpty();
     verifyNoInteractions(openingIntervalRepository);
@@ -230,7 +230,7 @@ class VenueSearchTest {
     when(openingIntervalRepository.findByVenueIdIn(List.of(1L)))
         .thenReturn(List.of(interval(offering, day, opens.toString(), closes.toString())));
 
-    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
+    final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
 
     assertThat(results).hasSize(expectedOpen ? 1 : 0);
   }
@@ -250,9 +250,9 @@ class VenueSearchTest {
                 interval(withHours, DayOfWeek.TUESDAY, "06:00", "09:00"),
                 interval(withHours, DayOfWeek.TUESDAY, "11:00", "17:00")));
 
-    final List<VenueSearchResponse> results = venueSearchService.findVenues(request);
+    final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
 
-    assertThat(results).extracting(VenueSearchResponse::getVenueId).containsExactly(1L);
+    assertThat(results).extracting(VenueSearchResultResponse::getVenueId).containsExactly(1L);
   }
 
   // /**

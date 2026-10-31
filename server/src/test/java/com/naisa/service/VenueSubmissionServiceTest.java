@@ -12,7 +12,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.naisa.exception.VenueException;
-import com.naisa.model.dto.AddVenueRequest;
+import com.naisa.model.dto.CreateVenueRequest;
 import com.naisa.model.dto.RateVenueRequest;
 import com.naisa.model.entity.Client;
 import com.naisa.model.entity.Review;
@@ -80,7 +80,7 @@ class VenueSubmissionServiceTest {
    */
   @Nested
   class AddVenue {
-    private AddVenueRequest request;
+    private CreateVenueRequest request;
 
     /**
      * Creates a valid request with whitespace to exercise normalization.
@@ -91,7 +91,7 @@ class VenueSubmissionServiceTest {
     void setUp() {
       request =
           Beans.create(
-              AddVenueRequest.class,
+              CreateVenueRequest.class,
               it -> {
                 it.setName("  Riverside Court  ");
                 it.setAddress("  1 Riverside Drive  ");

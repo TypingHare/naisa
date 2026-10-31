@@ -6,20 +6,20 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Represents a venue value object.
+ * Represents the information of a venue.
  *
  * @author Andrew Hsu, Codex, James Chen
  */
 @JavaBean
 @Getter
 @Setter
-public class VenueVo {
+public class VenueResponse {
   private Long venueId;
   private String name;
   private String address;
   private Double latitude;
   private Double longitude;
   private String timezone;
-  private List<SportVo> sports = List.of();
-  private List<OpeningIntervalVo> openingIntervals = List.of();
+  private List<VenueSportResponse> sports = List.of();
+  private List<OpeningIntervalResponse> openingIntervals = List.of();
 }
