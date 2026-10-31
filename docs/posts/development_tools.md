@@ -127,24 +127,19 @@ style:
 ./mvnw checkstyle:check
 ```
 
-### Code Formatter - google-java-format
+### Code Formatters
 
 A code formatter formats code according to preset rules, which are usually
 defined in a configuration file in the project's root directory. It is important
 for developers working on the same project to follow the same style guide.
 
-In this project, we use
-[google-java-format](https://github.com/google/google-java-format). It does not
-support customization, as its goal is to ensure that code formatting complies
-with the
-[Google Java Style Guide](https://google.github.io/styleguide/javaguide.html).
-In this project, Checkstyle is configured to match the formatting rules used by
-google-java-format. Therefore, after you format a Java file with
-google-java-format, Checkstyle should not report any style violations.
+In this project, we use `Spotless` to format Java code with the Eclipse
+formatter engine. The formatting configuration is provided in
+`server/.eclipse-formatter.xml`. Run `make format` in the `server` workspace to
+format all Java files in the codebase.
 
-Please make sure you install the plugin or extension with the same name in your
-IDE and enable "format on save". This allows your IDE to format files
-automatically when you save them.
+For Markdown files, we use `prettier` as the formatter. The formatting
+configuration is provided in `.prettierrc.json`.
 
 ### Debugger
 

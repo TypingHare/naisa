@@ -49,10 +49,11 @@ The `Makefile` provides several useful targets (commands). Run them with
 `make <target-name>` in the `server` workspace. Please ensure that GNU Make 3.8
 or later is installed in your environment.
 
-1. `lint`: Run Checkstyle and PMD for linting. Run this command before making a
+1. `make format`: Format all Java files using Spotless.
+2. `lint`: Run Checkstyle and PMD for linting. Run this command before making a
    commit.
-2. `test`: Run all tests.
-3. `coverage`: Run JaCoCo and generate a coverage report.
-4. `run`: Start the service.
-5. `run-test`: Start the service with the "test" profile active.
-6. `download-sources`: Download source files for Java dependencies.
+3. `test`: Run all tests.
+4. `coverage`: Run JaCoCo and generate a coverage report.
+5. `run`: Start the service.
+6. `run-test`: Start the service with the "test" profile active.
+7. `download-sources`: Download source files for Java dependencies.
