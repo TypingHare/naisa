@@ -19,13 +19,13 @@ import lombok.Setter;
 @Getter
 @Setter
 public final class EarthCoordinate implements WithLatitudeAndLongitude {
-	@NotNull
-	@DecimalMin("-90")
-	@DecimalMax("90")
-	private Double latitude;
+    @NotNull
+    @DecimalMin("-90")
+    @DecimalMax("90")
+    private Double latitude;
 
-	@NotNull
-	@DecimalMin("-180")
-	@DecimalMax("180")
-	private Double longitude;
+    @NotNull
+    @DecimalMin("-180")
+    @DecimalMax("180")
+    private Double longitude;
 }

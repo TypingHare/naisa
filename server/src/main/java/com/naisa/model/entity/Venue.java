@@ -42,40 +42,40 @@ import org.hibernate.generator.EventType;
 @Getter
 @Setter
 public class Venue implements WithLatitudeAndLongitude {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id", nullable = false, updatable = false)
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, updatable = false)
+    private Long id;
 
-	@Column(name = "name", length = 255, nullable = false)
-	@Size(max = 255, message = "Venue name must not exceed 255 characters.")
-	private String name;
+    @Column(name = "name", length = 255, nullable = false)
+    @Size(max = 255, message = "Venue name must not exceed 255 characters.")
+    private String name;
 
-	@Column(name = "address", length = 255, nullable = false)
-	@Size(max = 255, message = "Address must not exceed 255 characters.")
-	private String address;
+    @Column(name = "address", length = 255, nullable = false)
+    @Size(max = 255, message = "Address must not exceed 255 characters.")
+    private String address;
 
-	@Min(-90)
-	@Max(90)
-	@Column(name = "latitude", nullable = false)
-	private Double latitude;
+    @Min(-90)
+    @Max(90)
+    @Column(name = "latitude", nullable = false)
+    private Double latitude;
 
-	@Min(-180)
-	@Max(180)
-	@Column(name = "longitude", nullable = false)
-	private Double longitude;
+    @Min(-180)
+    @Max(180)
+    @Column(name = "longitude", nullable = false)
+    private Double longitude;
 
-	@Column(name = "timezone", length = 32, nullable = false)
-	@Size(max = 32, message = "Timezone must not exceed 32 characters.")
-	private String timezone;
+    @Column(name = "timezone", length = 32, nullable = false)
+    @Size(max = 32, message = "Timezone must not exceed 32 characters.")
+    private String timezone;
 
-	/** Client service that submitted the venue; absent for unattributed records. */
-	@ManyToOne
-	@JoinColumn(name = "created_by_client_id", updatable = false)
-	private Client createdByClient;
+    /** Client service that submitted the venue; absent for unattributed records. */
+    @ManyToOne
+    @JoinColumn(name = "created_by_client_id", updatable = false)
+    private Client createdByClient;
 
-	/** Database-generated creation time; may be unknown for older records. */
-	@Generated(event = EventType.INSERT)
-	@Column(name = "created_at", updatable = false)
-	private Instant createdAt;
+    /** Database-generated creation time; may be unknown for older records. */
+    @Generated(event = EventType.INSERT)
+    @Column(name = "created_at", updatable = false)
+    private Instant createdAt;
 }

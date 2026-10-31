@@ -16,14 +16,14 @@
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_annotations_on_package" value="49"></setting>
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_annotations_on_parameter" value="0"></setting>
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_annotations_on_type" value="49"></setting>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_allocation_expression" value="16"></setting>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_annotation" value="0"></setting>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_enum_constant" value="16"></setting>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_explicit_constructor_call" value="16"></setting>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_method_invocation" value="16"></setting>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_qualified_allocation_expression" value="16"></setting>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_allocation_expression" value="52"></setting>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_annotation" value="52"></setting>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_enum_constant" value="52"></setting>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_explicit_constructor_call" value="52"></setting>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_method_invocation" value="52"></setting>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_qualified_allocation_expression" value="52"></setting>
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_assertion_message" value="16"></setting>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_assignment" value="0"></setting>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_assignment" value="16"></setting>
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_bitwise_operator" value="16"></setting>
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_compact_if" value="16"></setting>
     <setting id="org.eclipse.jdt.core.formatter.alignment_for_compact_loops" value="16"></setting>
@@ -377,12 +377,12 @@
     <setting id="org.eclipse.jdt.core.formatter.parentheses_positions_in_if_while_statement" value="common_lines"></setting>
     <setting id="org.eclipse.jdt.core.formatter.parentheses_positions_in_lambda_declaration" value="common_lines"></setting>
     <setting id="org.eclipse.jdt.core.formatter.parentheses_positions_in_method_delcaration" value="separate_lines_if_wrapped"></setting>
-    <setting id="org.eclipse.jdt.core.formatter.parentheses_positions_in_method_invocation" value="common_lines"></setting>
+    <setting id="org.eclipse.jdt.core.formatter.parentheses_positions_in_method_invocation" value="separate_lines_if_wrapped"></setting>
     <setting id="org.eclipse.jdt.core.formatter.parentheses_positions_in_record_declaration" value="common_lines"></setting>
     <setting id="org.eclipse.jdt.core.formatter.parentheses_positions_in_switch_statement" value="common_lines"></setting>
     <setting id="org.eclipse.jdt.core.formatter.parentheses_positions_in_try_clause" value="common_lines"></setting>
     <setting id="org.eclipse.jdt.core.formatter.put_empty_statement_on_new_line" value="true"></setting>
-    <setting id="org.eclipse.jdt.core.formatter.tabulation.char" value="tab"></setting>
+    <setting id="org.eclipse.jdt.core.formatter.tabulation.char" value="space"></setting>
     <setting id="org.eclipse.jdt.core.formatter.tabulation.size" value="4"></setting>
     <setting id="org.eclipse.jdt.core.formatter.text_block_indentation" value="0"></setting>
     <setting id="org.eclipse.jdt.core.formatter.use_on_off_tags" value="true"></setting>
@@ -399,6 +399,6 @@
     <setting id="org.eclipse.jdt.core.formatter.wrap_before_shift_operator" value="true"></setting>
     <setting id="org.eclipse.jdt.core.formatter.wrap_before_string_concatenation" value="true"></setting>
     <setting id="org.eclipse.jdt.core.formatter.wrap_before_switch_case_arrow_operator" value="false"></setting>
-    <setting id="org.eclipse.jdt.core.formatter.wrap_outer_expressions_when_nested" value="true"></setting>
+    <setting id="org.eclipse.jdt.core.formatter.wrap_outer_expressions_when_nested" value="false"></setting>
   </profile>
 </profiles>

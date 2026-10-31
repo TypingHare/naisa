@@ -18,39 +18,39 @@ import org.springframework.http.HttpStatus;
  * @author James Chen
  */
 public class ServiceException extends RuntimeException implements Cloneable {
-	protected final String code;
-	protected final HttpStatus status;
+    protected final String code;
+    protected final HttpStatus status;
 
-	protected ServiceException(
-		final String code,
-		final String message,
-		final HttpStatus status,
-		final Throwable cause
-	) {
-		super(message, cause);
+    protected ServiceException(
+        final String code,
+        final String message,
+        final HttpStatus status,
+        final Throwable cause
+    ) {
+        super(message, cause);
 
-		this.code = code;
-		this.status = status;
-	}
+        this.code = code;
+        this.status = status;
+    }
 
-	protected ServiceException(final String code, final String message, final HttpStatus status) {
-		this(code, message, status, null);
-	}
+    protected ServiceException(final String code, final String message, final HttpStatus status) {
+        this(code, message, status, null);
+    }
 
-	public String getCode() {
-		return code;
-	}
+    public String getCode() {
+        return code;
+    }
 
-	public HttpStatus getStatus() {
-		return status;
-	}
+    public HttpStatus getStatus() {
+        return status;
+    }
 
-	@Override
-	public ServiceException clone() {
-		return new ServiceException(code, this.getMessage(), status);
-	}
+    @Override
+    public ServiceException clone() {
+        return new ServiceException(code, this.getMessage(), status);
+    }
 
-	public ServiceException causedBy(final Throwable throwable) {
-		return new ServiceException(code, this.getMessage(), status, throwable);
-	}
+    public ServiceException causedBy(final Throwable throwable) {
+        return new ServiceException(code, this.getMessage(), status, throwable);
+    }
 }

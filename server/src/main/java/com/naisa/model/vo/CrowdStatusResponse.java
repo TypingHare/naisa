@@ -18,9 +18,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CrowdStatusResponse {
-	private Long venueId;
-	private String crowdLevel;
-	private int reportCount;
-	private Instant latestReportAt;
-	private String source;
+    private Long venueId;
+    private String crowdLevel;
+    private int reportCount;
+    private Instant latestReportAt;
+    private String source;
 }

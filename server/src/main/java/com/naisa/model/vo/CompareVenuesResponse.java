@@ -17,8 +17,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CompareVenuesResponse {
-	private List<VenueComparisonResponse> venues;
-	private Long nearestVenueId;
-	private Long cheapestVenueId;
-	private Long leastCrowdedVenueId;
+    private List<VenueComparisonResponse> venues;
+    private Long nearestVenueId;
+    private Long cheapestVenueId;
+    private Long leastCrowdedVenueId;
 }

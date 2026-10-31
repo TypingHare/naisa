@@ -32,14 +32,14 @@ import org.hibernate.generator.EventType;
 @Getter
 @Setter
 public class Client {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id", nullable = false, updatable = false)
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, updatable = false)
+    private Long id;
 
-	@Generated(event = EventType.INSERT)
-	@ColumnDefault("gen_random_uuid()::text")
-	@Column(name = "api_key", length = 36, nullable = false, unique = true)
-	@Size(max = 36, message = "API key must not exceed 36 characters.")
-	private String apiKey;
+    @Generated(event = EventType.INSERT)
+    @ColumnDefault("gen_random_uuid()::text")
+    @Column(name = "api_key", length = 36, nullable = false, unique = true)
+    @Size(max = 36, message = "API key must not exceed 36 characters.")
+    private String apiKey;
 }

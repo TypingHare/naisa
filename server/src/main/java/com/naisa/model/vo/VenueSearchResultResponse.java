@@ -19,10 +19,10 @@ import lombok.Setter;
 @Getter
 @Setter
 public class VenueSearchResultResponse {
-	private Long venueId;
-	private String name;
-	private List<Double> memberDistancesKm;
-	private BigDecimal hourlyPrice;
-	private Boolean isIndoor;
-	private Boolean hasLighting;
+    private Long venueId;
+    private String name;
+    private List<Double> memberDistancesKm;
+    private BigDecimal hourlyPrice;
+    private Boolean isIndoor;
+    private Boolean hasLighting;
 }

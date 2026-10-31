@@ -24,20 +24,20 @@ import lombok.Setter;
 @Getter
 @Setter
 public class RateVenueRequest {
-	@JsonProperty("externalUserID")
-	@NotBlank
-	@Size(max = 128)
-	private String externalUserId;
+    @JsonProperty("externalUserID")
+    @NotBlank
+    @Size(max = 128)
+    private String externalUserId;
 
-	@Positive
-	private Long sportId;
+    @Positive
+    private Long sportId;
 
-	@NotNull
-	@Min(1)
-	@Max(5)
-	private Short rating;
+    @NotNull
+    @Min(1)
+    @Max(5)
+    private Short rating;
 
-	@NotBlank
-	@Size(max = 2000)
-	private String comment;
+    @NotBlank
+    @Size(max = 2000)
+    private String comment;
 }

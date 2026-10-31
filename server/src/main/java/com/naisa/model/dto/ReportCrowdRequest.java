@@ -20,14 +20,14 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ReportCrowdRequest {
-	@NotBlank
-	@Size(max = 128)
-	private String externalUserId;
+    @NotBlank
+    @Size(max = 128)
+    private String externalUserId;
 
-	@NotBlank
-	@Pattern(regexp = "EMPTY|LIGHT|MODERATE|BUSY|PACKED")
-	private String crowdLevel;
+    @NotBlank
+    @Pattern(regexp = "EMPTY|LIGHT|MODERATE|BUSY|PACKED")
+    private String crowdLevel;
 
-	@Positive
-	private Long sportId;
+    @Positive
+    private Long sportId;
 }

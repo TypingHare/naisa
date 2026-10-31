@@ -35,33 +35,34 @@ import lombok.Setter;
  */
 @JavaBean
 @Entity
-@Table(name = "venue_sports", uniqueConstraints = @UniqueConstraint(columnNames = { "venue_id",
-		"sport_id" }))
+@Table(
+    name = "venue_sports",
+    uniqueConstraints = @UniqueConstraint(columnNames = { "venue_id", "sport_id" }))
 @Getter
 @Setter
 public class VenueSport {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id", nullable = false, updatable = false)
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, updatable = false)
+    private Long id;
 
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	@JoinColumn(name = "venue_id", nullable = false)
-	private Venue venue;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "venue_id", nullable = false)
+    private Venue venue;
 
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	@JoinColumn(name = "sport_id", nullable = false)
-	private Sport sport;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "sport_id", nullable = false)
+    private Sport sport;
 
-	@NotNull
-	@DecimalMin("0.00")
-	@Digits(integer = 10, fraction = 2)
-	@Column(name = "price", nullable = false)
-	private BigDecimal price;
+    @NotNull
+    @DecimalMin("0.00")
+    @Digits(integer = 10, fraction = 2)
+    @Column(name = "price", nullable = false)
+    private BigDecimal price;
 
-	@Column(name = "is_indoor", nullable = false)
-	private Boolean isIndoor;
+    @Column(name = "is_indoor", nullable = false)
+    private Boolean isIndoor;
 
-	@Column(name = "has_lighting")
-	private Boolean hasLighting;
+    @Column(name = "has_lighting")
+    private Boolean hasLighting;
 }

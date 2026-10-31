@@ -28,27 +28,27 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Getter
 @Setter
 public class SearchVenuesRequest {
-	@NotNull
-	@Size(min = 1, max = 10)
-	private List<@NotNull @Valid EarthCoordinate> coordinates;
+    @NotNull
+    @Size(min = 1, max = 10)
+    private List<@NotNull @Valid EarthCoordinate> coordinates;
 
-	@NotNull
-	@Positive
-	private Long sportId;
+    @NotNull
+    @Positive
+    private Long sportId;
 
-	@NotNull
-	@DateTimeFormat(pattern = "uuuu-MM-dd")
-	private LocalDate date;
+    @NotNull
+    @DateTimeFormat(pattern = "uuuu-MM-dd")
+    private LocalDate date;
 
-	@NotNull
-	@DateTimeFormat(pattern = "HH:mm")
-	private LocalTime time;
+    @NotNull
+    @DateTimeFormat(pattern = "HH:mm")
+    private LocalTime time;
 
-	@NotNull
-	@DecimalMin("0")
-	private BigDecimal maxDistance;
+    @NotNull
+    @DecimalMin("0")
+    private BigDecimal maxDistance;
 
-	@NotNull
-	@DecimalMin("0")
-	private BigDecimal budget = BigDecimal.ZERO;
+    @NotNull
+    @DecimalMin("0")
+    private BigDecimal budget = BigDecimal.ZERO;
 }

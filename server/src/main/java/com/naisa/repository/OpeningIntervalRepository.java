@@ -17,22 +17,22 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface OpeningIntervalRepository extends JpaRepository<OpeningInterval, Long> {
-	/**
-	 * Retrieves all opening intervals for the venue with the given ID.
-	 *
-	 * @param venueId the ID of the venue
-	 * @return opening intervals belonging to the venue
-	 * @author James Chen
-	 */
-	List<OpeningInterval> findByVenueId(Long venueId);
+    /**
+     * Retrieves all opening intervals for the venue with the given ID.
+     *
+     * @param venueId the ID of the venue
+     * @return opening intervals belonging to the venue
+     * @author James Chen
+     */
+    List<OpeningInterval> findByVenueId(Long venueId);
 
-	/**
-	 * Retrieves opening intervals for the supplied venue identifiers.
-	 *
-	 * @param venueIds identifiers of the candidate venues
-	 * @return opening intervals belonging to those venues
-	 * @author Andrew Hsu, Codex
-	 */
-	@EntityGraph(attributePaths = "venue")
-	List<OpeningInterval> findByVenueIdIn(Collection<Long> venueIds);
+    /**
+     * Retrieves opening intervals for the supplied venue identifiers.
+     *
+     * @param venueIds identifiers of the candidate venues
+     * @return opening intervals belonging to those venues
+     * @author Andrew Hsu, Codex
+     */
+    @EntityGraph(attributePaths = "venue")
+    List<OpeningInterval> findByVenueIdIn(Collection<Long> venueIds);
 }

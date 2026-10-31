@@ -18,11 +18,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public class VenueComparisonResponse {
-	private Long venueId;
-	private String name;
-	private double distanceKm;
-	private BigDecimal hourlyPrice;
-	private Boolean isIndoor;
-	private Boolean openNow;
-	private String crowdLevel;
+    private Long venueId;
+    private String name;
+    private double distanceKm;
+    private BigDecimal hourlyPrice;
+    private Boolean isIndoor;
+    private Boolean openNow;
+    private String crowdLevel;
 }

@@ -19,13 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/v1/health")
 public class HealthController {
-	/**
-	 * Checks whether the service is running.
-	 *
-	 * @return a response entity with no content
-	 */
-	@GetMapping
-	public ResponseEntity<Capsule<Object>> check() {
-		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Capsule<>("", null));
-	}
+    /**
+     * Checks whether the service is running.
+     *
+     * @return a response entity with no content
+     */
+    @GetMapping
+    public ResponseEntity<Capsule<Object>> check() {
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Capsule<>("", null));
+    }
 }
