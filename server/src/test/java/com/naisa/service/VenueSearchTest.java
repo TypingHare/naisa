@@ -93,7 +93,7 @@ class VenueSearchTest {
         request.setSportId(SPORT_ID);
         request.setDate(LocalDate.of(2026, 10, 27));
         request.setTime(LocalTime.NOON);
-        request.setMaxDistance(new BigDecimal("2.00"));
+        request.setMaxDistance(2.0);
         request.setBudget(new BigDecimal("20.00"));
     }
 
@@ -120,7 +120,7 @@ class VenueSearchTest {
             List.of(interval(offering, DayOfWeek.TUESDAY, "09:00", "17:00"))
         );
 
-        final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
+        final List<VenueSearchResultResponse> results = venueSearchService.searchVenues(request);
 
         assertThat(results).hasSize(1);
         final VenueSearchResultResponse result = results.getFirst();
@@ -145,7 +145,7 @@ class VenueSearchTest {
     @ParameterizedTest
     @CsvSource({ "0.00, 1", "1.00, 1", "2.00, 2" })
     void appliesInclusiveRadius(final BigDecimal radius, final int expectedCount) {
-        request.setMaxDistance(radius);
+        request.setMaxDistance(radius.doubleValue());
         final VenueSport atOrigin = offering(1L, 40.00);
         final VenueSport fartherAway = offering(2L, 40.01);
         mockOfferings(List.of(atOrigin, fartherAway));
@@ -158,7 +158,7 @@ class VenueSearchTest {
                 )
         );
 
-        final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
+        final List<VenueSearchResultResponse> results = venueSearchService.searchVenues(request);
 
         assertThat(results).extracting(VenueSearchResultResponse::getVenueId)
             .containsExactlyElementsOf(nearbyIds);
@@ -175,7 +175,7 @@ class VenueSearchTest {
         request.setBudget(budget);
         mockOfferings(List.of());
 
-        final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
+        final List<VenueSearchResultResponse> results = venueSearchService.searchVenues(request);
 
         assertThat(results).isEmpty();
         verify(venueSportRepository).findBySportIdAndPriceLessThanEqual(SPORT_ID, budget);
@@ -191,7 +191,7 @@ class VenueSearchTest {
     void returnsEmptyWhenAllVenuesAreTooFarAway() {
         mockOfferings(List.of(offering(1L, 41.00)));
 
-        final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
+        final List<VenueSearchResultResponse> results = venueSearchService.searchVenues(request);
 
         assertThat(results).isEmpty();
         verifyNoInteractions(openingIntervalRepository);
@@ -233,7 +233,7 @@ class VenueSearchTest {
             List.of(interval(offering, day, opens.toString(), closes.toString()))
         );
 
-        final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
+        final List<VenueSearchResultResponse> results = venueSearchService.searchVenues(request);
 
         assertThat(results).hasSize(expectedOpen ? 1 : 0);
     }
@@ -254,7 +254,7 @@ class VenueSearchTest {
             )
         );
 
-        final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
+        final List<VenueSearchResultResponse> results = venueSearchService.searchVenues(request);
 
         assertThat(results).extracting(VenueSearchResultResponse::getVenueId).containsExactly(1L);
     }
@@ -316,7 +316,7 @@ class VenueSearchTest {
         request.setTime(NOW.toLocalTime());
         mockOfferings(List.of());
 
-        assertThat(venueSearchService.findVenues(request)).isEmpty();
+        assertThat(venueSearchService.searchVenues(request)).isEmpty();
         verify(venueSportRepository).findBySportIdAndPriceLessThanEqual(
             SPORT_ID,
             request.getBudget()
@@ -333,7 +333,7 @@ class VenueSearchTest {
         when(sportRepository.existsById(SPORT_ID)).thenReturn(false);
 
         assertThatExceptionOfType(VenueException.class).isThrownBy(
-            () -> venueSearchService.findVenues(request)
+            () -> venueSearchService.searchVenues(request)
         ).satisfies(exception -> {
             assertThat(exception.getCode()).isEqualTo("sport.not_found");
             assertThat(exception.getStatus()).isEqualTo(HttpStatus.NOT_FOUND);

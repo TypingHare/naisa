@@ -63,6 +63,8 @@ class VenueAlternativesTest {
     @InjectMocks
     private VenueService venueService;
 
+    private VenueSearchService venueSearchService;
+
     private MockedStatic<LocalDateTime> dateTimes;
     private SearchAlternativeVenuesRequest request;
 
@@ -73,6 +75,7 @@ class VenueAlternativesTest {
      */
     @BeforeEach
     void setUp() {
+        venueSearchService = new VenueSearchService(venueService);
         dateTimes = mockStatic(LocalDateTime.class, CALLS_REAL_METHODS);
         dateTimes.when(() -> LocalDateTime.now(SEARCH_ZONE)).thenReturn(NOW);
         request = new SearchAlternativeVenuesRequest();
@@ -83,7 +86,7 @@ class VenueAlternativesTest {
         request.setSportId(SPORT_ID);
         request.setDate(LocalDate.of(2026, 10, 27));
         request.setTime(LocalTime.NOON);
-        request.setMaxDistance(BigDecimal.ONE);
+        request.setMaxDistance(1.0);
         request.setBudget(new BigDecimal("20.00"));
         request.setAllowedChanges(Set.of(SearchConstraint.BUDGET));
     }
@@ -168,7 +171,9 @@ class VenueAlternativesTest {
             return;
         }
 
-        final List<AlternativeVenueResponse> results = venueService.findAlternatives(request);
+        final List<AlternativeVenueResponse> results = venueSearchService.searchAlternatives(
+            request
+        );
 
         assertThat(results).hasSize("MATCH".equals(outcome) ? 1 : 0);
         if (!results.isEmpty()) {
@@ -177,7 +182,8 @@ class VenueAlternativesTest {
                 new BigDecimal(price).max(request.getBudget())
             );
             assertThat(result.getMaxDistance()).isEqualByComparingTo(
-                BigDecimal.valueOf(result.getVenue().getMemberDistancesKm().getFirst()).max(
+                Math.max(
+                    result.getVenueSearchResult().getMemberDistancesKm().getFirst(),
                     request.getMaxDistance()
                 )
             );
@@ -276,7 +282,9 @@ class VenueAlternativesTest {
             List.of(interval(offering, DayOfWeek.MONDAY, "23:00", "02:00"))
         );
 
-        final List<AlternativeVenueResponse> results = venueService.findAlternatives(request);
+        final List<AlternativeVenueResponse> results = venueSearchService.searchAlternatives(
+            request
+        );
 
         assertThat(results).hasSize(expectedCount);
         assertThat(results).extracting(AlternativeVenueResponse::getDate).contains(date);
@@ -460,7 +468,7 @@ class VenueAlternativesTest {
      */
     private void assertFailure(final String code, final HttpStatus status) {
         assertThatExceptionOfType(VenueException.class).isThrownBy(
-            () -> venueService.findAlternatives(request)
+            () -> venueSearchService.searchAlternatives(request)
         ).satisfies(exception -> {
             assertThat(exception.getCode()).isEqualTo(code);
             assertThat(exception.getStatus()).isEqualTo(status);

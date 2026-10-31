@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
  * The static instances define reusable error descriptions. Callers must throw a fresh copy using
  * {@link #clone()} or {@link #causedBy(Throwable)} rather than throwing a shared instance.
  *
- * @author Vincent Lai, Codex, Emily Wang, Codex, Andrew Hsu, Codex
+ * @author Vincent Lai, Codex, Emily Wang, Codex, Andrew Hsu, Codex, James Chen
  */
 public final class VenueException extends ServiceException {
     public static final VenueException REQUEST_IN_PAST = new VenueException(

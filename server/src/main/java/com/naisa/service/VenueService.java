@@ -1,19 +1,16 @@
 package com.naisa.service;
 
+import com.naisa.constant.VenueConstant;
 import com.naisa.exception.VenueException;
 import com.naisa.model.common.EarthCoordinate;
 import com.naisa.model.dto.CreateVenueRequest;
 import com.naisa.model.dto.RateVenueRequest;
-import com.naisa.model.dto.SearchAlternativeVenuesRequest;
-import com.naisa.model.dto.SearchAlternativeVenuesRequest.SearchConstraint;
-import com.naisa.model.dto.SearchVenuesRequest;
 import com.naisa.model.entity.Client;
 import com.naisa.model.entity.OpeningInterval;
 import com.naisa.model.entity.Review;
 import com.naisa.model.entity.Sport;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
-import com.naisa.model.vo.AlternativeVenueResponse;
 import com.naisa.model.vo.OpeningIntervalResponse;
 import com.naisa.model.vo.VenueSearchResultResponse;
 import com.naisa.model.vo.VenueSportResponse;
@@ -25,17 +22,12 @@ import com.naisa.repository.VenueSportRepository;
 import com.naisa.util.Beans;
 import com.naisa.util.EarthCoordinates;
 import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -52,13 +44,6 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class VenueService {
-    private static final ZoneId SEARCH_TIMEZONE = ZoneId.of("America/New_York");
-    private static final int ALTERNATIVE_DATE_WINDOW_DAYS = 3;
-    private static final int ALTERNATIVE_TIME_WINDOW_HOURS = 2;
-    private static final BigDecimal ALTERNATIVE_DISTANCE_INCREASE_KM = BigDecimal.valueOf(5);
-    private static final BigDecimal ALTERNATIVE_BUDGET_INCREASE = BigDecimal.valueOf(20);
-    private static final int ALTERNATIVE_RESULT_LIMIT = 10;
-
     private final VenueRepository venueRepository;
     private final VenueSportRepository venueSportRepository;
     private final ReviewRepository reviewRepository;
@@ -227,14 +212,12 @@ public class VenueService {
     /**
      * Gets a table mapping venue IDs to opening intervals.
      *
-     * @param venueIdList a list of venue IDs whose opening intervals to retrieve
+     * @param venueIds IDs of the venues whose opening intervals should be retrieved
      * @return a table mapping venue IDs to opening intervals ({@code OpeningInterval} instances)
      * @author James Chen
      */
-    public Map<Long, List<OpeningInterval>> getIntervalListsByVenueId(
-        final List<Long> venueIdList
-    ) {
-        return openingIntervalRepository.findByVenueIdIn(venueIdList).stream().collect(
+    public Map<Long, List<OpeningInterval>> getIntervalListsByVenueId(final List<Long> venueIds) {
+        return openingIntervalRepository.findByVenueIdIn(venueIds).stream().collect(
             Collectors.groupingBy(interval -> interval.getVenue().getId())
         );
     }
@@ -284,111 +267,6 @@ public class VenueService {
     }
 
     /**
-     * Finds alternatives by changing only the search values permitted by the client.
-     *
-     * <p>
-     * The request must already have passed field validation. A nearby sport offering is checked
-     * before budget or opening hours, so an unavailable alternative differs from no nearby venue.
-     *
-     * @param request validated search parameters and permitted changes
-     * @return up to 10 alternatives, ordered by fewest changes and closest date and time
-     * @throws VenueException if the original time is in the past, the sport is unknown, or no
-     *                        offering is within the permitted radius
-     * @author Andrew Hsu, Codex, Vincent Lai, Codex
-     */
-    @Transactional(readOnly = true)
-    public List<AlternativeVenueResponse> findAlternatives(
-        final SearchAlternativeVenuesRequest request
-    ) {
-        // TODO: This function has known issues and will be fixed in the future.
-        final LocalDateTime now = LocalDateTime.now(SEARCH_TIMEZONE);
-        final LocalDateTime requestedAt = validateSearchRequest(request, now);
-        final Set<SearchConstraint> allowedChanges = request.getAllowedChanges();
-        final BigDecimal maximumDistance = allowedChanges.contains(SearchConstraint.MAX_DISTANCE)
-            ? request.getMaxDistance().add(ALTERNATIVE_DISTANCE_INCREASE_KM)
-            : request.getMaxDistance();
-        final BigDecimal maximumBudget = allowedChanges.contains(SearchConstraint.BUDGET) ? request
-            .getBudget().add(ALTERNATIVE_BUDGET_INCREASE) : request.getBudget();
-
-        final List<VenueSearchResultResponse> nearbyVenues = new ArrayList<>();
-        final EarthCoordinate coordinate = EarthCoordinates.createFrom(
-            request.getCoordinates().getFirst()
-        );
-        for (final VenueSport offering : venueSportRepository.findBySportId(request.getSportId())) {
-            final Venue venue = offering.getVenue();
-            final EarthCoordinate venueCoordinate = EarthCoordinates.createFrom(venue);
-            final double distanceKm = EarthCoordinates.calculateDistanceKm(
-                coordinate,
-                venueCoordinate
-            );
-
-            if (BigDecimal.valueOf(distanceKm).compareTo(maximumDistance) <= 0) {
-                nearbyVenues.add(Beans.create(VenueSearchResultResponse.class, (it) -> {
-                    it.setVenueId(venue.getId());
-                    it.setName(venue.getName());
-                    it.setHourlyPrice(offering.getPrice());
-                    it.setIsIndoor(offering.getIsIndoor());
-                    it.setHasLighting(offering.getHasLighting());
-                }));
-            }
-        }
-        if (nearbyVenues.isEmpty()) {
-            throw VenueException.NO_NEARBY_VENUES.clone();
-        }
-
-        final List<VenueSearchResultResponse> affordableVenues = nearbyVenues.stream().filter(
-            venue -> venue.getHourlyPrice().compareTo(maximumBudget) <= 0
-        ).toList();
-        if (affordableVenues.isEmpty()) {
-            return List.of();
-        }
-        final List<Long> venueIds = affordableVenues.stream().map(
-            VenueSearchResultResponse::getVenueId
-        ).toList();
-        final Map<Long, List<OpeningInterval>> intervalsByVenue = openingIntervalRepository
-            .findByVenueIdIn(venueIds).stream().collect(
-                Collectors.groupingBy(interval -> interval.getVenue().getId())
-            );
-        final List<LocalDateTime> suggestedTimes = suggestDateTimes(request, now);
-        final List<AlternativeVenueResponse> alternatives = new ArrayList<>();
-        for (final VenueSearchResultResponse venue : affordableVenues) {
-            final List<OpeningInterval> intervals = intervalsByVenue.getOrDefault(
-                venue.getVenueId(),
-                List.of()
-            );
-            for (final LocalDateTime suggestedAt : suggestedTimes) {
-                if (intervals.stream().anyMatch(interval -> isOpenAt(interval, suggestedAt))) {
-                    alternatives.add(Beans.create(AlternativeVenueResponse.class, (it) -> {
-                        it.setVenue(venue);
-                        it.setDate(suggestedAt.toLocalDate());
-                        it.setTime(suggestedAt.toLocalTime());
-                        it.setMaxDistance(request.getMaxDistance());
-                        it.setBudget(request.getBudget().max(venue.getHourlyPrice()));
-                    }));
-                }
-            }
-        }
-
-        return alternatives.stream().sorted(
-            Comparator.comparingInt(
-                (AlternativeVenueResponse alternative) -> countChangedConstraints(
-                    request,
-                    alternative
-                )
-            ).thenComparing(
-                alternative -> Duration.between(
-                    requestedAt,
-                    LocalDateTime.of(alternative.getDate(), alternative.getTime())
-                ).abs()
-            ).thenComparing(AlternativeVenueResponse::getDate).thenComparing(
-                AlternativeVenueResponse::getTime
-            ).thenComparing(alternative -> alternative.getVenue().getHourlyPrice()).thenComparing(
-                alternative -> alternative.getVenue().getVenueId()
-            )
-        ).limit(ALTERNATIVE_RESULT_LIMIT).toList();
-    }
-
-    /**
      * Ensures a sport ID exists.
      *
      * @param sportId the sport ID to check
@@ -409,97 +287,11 @@ public class VenueService {
      * @author James Chen
      */
     public void validateSearchRequestTime(final LocalDateTime requestedAt) {
-        final LocalDateTime now = LocalDateTime.now(SEARCH_TIMEZONE);
+        final ZoneId searchTimeZone = ZoneId.of(VenueConstant.SEARCH_TIMEZONE);
+        final LocalDateTime now = LocalDateTime.now(searchTimeZone);
         if (requestedAt.isBefore(now)) {
             throw VenueException.REQUEST_IN_PAST.clone();
         }
-    }
-
-    /**
-     * Checks the original search time and sport for either search operation.
-     *
-     * @param request search parameters that have passed field validation
-     * @param now     current local date and time in New York
-     * @return the original requested date and time
-     * @throws VenueException if the time is in the past or the sport is unknown
-     * @author Andrew Hsu, Codex
-     */
-    private LocalDateTime validateSearchRequest(
-        final SearchVenuesRequest request,
-        final LocalDateTime now
-    ) {
-        final LocalDateTime requestedAt = LocalDateTime.of(request.getDate(), request.getTime());
-        if (requestedAt.isBefore(now)) {
-            throw VenueException.REQUEST_IN_PAST.clone();
-        }
-        if (!sportRepository.existsById(request.getSportId())) {
-            throw VenueException.SPORT_NOT_FOUND.clone();
-        }
-        return requestedAt;
-    }
-
-    /**
-     * Builds unique future date and time suggestions within the permitted windows.
-     *
-     * @param request original search parameters and permitted changes
-     * @param now     current local date and time in New York
-     * @return unique suggestions that preserve the original time precision
-     * @author Andrew Hsu, Codex
-     */
-    private static List<LocalDateTime> suggestDateTimes(
-        final SearchAlternativeVenuesRequest request,
-        final LocalDateTime now
-    ) {
-        final int dateWindow = request.getAllowedChanges().contains(SearchConstraint.DATE)
-            ? ALTERNATIVE_DATE_WINDOW_DAYS
-            : 0;
-        final int timeWindow = request.getAllowedChanges().contains(SearchConstraint.TIME)
-            ? ALTERNATIVE_TIME_WINDOW_HOURS
-            : 0;
-        final LocalDate earliestDate = request.getDate().minusDays(dateWindow);
-        final LocalDate latestDate = request.getDate().plusDays(dateWindow);
-        final Set<LocalDateTime> suggestions = new TreeSet<>();
-        for (int dayOffset = -dateWindow; dayOffset <= dateWindow; dayOffset++) {
-            final LocalDateTime anchor = request.getDate().plusDays(dayOffset).atTime(
-                request.getTime()
-            );
-            for (int hourOffset = -timeWindow; hourOffset <= timeWindow; hourOffset++) {
-                final LocalDateTime suggestion = anchor.plusHours(hourOffset);
-                if (!suggestion.isBefore(now) && !suggestion.toLocalDate().isBefore(earliestDate)
-                    && !suggestion.toLocalDate().isAfter(latestDate)) {
-                    suggestions.add(suggestion);
-                }
-            }
-        }
-        return List.copyOf(suggestions);
-    }
-
-    /**
-     * Counts actual changes from the original search, independent of granted permissions.
-     *
-     * @param request     original search parameters
-     * @param alternative suggested venue and search values
-     * @return number of changed date, time, distance, and budget values
-     * @author Andrew Hsu, Codex
-     */
-    private static int countChangedConstraints(
-        final SearchVenuesRequest request,
-        final AlternativeVenueResponse alternative
-    ) {
-        int changes = 0;
-        if (!request.getDate().equals(alternative.getDate())) {
-            changes++;
-        }
-        if (!request.getTime().equals(alternative.getTime())) {
-            changes++;
-        }
-        if (request.getMaxDistance().compareTo(alternative.getMaxDistance()) != 0) {
-            changes++;
-        }
-        if (request.getBudget().compareTo(alternative.getBudget()) != 0) {
-            changes++;
-        }
-        return changes;
     }
 
     /**

@@ -46,7 +46,7 @@ public class SearchVenuesRequest {
 
     @NotNull
     @DecimalMin("0")
-    private BigDecimal maxDistance;
+    private Double maxDistance;
 
     @NotNull
     @DecimalMin("0")

@@ -88,7 +88,7 @@ class GroupVenueSearchTest {
         request.setSportId(SPORT_ID);
         request.setDate(LocalDate.of(2026, 10, 27));
         request.setTime(LocalTime.NOON);
-        request.setMaxDistance(new BigDecimal("3.00"));
+        request.setMaxDistance(3.0);
         request.setBudget(new BigDecimal("20.00"));
     }
 
@@ -112,7 +112,9 @@ class GroupVenueSearchTest {
         request.setCoordinates(List.of(location("40.00", "-73.00")));
         mockOpenVenues(List.of(offering(7L, 40.01, -73.00)));
 
-        final List<VenueSearchResultResponse> groupResults = venueSearchService.findVenues(request);
+        final List<VenueSearchResultResponse> groupResults = venueSearchService.searchVenues(
+            request
+        );
 
         assertThat(groupResults).hasSize(1);
         final VenueSearchResultResponse result = groupResults.getFirst();
@@ -162,10 +164,10 @@ class GroupVenueSearchTest {
     @Test
     void excludesVenueNearOnlyOneMember() {
         request.setCoordinates(List.of(location("40.00", "-73.00"), location("40.04", "-73.00")));
-        request.setMaxDistance(BigDecimal.ONE);
+        request.setMaxDistance(1.0);
         mockOfferings(List.of(offering(1L, 40.00, -73.00)));
 
-        final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
+        final List<VenueSearchResultResponse> results = venueSearchService.searchVenues(request);
 
         assertThat(results).isEmpty();
         verifyNoInteractions(openingIntervalRepository);
@@ -187,11 +189,11 @@ class GroupVenueSearchTest {
         );
         mockOpenVenues(List.of(offering(1L, 40.00, -73.00)));
 
-        final List<VenueSearchResultResponse> forwardResults = venueSearchService.findVenues(
+        final List<VenueSearchResultResponse> forwardResults = venueSearchService.searchVenues(
             request
         );
         request.setCoordinates(request.getCoordinates().reversed());
-        final List<VenueSearchResultResponse> reverseResults = venueSearchService.findVenues(
+        final List<VenueSearchResultResponse> reverseResults = venueSearchService.searchVenues(
             request
         );
 
@@ -280,10 +282,10 @@ class GroupVenueSearchTest {
         request.setCoordinates(
             IntStream.range(0, 10).mapToObj(index -> location("40.00", "-73.00")).toList()
         );
-        request.setMaxDistance(BigDecimal.ZERO);
+        request.setMaxDistance(0.0);
         mockOpenVenues(List.of(offering(1L, 40.00, -73.00)));
 
-        final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
+        final List<VenueSearchResultResponse> results = venueSearchService.searchVenues(request);
 
         assertThat(results).hasSize(1);
         final VenueSearchResultResponse result = results.getFirst();
@@ -326,7 +328,7 @@ class GroupVenueSearchTest {
         when(sportRepository.existsById(SPORT_ID)).thenReturn(false);
 
         assertThatExceptionOfType(VenueException.class).isThrownBy(
-            () -> venueSearchService.findVenues(request)
+            () -> venueSearchService.searchVenues(request)
         ).satisfies(exception -> {
             assertThat(exception.getCode()).isEqualTo("sport.not_found");
             assertThat(exception.getStatus()).isEqualTo(HttpStatus.NOT_FOUND);

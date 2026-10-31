@@ -4,7 +4,7 @@ import com.naisa.model.common.EarthCoordinate;
 import java.util.Collection;
 
 /**
- * A utility class containing a collection of helper functions for {@code EarthCoordinate}.
+ * A utility class containing a collection of helper functions for {@link EarthCoordinate}.
  *
  * @author James Chen
  */
@@ -17,7 +17,7 @@ public final class EarthCoordinates {
      * @param latitude  the latitude of the coordinate
      * @param longitude the longitude of the coordinate
      * @return a created {@code EarthCoordinate} instance
-     * @author James Chen, Codex
+     * @author James Chen
      */
     public static EarthCoordinate create(final double latitude, final double longitude) {
         final EarthCoordinate coordinate = new EarthCoordinate();
@@ -31,7 +31,7 @@ public final class EarthCoordinates {
      * implementation.
      *
      * @param impl an instance that implements {@code WithLatitudeAndLongitude}
-     * @author James Chen, Codex
+     * @author James Chen
      */
     public static EarthCoordinate createFrom(final WithLatitudeAndLongitude impl) {
         return create(impl.getLatitude(), impl.getLongitude());

@@ -115,7 +115,7 @@ public class VenueController {
     public ResponseEntity<Capsule<List<VenueSearchResultResponse>>> findVenues(
         @Valid @ModelAttribute final SearchVenuesRequest request
     ) {
-        final List<VenueSearchResultResponse> results = venueSearchService.findVenues(request);
+        final List<VenueSearchResultResponse> results = venueSearchService.searchVenues(request);
         final String message = results.isEmpty() ? "No venues match the search parameters."
             : "Venues found.";
         return ResponseEntity.ok(new Capsule<>(message, results));
@@ -135,7 +135,9 @@ public class VenueController {
     public ResponseEntity<Capsule<List<AlternativeVenueResponse>>> findAlternatives(
         @Valid @ModelAttribute final SearchAlternativeVenuesRequest request
     ) {
-        final List<AlternativeVenueResponse> results = venueService.findAlternatives(request);
+        final List<AlternativeVenueResponse> results = venueSearchService.searchAlternatives(
+            request
+        );
         final String message = results.isEmpty() ? "No alternatives match the permitted changes."
             : "Alternatives found.";
         return ResponseEntity.ok(new Capsule<>(message, results));

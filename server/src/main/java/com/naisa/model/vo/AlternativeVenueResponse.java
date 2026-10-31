@@ -20,9 +20,12 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AlternativeVenueResponse {
-    private VenueSearchResultResponse venue;
+    private VenueSearchResultResponse venueSearchResult;
     private LocalDate date;
     private LocalTime time;
-    private BigDecimal maxDistance;
+    private Double maxDistance;
+    private Double averageDistance;
     private BigDecimal budget;
+    private Integer numChangedConstraint;
+    private Long dateTimeDifferenceInMinutes;
 }
