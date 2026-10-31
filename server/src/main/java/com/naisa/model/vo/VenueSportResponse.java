@@ -8,7 +8,8 @@ import lombok.Setter;
 /**
  * Describes a sport offered at a venue.
  *
- * <p>Null lighting availability means unknown.
+ * <p>
+ * Null lighting availability means unknown.
  *
  * @author Andrew Hsu, Codex, James Chen
  */
@@ -16,9 +17,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class VenueSportResponse {
-  private Long sportId;
-  private String name;
-  private BigDecimal hourlyPrice;
-  private Boolean isIndoor;
-  private Boolean hasLighting;
+	private Long sportId;
+	private String name;
+	private BigDecimal hourlyPrice;
+	private Boolean isIndoor;
+	private Boolean hasLighting;
 }

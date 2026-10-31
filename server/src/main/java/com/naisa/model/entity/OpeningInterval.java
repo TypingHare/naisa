@@ -19,9 +19,10 @@ import lombok.Setter;
 /**
  * Represents an opening interval entity.
  *
- * <p>The {@code opening_intervals} table records the time intervals during which a venue is open.
- * We allow a venue to have multiple opening intervals on the same day of the week. However, we
- * assume that all sports at a given venue share the same opening intervals.
+ * <p>
+ * The {@code opening_intervals} table records the time intervals during which a venue is open. We
+ * allow a venue to have multiple opening intervals on the same day of the week. However, we assume
+ * that all sports at a given venue share the same opening intervals.
  *
  * @author James Chen, Vincent Lai
  */
@@ -31,22 +32,22 @@ import lombok.Setter;
 @Getter
 @Setter
 public class OpeningInterval {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "id", nullable = false, updatable = false)
-  private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id", nullable = false, updatable = false)
+	private Long id;
 
-  @ManyToOne
-  @JoinColumn(name = "venue_id", nullable = false)
-  private Venue venue;
+	@ManyToOne
+	@JoinColumn(name = "venue_id", nullable = false)
+	private Venue venue;
 
-  @Column(name = "day_of_week", length = 9, nullable = false)
-  @Enumerated(EnumType.STRING)
-  private DayOfWeek dayOfWeek;
+	@Column(name = "day_of_week", length = 9, nullable = false)
+	@Enumerated(EnumType.STRING)
+	private DayOfWeek dayOfWeek;
 
-  @Column(name = "opens_at", nullable = false)
-  private LocalTime opensAt;
+	@Column(name = "opens_at", nullable = false)
+	private LocalTime opensAt;
 
-  @Column(name = "closes_at", nullable = false)
-  private LocalTime closesAt;
+	@Column(name = "closes_at", nullable = false)
+	private LocalTime closesAt;
 }

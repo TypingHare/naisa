@@ -13,26 +13,29 @@ import lombok.Setter;
 /**
  * Parameters for comparing two to five distinct venues for a sport.
  *
- * <p>Distances are measured from the supplied latitude and longitude.
+ * <p>
+ * Distances are measured from the supplied latitude and longitude.
  *
  * @author Emily Wang, Codex, Vincent Lai, Codex, James Chen
  */
 @Getter
 @Setter
 public class CompareVenuesRequest implements WithLatitudeAndLongitude {
-  @NotNull
-  @Size(min = 2, max = 5)
-  private List<@NotNull @Positive Long> venueIds;
+	@NotNull
+	@Size(min = 2, max = 5)
+	private List<@NotNull @Positive Long> venueIds;
 
-  @NotNull @Positive private Long sportId;
+	@NotNull
+	@Positive
+	private Long sportId;
 
-  @NotNull
-  @DecimalMin("-90.0")
-  @DecimalMax("90.0")
-  private Double latitude;
+	@NotNull
+	@DecimalMin("-90.0")
+	@DecimalMax("90.0")
+	private Double latitude;
 
-  @NotNull
-  @DecimalMin("-180.0")
-  @DecimalMax("180.0")
-  private Double longitude;
+	@NotNull
+	@DecimalMin("-180.0")
+	@DecimalMax("180.0")
+	private Double longitude;
 }

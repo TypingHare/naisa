@@ -15,7 +15,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class OpeningIntervalResponse {
-  private DayOfWeek dayOfWeek;
-  private LocalTime opensAt;
-  private LocalTime closesAt;
+	private DayOfWeek dayOfWeek;
+	private LocalTime opensAt;
+	private LocalTime closesAt;
 }

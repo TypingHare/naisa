@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /** The entry point of a Spring Boot project. */
 @SpringBootApplication
 public class Application {
-  public static void main(final String[] args) {
-    SpringApplication.run(Application.class, args);
-  }
+	public static void main(final String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
 }

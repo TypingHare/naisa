@@ -10,7 +10,8 @@ import lombok.Setter;
 /**
  * Parameters for searching for alternative venues.
  *
- * <p>Extends {@link SearchVenuesRequest} with the search constraints the client permits changing.
+ * <p>
+ * Extends {@link SearchVenuesRequest} with the search constraints the client permits changing.
  *
  * @author Andrew Hsu, Codex
  */
@@ -18,17 +19,15 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SearchAlternativeVenuesRequest extends SearchVenuesRequest {
-  @NotEmpty private Set<@NotNull SearchConstraint> allowedChanges;
+	@NotEmpty
+	private Set<@NotNull SearchConstraint> allowedChanges;
 
-  /**
-   * Identifies a search value that the client permits the service to change.
-   *
-   * @author Andrew Hsu, Codex, James Chen
-   */
-  public enum SearchConstraint {
-    DATE,
-    TIME,
-    MAX_DISTANCE,
-    BUDGET
-  }
+	/**
+	 * Identifies a search value that the client permits the service to change.
+	 *
+	 * @author Andrew Hsu, Codex, James Chen
+	 */
+	public enum SearchConstraint {
+		DATE, TIME, MAX_DISTANCE, BUDGET
+	}
 }

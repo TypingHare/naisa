@@ -16,47 +16,46 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class VenueRetrievalService {
-  private final VenueService venueService;
+	private final VenueService venueService;
 
-  /**
-   * Creates a {@code VenueRetrievalService} instance.
-   *
-   * @param venueService service for basic venue operations
-   * @author James Chen
-   */
-  public VenueRetrievalService(final VenueService venueService) {
-    this.venueService = venueService;
-  }
+	/**
+	 * Creates a {@code VenueRetrievalService} instance.
+	 *
+	 * @param venueService service for basic venue operations
+	 * @author James Chen
+	 */
+	public VenueRetrievalService(final VenueService venueService) {
+		this.venueService = venueService;
+	}
 
-  /**
-   * Retrieves a venue's location, offered sports, and weekly opening intervals.
-   *
-   * <p>Sports and opening intervals are returned without sorting. Missing sports or intervals
-   * produce empty lists. Hours are returned in the venue's local time, including overnight
-   * intervals. Current availability is not checked.
-   *
-   * @param venueId identifier of the venue
-   * @return the venue details with its sports and opening intervals
-   * @throws com.naisa.exception.VenueException if the venue does not exist
-   * @author Andrew Hsu, Codex, Vincent Lai, Codex, James Chen
-   */
-  @Transactional(readOnly = true)
-  public VenueResponse getVenueVo(final Long venueId) {
-    final Venue venue = venueService.getVenue(venueId);
-    final List<VenueSportResponse> sportVos = venueService.getSportVos(venueId);
-    final List<OpeningIntervalResponse> openIntervalVos =
-        venueService.getOpeningIntervalVos(venueId);
-    return Beans.create(
-        VenueResponse.class,
-        (it) -> {
-          it.setVenueId(venue.getId());
-          it.setName(venue.getName());
-          it.setAddress(venue.getAddress());
-          it.setLatitude(venue.getLatitude());
-          it.setLongitude(venue.getLongitude());
-          it.setTimezone(venue.getTimezone());
-          it.setSports(sportVos);
-          it.setOpeningIntervals(openIntervalVos);
-        });
-  }
+	/**
+	 * Retrieves a venue's location, offered sports, and weekly opening intervals.
+	 *
+	 * <p>
+	 * Sports and opening intervals are returned without sorting. Missing sports or intervals
+	 * produce empty lists. Hours are returned in the venue's local time, including overnight
+	 * intervals. Current availability is not checked.
+	 *
+	 * @param venueId identifier of the venue
+	 * @return the venue details with its sports and opening intervals
+	 * @throws com.naisa.exception.VenueException if the venue does not exist
+	 * @author Andrew Hsu, Codex, Vincent Lai, Codex, James Chen
+	 */
+	@Transactional(readOnly = true)
+	public VenueResponse getVenueVo(final Long venueId) {
+		final Venue venue = venueService.getVenue(venueId);
+		final List<VenueSportResponse> sportVos = venueService.getSportVos(venueId);
+		final List<OpeningIntervalResponse> openIntervalVos = venueService
+			.getOpeningIntervalVos(venueId);
+		return Beans.create(VenueResponse.class, (it) -> {
+			it.setVenueId(venue.getId());
+			it.setName(venue.getName());
+			it.setAddress(venue.getAddress());
+			it.setLatitude(venue.getLatitude());
+			it.setLongitude(venue.getLongitude());
+			it.setTimezone(venue.getTimezone());
+			it.setSports(sportVos);
+			it.setOpeningIntervals(openIntervalVos);
+		});
+	}
 }

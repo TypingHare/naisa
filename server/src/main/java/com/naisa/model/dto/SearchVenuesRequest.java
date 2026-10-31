@@ -18,7 +18,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 /**
  * Parameters for searching for venues for one to ten members.
  *
- * <p>The maximum distance applies to each member and is measured in kilometers. The budget is the
+ * <p>
+ * The maximum distance applies to each member and is measured in kilometers. The budget is the
  * maximum hourly price and defaults to zero. Date and time use America/New_York.
  *
  * @author Andrew Hsu, Codex, Vincent Lai, Codex, James Chen
@@ -27,25 +28,27 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Getter
 @Setter
 public class SearchVenuesRequest {
-  @NotNull
-  @Size(min = 1, max = 10)
-  private List<@NotNull @Valid EarthCoordinate> coordinates;
+	@NotNull
+	@Size(min = 1, max = 10)
+	private List<@NotNull @Valid EarthCoordinate> coordinates;
 
-  @NotNull @Positive private Long sportId;
+	@NotNull
+	@Positive
+	private Long sportId;
 
-  @NotNull
-  @DateTimeFormat(pattern = "uuuu-MM-dd")
-  private LocalDate date;
+	@NotNull
+	@DateTimeFormat(pattern = "uuuu-MM-dd")
+	private LocalDate date;
 
-  @NotNull
-  @DateTimeFormat(pattern = "HH:mm")
-  private LocalTime time;
+	@NotNull
+	@DateTimeFormat(pattern = "HH:mm")
+	private LocalTime time;
 
-  @NotNull
-  @DecimalMin("0")
-  private BigDecimal maxDistance;
+	@NotNull
+	@DecimalMin("0")
+	private BigDecimal maxDistance;
 
-  @NotNull
-  @DecimalMin("0")
-  private BigDecimal budget = BigDecimal.ZERO;
+	@NotNull
+	@DecimalMin("0")
+	private BigDecimal budget = BigDecimal.ZERO;
 }

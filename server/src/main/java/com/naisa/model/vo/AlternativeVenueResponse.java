@@ -10,7 +10,8 @@ import lombok.Setter;
 /**
  * Describes one alternative venue and its suggested search parameters.
  *
- * <p>Date and time use America/New_York. Maximum distance is in kilometers; budget is the maximum
+ * <p>
+ * Date and time use America/New_York. Maximum distance is in kilometers; budget is the maximum
  * hourly price.
  *
  * @author Andrew Hsu, Codex
@@ -19,9 +20,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AlternativeVenueResponse {
-  private VenueSearchResultResponse venue;
-  private LocalDate date;
-  private LocalTime time;
-  private BigDecimal maxDistance;
-  private BigDecimal budget;
+	private VenueSearchResultResponse venue;
+	private LocalDate date;
+	private LocalTime time;
+	private BigDecimal maxDistance;
+	private BigDecimal budget;
 }

@@ -8,10 +8,12 @@ import java.lang.annotation.Target;
 /**
  * Indicates that a controller method requires authorization.
  *
- * <p>Authorization is implemented in {@code AuthorizationInterceptor}.
+ * <p>
+ * Authorization is implemented in {@code AuthorizationInterceptor}.
  *
  * @author James Chen
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface AuthorizationRequired {}
+public @interface AuthorizationRequired {
+}

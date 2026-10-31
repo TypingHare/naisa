@@ -14,7 +14,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ReportCrowdResponse {
-  private Long reportId;
-  private String crowdLevel;
-  private Instant createdAt;
+	private Long reportId;
+	private String crowdLevel;
+	private Instant createdAt;
 }

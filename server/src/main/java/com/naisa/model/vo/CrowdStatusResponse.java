@@ -8,7 +8,8 @@ import lombok.Setter;
 /**
  * Describes the current crowd status and supporting reports for a venue.
  *
- * <p>Without recent reports, crowd level and latest report time are null, and source is {@code
+ * <p>
+ * Without recent reports, crowd level and latest report time are null, and source is {@code
  * UNKNOWN}.
  *
  * @author Emily Wang, Claude Code
@@ -17,9 +18,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CrowdStatusResponse {
-  private Long venueId;
-  private String crowdLevel;
-  private int reportCount;
-  private Instant latestReportAt;
-  private String source;
+	private Long venueId;
+	private String crowdLevel;
+	private int reportCount;
+	private Instant latestReportAt;
+	private String source;
 }

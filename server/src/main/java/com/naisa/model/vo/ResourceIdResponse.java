@@ -13,5 +13,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ResourceIdResponse {
-  private Long id;
+	private Long id;
 }

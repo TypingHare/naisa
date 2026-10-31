@@ -8,8 +8,9 @@ import lombok.Setter;
 /**
  * Describes one venue's distance, hourly price, availability, and crowd level in a comparison.
  *
- * <p>Distance is in kilometers. Opening status is null when hours are unavailable; crowd level is
- * null when recent reports are unavailable.
+ * <p>
+ * Distance is in kilometers. Opening status is null when hours are unavailable; crowd level is null
+ * when recent reports are unavailable.
  *
  * @author Emily Wang, Codex
  */
@@ -17,11 +18,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public class VenueComparisonResponse {
-  private Long venueId;
-  private String name;
-  private double distanceKm;
-  private BigDecimal hourlyPrice;
-  private Boolean isIndoor;
-  private Boolean openNow;
-  private String crowdLevel;
+	private Long venueId;
+	private String name;
+	private double distanceKm;
+	private BigDecimal hourlyPrice;
+	private Boolean isIndoor;
+	private Boolean openNow;
+	private String crowdLevel;
 }

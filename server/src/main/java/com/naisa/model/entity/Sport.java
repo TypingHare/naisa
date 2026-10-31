@@ -20,12 +20,12 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Sport {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "id", nullable = false, updatable = false)
-  private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id", nullable = false, updatable = false)
+	private Long id;
 
-  @Column(name = "name", length = 32, nullable = false)
-  @Size(max = 32, message = "Sport name must not exceed 32 characters.")
-  private String name;
+	@Column(name = "name", length = 32, nullable = false)
+	@Size(max = 32, message = "Sport name must not exceed 32 characters.")
+	private String name;
 }

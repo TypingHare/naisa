@@ -13,7 +13,8 @@ import lombok.Setter;
 /**
  * Parameters for creating a venue.
  *
- * <p>This request does not include sports or opening intervals.
+ * <p>
+ * This request does not include sports or opening intervals.
  *
  * @author Vincent Lai, Codex, James Chen
  */
@@ -21,25 +22,25 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CreateVenueRequest implements WithLatitudeAndLongitude {
-  @NotBlank
-  @Size(max = 255)
-  private String name;
+	@NotBlank
+	@Size(max = 255)
+	private String name;
 
-  @NotBlank
-  @Size(max = 255)
-  private String address;
+	@NotBlank
+	@Size(max = 255)
+	private String address;
 
-  @NotNull
-  @DecimalMin("-90")
-  @DecimalMax("90")
-  private Double latitude;
+	@NotNull
+	@DecimalMin("-90")
+	@DecimalMax("90")
+	private Double latitude;
 
-  @NotNull
-  @DecimalMin("-180")
-  @DecimalMax("180")
-  private Double longitude;
+	@NotNull
+	@DecimalMin("-180")
+	@DecimalMax("180")
+	private Double longitude;
 
-  @NotBlank
-  @Size(max = 32)
-  private String timezone;
+	@NotBlank
+	@Size(max = 32)
+	private String timezone;
 }
