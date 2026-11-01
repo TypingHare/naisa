@@ -24,6 +24,7 @@ import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.repository.CrowdReportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
+import com.naisa.util.Beans;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -140,7 +141,10 @@ class CrowdReportServiceTest {
             sport.setId(SPORT_ID);
             request.setSportId(SPORT_ID);
             when(venueRepository.findById(VENUE_ID)).thenReturn(Optional.of(venue));
-            when(venueService.getVenueSport(VENUE_ID, SPORT_ID)).thenReturn(sport);
+            final VenueSport venueSport = Beans.create(VenueSport.class, it -> {
+                it.setSport(sport);
+            });
+            when(venueService.getVenueSport(VENUE_ID, SPORT_ID)).thenReturn(venueSport);
             mockSave();
 
             crowdReportService.reportCrowd(client, VENUE_ID, request);

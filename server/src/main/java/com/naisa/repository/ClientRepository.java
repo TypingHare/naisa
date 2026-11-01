@@ -5,7 +5,11 @@ import jakarta.annotation.Nullable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-/** Represents a client repository. */
+/**
+ * Represents a client repository.
+ *
+ * @author James Chen
+ */
 @Repository
 public interface ClientRepository extends JpaRepository<Client, Long> {
     /**

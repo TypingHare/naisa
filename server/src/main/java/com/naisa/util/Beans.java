@@ -57,4 +57,24 @@ public final class Beans {
             );
         }
     }
+
+    /**
+     * Creates a JavaBean instance without applying an initializer.
+     *
+     * <p>
+     * The class must be annotated with {@link JavaBean} and have a public no-argument constructor.
+     * Fields retain the values assigned by the constructor and field initializers.
+     *
+     * @param <T>   the JavaBean type
+     * @param clazz the JavaBean class to instantiate
+     * @return the created JavaBean instance
+     * @throws RuntimeException if the class is not annotated with {@code JavaBean} or cannot be
+     *                          instantiated
+     * @see #create(Class, Consumer)
+     * @author James Chen
+     */
+    public static <T extends Object> T create(final Class<T> clazz) {
+        return create(clazz, (it) -> {
+        });
+    }
 }

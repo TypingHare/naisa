@@ -310,25 +310,23 @@ public class VenueService {
      * @param request validated venue information
      * @return the identifier assigned to the created venue
      * @throws VenueException if the timezone is not recognized
-     * @author Vincent Lai, Codex
+     * @author Vincent Lai, Codex, James Chen
      */
     @Transactional
     public Venue addVenue(final Client client, final CreateVenueRequest request) {
         final String timezone = request.getTimezone().strip();
-
         if (!ZoneId.getAvailableZoneIds().contains(timezone)) {
             throw VenueException.INVALID_TIMEZONE.clone();
         }
 
-        final Venue venue = new Venue();
-        venue.setName(request.getName().strip());
-        venue.setAddress(request.getAddress().strip());
-        venue.setLatitude(request.getLatitude());
-        venue.setLongitude(request.getLongitude());
-        venue.setTimezone(timezone);
-        venue.setCreatedByClient(client);
-
-        return venueRepository.saveAndFlush(venue);
+        return venueRepository.saveAndFlush(Beans.create(Venue.class, (it) -> {
+            it.setName(request.getName().strip());
+            it.setAddress(request.getAddress().strip());
+            it.setLatitude(request.getLatitude());
+            it.setLongitude(request.getLongitude());
+            it.setTimezone(timezone);
+            it.setCreatedByClient(client);
+        }));
     }
 
     /**
@@ -354,7 +352,7 @@ public class VenueService {
      * @param request validated rating, comment, external user identifier, and optional sport
      * @return the identifier of the created or updated review
      * @throws VenueException if the venue does not exist or does not offer the requested sport
-     * @author Vincent Lai, Codex
+     * @author Vincent Lai, Codex, James Chen
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Review rateVenue(
@@ -366,28 +364,21 @@ public class VenueService {
             VenueException.NOT_FOUND::clone
         );
 
-        final Sport sport;
-        if (request.getSportId() == null) {
-            sport = null;
-        } else {
-            final VenueSport offering = venueSportRepository.findByVenueIdAndSportId(
-                venueId,
-                request.getSportId()
-            ).orElseThrow(VenueException.SPORT_NOT_OFFERED::clone);
-            sport = offering.getSport();
-        }
+        final Long sportId = request.getSportId();
+        final Sport sport = sportId == null ? null : getVenueSport(venueId, sportId).getSport();
 
+        // Update an existing review or create a new one.
         final Review review = reviewRepository.findExistingReview(
             client.getId(),
             request.getExternalUserId(),
             venueId,
-            request.getSportId()
-        ).orElseGet(Review::new);
-
-        review.setClient(client);
-        review.setExternalUserId(request.getExternalUserId());
-        review.setVenue(venue);
-        review.setSport(sport);
+            sportId
+        ).orElseGet(() -> Beans.create(Review.class, (it) -> {
+            it.setClient(client);
+            it.setExternalUserId(request.getExternalUserId());
+            it.setVenue(venue);
+            it.setSport(sport);
+        }));
         review.setRating(request.getRating());
         review.setCommentContent(request.getComment().strip());
 
@@ -403,9 +394,9 @@ public class VenueService {
      * @throws VenueException if the sport isn't offered by the venue
      * @author James Chen.
      */
-    public Sport getVenueSport(final Long venueId, final Long sportId) {
-        final VenueSport venueSport = venueSportRepository.findByVenueIdAndSportId(venueId, sportId)
-            .orElseThrow(VenueException.SPORT_NOT_OFFERED::clone);
-        return venueSport.getSport();
+    public VenueSport getVenueSport(final Long venueId, final Long sportId) {
+        return venueSportRepository.findByVenueIdAndSportId(venueId, sportId).orElseThrow(
+            VenueException.SPORT_NOT_OFFERED::clone
+        );
     }
 }

@@ -86,7 +86,8 @@ public class CrowdReportService {
         );
 
         final Long sportId = request.getSportId();
-        final Sport sport = sportId == null ? null : venueService.getVenueSport(venueId, sportId);
+        final Sport sport = sportId == null ? null
+            : venueService.getVenueSport(venueId, sportId).getSport();
 
         final CrowdReport report = Beans.create(CrowdReport.class, (it) -> {
             it.setClient(client);

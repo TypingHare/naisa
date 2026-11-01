@@ -3,7 +3,10 @@ package com.naisa.service;
 import com.naisa.exception.ClientException;
 import com.naisa.model.entity.Client;
 import com.naisa.repository.ClientRepository;
+import com.naisa.util.Beans;
+
 import jakarta.validation.constraints.NotNull;
+
 import org.springframework.stereotype.Service;
 
 /**
@@ -58,6 +61,6 @@ public final class ClientService {
      */
     @NotNull
     public Client createClient() {
-        return this.clientRepository.save(new Client());
+        return this.clientRepository.save(Beans.create(Client.class));
     }
 }
