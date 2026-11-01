@@ -14,6 +14,7 @@ target/
 
 # Eclipse
 .classpath
+.factorypath
 .project
 .settings/
 
