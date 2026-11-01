@@ -31,6 +31,9 @@ or agents they used, separated by commas:
  */
 ```
 
+Note that if an author uses AI tools only to add or edit Javadoc and comments,
+including the names of those tools in the `@author` tag is optional.
+
 The name of each tool or agent must appear immediately after the name of the
 author who used it. If two developers use the same AI agent (e.g., Codex), then
 the agent's name can appear twice in the `@author` tag. For example:
@@ -40,6 +43,17 @@ the agent's name can appear twice in the `@author` tag. For example:
  * Description of a class or method.
  *
  * @author James Chen, Codex, Vincent Lai, Claude Code, Andrew Hsu, Codex
+ */
+```
+
+If an author uses multiple AI tools to edit a class or method, they must list
+them all:
+
+```java
+/**
+ * Description of a class or method.
+ *
+ * @author James Chen, Codex, Claude Code
  */
 ```
 
