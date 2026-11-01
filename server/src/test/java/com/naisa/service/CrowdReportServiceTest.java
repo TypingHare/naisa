@@ -9,7 +9,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.naisa.exception.VenueException;
@@ -194,8 +193,9 @@ class CrowdReportServiceTest {
         @DisplayName("returns UNKNOWN when there are no recent reports")
         void returnsUnknownWithoutReports() {
             when(venueRepository.existsById(VENUE_ID)).thenReturn(true);
-            when(crowdReportRepository.findLatestReportsPerReporter(eq(VENUE_ID), isNull(), any()))
-                .thenReturn(List.of());
+            when(crowdReportRepository.findLatestReports(eq(VENUE_ID), isNull(), any())).thenReturn(
+                List.of()
+            );
 
             final CrowdStatusResponse status = crowdReportService.getCrowdStatus(VENUE_ID, null);
 
@@ -210,14 +210,13 @@ class CrowdReportServiceTest {
         @DisplayName("returns the most frequently reported level")
         void returnsMostFrequentLevel() {
             when(venueRepository.existsById(VENUE_ID)).thenReturn(true);
-            when(crowdReportRepository.findLatestReportsPerReporter(eq(VENUE_ID), isNull(), any()))
-                .thenReturn(
-                    List.of(
-                        report(3L, "LIGHT", newest),
-                        report(2L, "BUSY", middle),
-                        report(1L, "BUSY", oldest)
-                    )
-                );
+            when(crowdReportRepository.findLatestReports(eq(VENUE_ID), isNull(), any())).thenReturn(
+                List.of(
+                    report(3L, "LIGHT", newest),
+                    report(2L, "BUSY", middle),
+                    report(1L, "BUSY", oldest)
+                )
+            );
 
             final CrowdStatusResponse status = crowdReportService.getCrowdStatus(VENUE_ID, null);
 
@@ -231,8 +230,9 @@ class CrowdReportServiceTest {
         @DisplayName("breaks a tie with the most recent report")
         void breaksTieWithMostRecentReport() {
             when(venueRepository.existsById(VENUE_ID)).thenReturn(true);
-            when(crowdReportRepository.findLatestReportsPerReporter(eq(VENUE_ID), isNull(), any()))
-                .thenReturn(List.of(report(2L, "PACKED", newest), report(1L, "EMPTY", oldest)));
+            when(crowdReportRepository.findLatestReports(eq(VENUE_ID), isNull(), any())).thenReturn(
+                List.of(report(2L, "PACKED", newest), report(1L, "EMPTY", oldest))
+            );
 
             final CrowdStatusResponse status = crowdReportService.getCrowdStatus(VENUE_ID, null);
 
@@ -246,13 +246,8 @@ class CrowdReportServiceTest {
             when(venueSportRepository.findByVenueIdAndSportId(VENUE_ID, SPORT_ID)).thenReturn(
                 Optional.of(new VenueSport())
             );
-            when(
-                crowdReportRepository.findLatestReportsPerReporter(
-                    eq(VENUE_ID),
-                    eq(SPORT_ID),
-                    any()
-                )
-            ).thenReturn(List.of(report(1L, "EMPTY", newest)));
+            when(crowdReportRepository.findLatestReports(eq(VENUE_ID), eq(SPORT_ID), any()))
+                .thenReturn(List.of(report(1L, "EMPTY", newest)));
 
             final CrowdStatusResponse status = crowdReportService.getCrowdStatus(
                 VENUE_ID,
@@ -260,11 +255,7 @@ class CrowdReportServiceTest {
             );
 
             assertEquals("EMPTY", status.getCrowdLevel());
-            verify(crowdReportRepository, never()).findLatestReportsPerReporter(
-                eq(VENUE_ID),
-                isNull(),
-                any()
-            );
+            verify(crowdReportRepository, never()).findLatestReports(eq(VENUE_ID), isNull(), any());
         }
 
         @Test
@@ -274,15 +265,11 @@ class CrowdReportServiceTest {
             when(venueSportRepository.findByVenueIdAndSportId(VENUE_ID, SPORT_ID)).thenReturn(
                 Optional.of(new VenueSport())
             );
-            when(
-                crowdReportRepository.findLatestReportsPerReporter(
-                    eq(VENUE_ID),
-                    eq(SPORT_ID),
-                    any()
-                )
-            ).thenReturn(List.of());
-            when(crowdReportRepository.findLatestReportsPerReporter(eq(VENUE_ID), isNull(), any()))
-                .thenReturn(List.of(report(1L, "MODERATE", newest)));
+            when(crowdReportRepository.findLatestReports(eq(VENUE_ID), eq(SPORT_ID), any()))
+                .thenReturn(List.of());
+            when(crowdReportRepository.findLatestReports(eq(VENUE_ID), isNull(), any())).thenReturn(
+                List.of(report(1L, "MODERATE", newest))
+            );
 
             final CrowdStatusResponse status = crowdReportService.getCrowdStatus(
                 VENUE_ID,

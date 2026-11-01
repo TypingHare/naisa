@@ -12,15 +12,16 @@ import lombok.Setter;
  * Without recent reports, crowd level and latest report time are null, and source is {@code
  * UNKNOWN}.
  *
- * @author Emily Wang, Claude Code
+ * @author Emily Wang, Claude Code, James Chen
  */
 @JavaBean
 @Getter
 @Setter
 public class CrowdStatusResponse {
     private Long venueId;
-    private String crowdLevel;
-    private int reportCount;
-    private Instant latestReportAt;
     private String source;
+    private Integer reportCount;
+    private Instant latestReportAt;
+    private Double crowdLevelScore;
+    private String crowdLevel;
 }
