@@ -5,12 +5,15 @@ MVN = ./mvnw
 all:
 	$(MVN) package
 
+format:
+	$(MVN) spotless:apply
+
 lint:
 	$(MVN) checkstyle:check
 	$(MVN) pmd:check -Dpmd.printFailingErrors=true
 
 test:
-	$(MVN) test
+	$(MVN) -Dspring.profiles.active=test test
 
 coverage:
 	$(MVN) clean jacoco:prepare-agent test jacoco:report

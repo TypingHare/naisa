@@ -41,9 +41,8 @@ Because this is just a COURSE PROJECT, you do not have to take security very
 seriously. Avoid writing hard-to-understand code to protect the application from
 attacks or abuse by clients and users.
 
-Before every commit, make sure you run `google-java-format` on all changed Java
-files and run `make lint`. If `google-java-format` is not installed, ask the
-developer to install it.
+Before every commit, make sure you run `make format` to format the codebase and
+`make lint` to lint it.
 
 Before every commit, make sure you run `prettier` on all changed Markdown files.
 If `prettier` is not installed, ask the developer to install it.
