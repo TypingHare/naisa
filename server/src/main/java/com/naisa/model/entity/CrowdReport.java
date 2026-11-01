@@ -17,6 +17,8 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
+import com.naisa.util.Resources.WithId;
+
 /**
  * Represents a crowd report entity.
  *
@@ -35,7 +37,7 @@ import org.hibernate.generator.EventType;
 @Table(name = "crowd_reports")
 @Getter
 @Setter
-public class CrowdReport {
+public class CrowdReport implements WithId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)

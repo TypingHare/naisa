@@ -14,6 +14,8 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
+import com.naisa.util.Resources.WithId;
+
 /**
  * Represents a client entity.
  *
@@ -31,7 +33,7 @@ import org.hibernate.generator.EventType;
 @Table(name = "clients")
 @Getter
 @Setter
-public class Client {
+public class Client implements WithId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)

@@ -7,6 +7,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.Size;
 import java.beans.JavaBean;
+
+import com.naisa.util.Resources.WithId;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,7 +22,7 @@ import lombok.Setter;
 @Entity(name = "sports")
 @Getter
 @Setter
-public class Sport {
+public class Sport implements WithId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)

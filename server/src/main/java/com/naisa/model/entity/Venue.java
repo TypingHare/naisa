@@ -1,6 +1,8 @@
 package com.naisa.model.entity;
 
 import com.naisa.util.EarthCoordinates.WithLatitudeAndLongitude;
+import com.naisa.util.Resources.WithId;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -41,7 +43,7 @@ import org.hibernate.generator.EventType;
 @Entity(name = "venues")
 @Getter
 @Setter
-public class Venue implements WithLatitudeAndLongitude {
+public class Venue implements WithLatitudeAndLongitude, WithId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)

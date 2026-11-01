@@ -11,6 +11,9 @@ import java.util.Collection;
 public final class EarthCoordinates {
     public static final double EARTH_RADIUS_KM = 6371.0;
 
+    private EarthCoordinates() {
+    }
+
     /**
      * Creates an {@code EarthCoordinate} instance.
      *
@@ -63,6 +66,7 @@ public final class EarthCoordinates {
      * @param coordinate1 the first coordinate
      * @param coordinate2 the second coordinate
      * @return distance in kilometers
+     * @author James Chen, Codex
      * @see <a href="https://en.wikipedia.org/wiki/Haversine_formula">Haversine formula</a>
      */
     public static double calculateDistanceKm(
@@ -88,7 +92,11 @@ public final class EarthCoordinates {
         return EARTH_RADIUS_KM * centralAngle;
     }
 
-    /** An interface providing getters for both latitude and longitude. */
+    /**
+     * An interface providing getters for both latitude and longitude.
+     *
+     * @author James Chen
+     */
     public interface WithLatitudeAndLongitude {
         Double getLatitude();
 

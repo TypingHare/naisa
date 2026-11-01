@@ -15,6 +15,9 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 import java.beans.JavaBean;
 import java.math.BigDecimal;
+
+import com.naisa.util.Resources.WithId;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -40,7 +43,7 @@ import lombok.Setter;
     uniqueConstraints = @UniqueConstraint(columnNames = { "venue_id", "sport_id" }))
 @Getter
 @Setter
-public class VenueSport {
+public class VenueSport implements WithId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)

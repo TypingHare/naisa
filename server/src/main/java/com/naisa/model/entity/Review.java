@@ -19,6 +19,8 @@ import lombok.Setter;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
+import com.naisa.util.Resources.WithId;
+
 /**
  * Represents a review entity.
  *
@@ -40,7 +42,7 @@ import org.hibernate.generator.EventType;
 @Table(name = "reviews")
 @Getter
 @Setter
-public class Review {
+public class Review implements WithId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)

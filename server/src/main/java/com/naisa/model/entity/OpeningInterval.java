@@ -13,6 +13,9 @@ import jakarta.persistence.Table;
 import java.beans.JavaBean;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+
+import com.naisa.util.Resources.WithId;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,7 +34,7 @@ import lombok.Setter;
 @Table(name = "opening_intervals")
 @Getter
 @Setter
-public class OpeningInterval {
+public class OpeningInterval implements WithId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)
