@@ -20,12 +20,9 @@ import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
 import com.naisa.model.vo.CrowdStatusResponse;
 import com.naisa.repository.CrowdReportRepository;
-import com.naisa.repository.VenueRepository;
-import com.naisa.repository.VenueSportRepository;
 import com.naisa.util.Beans;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -53,23 +50,10 @@ class CrowdReportServiceTest {
     @Mock
     private CrowdReportRepository crowdReportRepository;
     @Mock
-    private VenueRepository venueRepository;
-    @Mock
-    private VenueSportRepository venueSportRepository;
-    @Mock
     private VenueService venueService;
 
     @InjectMocks
     private CrowdReportService crowdReportService;
-
-    /** Creates a crowd report with the given level, creation time, and ID. */
-    private static CrowdReport report(final Long id, final String level, final Instant createdAt) {
-        final CrowdReport report = new CrowdReport();
-        report.setId(id);
-        report.setCrowdLevel(level);
-        report.setCreatedAt(createdAt);
-        return report;
-    }
 
     /** Tests for {@link CrowdReportService#reportCrowd}. */
     @Nested
@@ -189,9 +173,6 @@ class CrowdReportServiceTest {
     @Nested
     @DisplayName("getCrowdStatus")
     class GetCrowdStatus {
-        private final Instant newest = Instant.parse("2026-10-24T12:30:00Z");
-        private final Instant middle = Instant.parse("2026-10-24T12:00:00Z");
-        private final Instant oldest = Instant.parse("2026-10-24T11:30:00Z");
 
         @Test
         @DisplayName("returns UNKNOWN when there are no recent reports")
@@ -207,85 +188,6 @@ class CrowdReportServiceTest {
             assertEquals(0, status.getReportCount());
             assertNull(status.getCrowdLevel());
             assertNull(status.getLatestReportAt());
-        }
-
-        // TODO: Update this test. Crowd status now uses a weighted average instead of majority
-        // voting.
-        // @Test
-        @DisplayName("returns the most frequently reported level")
-        void returnsMostFrequentLevel() {
-            when(venueRepository.existsById(VENUE_ID)).thenReturn(true);
-            when(crowdReportRepository.findLatestReports(eq(VENUE_ID), isNull(), any())).thenReturn(
-                List.of(
-                    report(3L, "LIGHT", newest),
-                    report(2L, "BUSY", middle),
-                    report(1L, "BUSY", oldest)
-                )
-            );
-
-            final CrowdStatusResponse status = crowdReportService.getCrowdStatus(VENUE_ID, null);
-
-            assertEquals("BUSY", status.getCrowdLevel());
-            assertEquals(3, status.getReportCount());
-            assertEquals(newest, status.getLatestReportAt());
-            assertEquals("LIVE", status.getSource());
-        }
-
-        // TODO: Update this test. Weighted scoring replaces majority-vote tie-breaking.
-        // @Test
-        @DisplayName("breaks a tie with the most recent report")
-        void breaksTieWithMostRecentReport() {
-            when(venueRepository.existsById(VENUE_ID)).thenReturn(true);
-            when(crowdReportRepository.findLatestReports(eq(VENUE_ID), isNull(), any())).thenReturn(
-                List.of(report(2L, "PACKED", newest), report(1L, "EMPTY", oldest))
-            );
-
-            final CrowdStatusResponse status = crowdReportService.getCrowdStatus(VENUE_ID, null);
-
-            assertEquals("PACKED", status.getCrowdLevel());
-        }
-
-        // TODO: Update this test. Sport-specific status now also considers venue-wide reports.
-        // @Test
-        @DisplayName("uses only the sport's reports when the sport has recent reports")
-        void usesSportReports() {
-            when(venueRepository.existsById(VENUE_ID)).thenReturn(true);
-            when(venueSportRepository.findByVenueIdAndSportId(VENUE_ID, SPORT_ID)).thenReturn(
-                Optional.of(new VenueSport())
-            );
-            when(crowdReportRepository.findLatestReports(eq(VENUE_ID), eq(SPORT_ID), any()))
-                .thenReturn(List.of(report(1L, "EMPTY", newest)));
-
-            final CrowdStatusResponse status = crowdReportService.getCrowdStatus(
-                VENUE_ID,
-                SPORT_ID
-            );
-
-            assertEquals("EMPTY", status.getCrowdLevel());
-            verify(crowdReportRepository, never()).findLatestReports(eq(VENUE_ID), isNull(), any());
-        }
-
-        // TODO: Update this test. Eligible reports are now selected together in one query.
-        // @Test
-        @DisplayName("falls back to venue-wide reports when the sport has none")
-        void fallsBackToVenueReports() {
-            when(venueRepository.existsById(VENUE_ID)).thenReturn(true);
-            when(venueSportRepository.findByVenueIdAndSportId(VENUE_ID, SPORT_ID)).thenReturn(
-                Optional.of(new VenueSport())
-            );
-            when(crowdReportRepository.findLatestReports(eq(VENUE_ID), eq(SPORT_ID), any()))
-                .thenReturn(List.of());
-            when(crowdReportRepository.findLatestReports(eq(VENUE_ID), isNull(), any())).thenReturn(
-                List.of(report(1L, "MODERATE", newest))
-            );
-
-            final CrowdStatusResponse status = crowdReportService.getCrowdStatus(
-                VENUE_ID,
-                SPORT_ID
-            );
-
-            assertEquals("MODERATE", status.getCrowdLevel());
-            assertEquals("LIVE", status.getSource());
         }
 
         @Test
