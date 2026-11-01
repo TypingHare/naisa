@@ -20,7 +20,6 @@ import com.naisa.model.entity.Sport;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.entity.VenueSport;
 import com.naisa.model.vo.CrowdStatusResponse;
-import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.repository.CrowdReportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
@@ -110,14 +109,10 @@ class CrowdReportServiceTest {
         @Test
         @DisplayName("saves a venue-wide report when no sport is given")
         void savesVenueWideReport() {
-            when(venueRepository.findById(VENUE_ID)).thenReturn(Optional.of(venue));
+            when(venueService.getVenue(VENUE_ID)).thenReturn(venue);
             mockSave();
 
-            final ReportCrowdResponse response = crowdReportService.reportCrowd(
-                client,
-                VENUE_ID,
-                request
-            );
+            final CrowdReport response = crowdReportService.reportCrowd(client, VENUE_ID, request);
 
             final ArgumentCaptor<CrowdReport> captor = ArgumentCaptor.forClass(CrowdReport.class);
             verify(crowdReportRepository).saveAndFlush(captor.capture());
@@ -127,9 +122,9 @@ class CrowdReportServiceTest {
             assertNull(saved.getSport());
             assertEquals("user-1", saved.getExternalUserId());
             assertEquals("BUSY", saved.getCrowdLevel());
-            verifyNoInteractions(venueService);
+            verify(venueService, never()).getVenueSport(any(), any());
 
-            assertEquals(100L, response.getReportId());
+            assertEquals(100L, response.getId());
             assertEquals("BUSY", response.getCrowdLevel());
             assertEquals(Instant.parse("2026-10-24T12:00:00Z"), response.getCreatedAt());
         }
@@ -140,7 +135,7 @@ class CrowdReportServiceTest {
             final Sport sport = new Sport();
             sport.setId(SPORT_ID);
             request.setSportId(SPORT_ID);
-            when(venueRepository.findById(VENUE_ID)).thenReturn(Optional.of(venue));
+            when(venueService.getVenue(VENUE_ID)).thenReturn(venue);
             final VenueSport venueSport = Beans.create(VenueSport.class, it -> {
                 it.setSport(sport);
             });
@@ -157,7 +152,7 @@ class CrowdReportServiceTest {
         @Test
         @DisplayName("throws venue.not_found when the venue does not exist")
         void rejectsUnknownVenue() {
-            when(venueRepository.findById(VENUE_ID)).thenReturn(Optional.empty());
+            when(venueService.getVenue(VENUE_ID)).thenThrow(VenueException.NOT_FOUND.clone());
 
             final VenueException exception = assertThrows(
                 VenueException.class,
@@ -172,7 +167,7 @@ class CrowdReportServiceTest {
         @DisplayName("throws venue.sport_not_offered when the venue does not offer the sport")
         void rejectsSportNotOffered() {
             request.setSportId(SPORT_ID);
-            when(venueRepository.findById(VENUE_ID)).thenReturn(Optional.of(venue));
+            when(venueService.getVenue(VENUE_ID)).thenReturn(venue);
             when(venueService.getVenueSport(VENUE_ID, SPORT_ID)).thenThrow(
                 VenueException.SPORT_NOT_OFFERED.clone()
             );

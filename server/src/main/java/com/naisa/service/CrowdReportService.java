@@ -8,7 +8,6 @@ import com.naisa.model.entity.CrowdReport;
 import com.naisa.model.entity.Sport;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.vo.CrowdStatusResponse;
-import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.repository.CrowdReportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
@@ -62,11 +61,7 @@ public class CrowdReportService {
     }
 
     /**
-     * Saves a new crowd report for a venue.
-     *
-     * <p>
-     * We first check whether the venue exists and offers the requested sport. Then we store the
-     * report with the current server time.
+     * Adds a new crowd report for a venue.
      *
      * @param client  the client submitting the report
      * @param venueId the venue ID
@@ -76,15 +71,12 @@ public class CrowdReportService {
      * @author Emily Wang, Codex, James Chen
      */
     @Transactional
-    public ReportCrowdResponse reportCrowd(
+    public CrowdReport reportCrowd(
         final Client client,
         final Long venueId,
         final ReportCrowdRequest request
     ) {
-        final Venue venue = venueRepository.findById(venueId).orElseThrow(
-            VenueException.NOT_FOUND::clone
-        );
-
+        final Venue venue = venueService.getVenue(venueId);
         final Long sportId = request.getSportId();
         final Sport sport = sportId == null ? null
             : venueService.getVenueSport(venueId, sportId).getSport();
@@ -96,13 +88,7 @@ public class CrowdReportService {
             it.setSport(sport);
             it.setCrowdLevel(request.getCrowdLevel());
         });
-        final CrowdReport savedReport = crowdReportRepository.saveAndFlush(report);
-
-        return Beans.create(ReportCrowdResponse.class, (it) -> {
-            it.setReportId(savedReport.getId());
-            it.setCrowdLevel(savedReport.getCrowdLevel());
-            it.setCreatedAt(savedReport.getCreatedAt());
-        });
+        return crowdReportRepository.saveAndFlush(report);
     }
 
     /**

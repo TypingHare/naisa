@@ -11,12 +11,12 @@ import com.naisa.model.dto.ReportCrowdRequest;
 import com.naisa.model.dto.SearchAlternativeVenuesRequest;
 import com.naisa.model.dto.SearchVenuesRequest;
 import com.naisa.model.entity.Client;
+import com.naisa.model.entity.CrowdReport;
 import com.naisa.model.entity.Review;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.vo.AlternativeVenueResponse;
 import com.naisa.model.vo.CompareVenuesResponse;
 import com.naisa.model.vo.CrowdStatusResponse;
-import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.model.vo.ResourceIdResponse;
 import com.naisa.model.vo.VenueResponse;
 import com.naisa.model.vo.VenueSearchResultResponse;
@@ -25,7 +25,8 @@ import com.naisa.service.VenueComparisonService;
 import com.naisa.service.VenueRetrievalService;
 import com.naisa.service.VenueSearchService;
 import com.naisa.service.VenueService;
-import com.naisa.util.Beans;
+import com.naisa.util.Resources;
+
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -164,11 +165,8 @@ public class VenueController {
         @Valid @RequestBody final CreateVenueRequest request
     ) {
         final Venue venue = venueService.addVenue(client, request);
-        final ResourceIdResponse result = Beans.create(ResourceIdResponse.class, (it) -> {
-            it.setId(venue.getId());
-        });
         return ResponseEntity.status(HttpStatus.CREATED).body(
-            new Capsule<>("Venue created.", result)
+            new Capsule<>("Venue created.", Resources.createResponseFrom(venue))
         );
     }
 
@@ -195,10 +193,9 @@ public class VenueController {
         @Valid @RequestBody final RateVenueRequest request
     ) {
         final Review review = venueService.rateVenue(client, venueId, request);
-        final ResourceIdResponse result = Beans.create(ResourceIdResponse.class, (it) -> {
-            it.setId(review.getId());
-        });
-        return ResponseEntity.ok(new Capsule<>("Review saved.", result));
+        return ResponseEntity.ok(
+            new Capsule<>("Review saved.", Resources.createResponseFrom(review))
+        );
     }
 
     /**
@@ -210,24 +207,20 @@ public class VenueController {
      * @param client  authenticated client attached by the authorization interceptor
      * @param venueId identifier of the venue
      * @param request validated crowd report request
-     * @return HTTP 201 with the created report
+     * @return HTTP 201 with the created report's ID
      * @throws VenueException if the venue does not exist or does not offer the sport
      * @author Emily Wang, Codex
      */
     @AuthorizationRequired
     @PostMapping("/{venueId}/crowd-reports")
-    public ResponseEntity<Capsule<ReportCrowdResponse>> reportCrowd(
+    public ResponseEntity<Capsule<ResourceIdResponse>> reportCrowd(
         @RequestAttribute(AuthorizationInterceptor.REQUEST_ATTRIBUTE_CLIENT) final Client client,
         @PathVariable("venueId") final Long venueId,
         @Valid @RequestBody final ReportCrowdRequest request
     ) {
-        final ReportCrowdResponse response = crowdReportService.reportCrowd(
-            client,
-            venueId,
-            request
-        );
+        final CrowdReport crowdReport = crowdReportService.reportCrowd(client, venueId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
-            new Capsule<>("Crowd report saved.", response)
+            new Capsule<>("Crowd report created.", Resources.createResponseFrom(crowdReport))
         );
     }
 
