@@ -8,7 +8,9 @@ import com.naisa.model.entity.VenueSport;
 import com.naisa.model.vo.VenueSearchResultResponse;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
@@ -116,7 +118,7 @@ public class VenueSearchService {
      * @return up to 10 alternatives, ordered by fewest changes and closest date and time
      * @throws VenueException if the original time is in the past, the sport is unknown, or no
      *                        offering is within the permitted radius
-     * @author Andrew Hsu, Codex, Vincent Lai, Codex, James Chen
+     * @author Andrew Hsu, Codex, Vincent Lai, Codex, James Chen, Codex
      */
     @Transactional(readOnly = true)
     public List<AlternativeVenueResponse> searchAlternatives(
@@ -177,13 +179,18 @@ public class VenueSearchService {
                     continue;
                 }
 
+                final double usedMaxDistance = Math.max(
+                    request.getMaxDistance(),
+                    Collections.max(nearbyVenue.getMemberDistancesKm())
+                );
+                final BigDecimal usedBudget = request.getBudget().max(nearbyVenue.getHourlyPrice());
                 alternativeVenues.add(Beans.create(AlternativeVenueResponse.class, (it) -> {
                     it.setVenueSearchResult(nearbyVenue);
                     it.setDate(suggestedAt.toLocalDate());
                     it.setTime(suggestedAt.toLocalTime());
-                    it.setMaxDistance(request.getMaxDistance());
+                    it.setMaxDistance(usedMaxDistance);
                     it.setAverageDistance(averageDistance);
-                    it.setBudget(request.getBudget().max(nearbyVenue.getHourlyPrice()));
+                    it.setBudget(usedBudget);
                     it.setNumChangedConstraint(countChangedConstraints(request, it));
                     it.setDateTimeDifferenceInMinutes(
                         Math.abs(Duration.between(requestedAt, suggestedAt).toMinutes())
@@ -235,7 +242,7 @@ public class VenueSearchService {
         final LocalDate requestDate = request.getDate();
         final LocalTime requestTime = request.getTime();
 
-        final LocalDateTime now = LocalDateTime.now();
+        final LocalDateTime now = LocalDateTime.now(ZoneId.of(VenueConstant.SEARCH_TIMEZONE));
         final Set<SearchConstraint> allowedChanges = request.getAllowedChanges();
         final int dateWindow = allowedChanges.contains(SearchConstraint.DATE)
             ? VenueConstant.ALTERNATIVE_DATE_WINDOW_DAYS
@@ -284,7 +291,7 @@ public class VenueSearchService {
         if (!request.getTime().equals(alternative.getTime())) {
             changes++;
         }
-        if (request.getMaxDistance() != alternative.getMaxDistance()) {
+        if (Double.compare(request.getMaxDistance(), alternative.getMaxDistance()) != 0) {
             changes++;
         }
         if (request.getBudget().compareTo(alternative.getBudget()) != 0) {
