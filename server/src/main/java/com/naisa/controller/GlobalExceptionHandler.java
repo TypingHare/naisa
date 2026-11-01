@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
     public static final String ERROR_CODE_REQUEST_VALIDATION_FAILED = "request.validation_failed";
 
     /**
-     * Handles unexpected exception.
+     * Handles unexpected exceptions.
      *
      * @param exception the exception caught
      * @return a response entity
@@ -54,7 +54,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles service exception.
+     * Handles service exceptions.
      *
      * @param exception the service exception caught
      * @return a response entity
@@ -69,7 +69,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles undreadable body.
+     * Handles an unreadable request body.
      *
      * @param exception the exception caught
      * @return a response entity

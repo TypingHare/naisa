@@ -29,9 +29,10 @@ import tools.jackson.databind.ObjectMapper;
  * response contains a capsule with the error code {@code ERROR_CODE_INVALID_AUTHORIZATION_HEADER}.
  *
  * <p>
- * If the API key is missing or is not associated with any client, the interceptor builds a response
- * and prevents the controller method from handling the request. The response contains a capsule
- * with the error code {@code ERROR_CODE_NO_API_KEY_PROVIDED}.
+ * If the Authorization header is missing, the response contains a capsule with the error code
+ * {@code ERROR_CODE_NO_API_KEY_PROVIDED}. If the supplied key is not associated with a client, the
+ * response contains the client service exception's error code. Both cases prevent the controller
+ * method from handling the request.
  *
  * @author James Chen
  */

@@ -164,7 +164,7 @@ class VenueServiceTest {
                 noHours ? List.of() : List.of(interval(DayOfWeek.MONDAY, 9, 17))
             );
 
-            final VenueResponse response = venueRetrievalService.getVenueVo(VENUE_ID);
+            final VenueResponse response = venueRetrievalService.getVenueResponse(VENUE_ID);
 
             assertThat(response.getVenueId()).isEqualTo(VENUE_ID);
             assertThat(response.getSports()).hasSize(noSports ? 0 : 1);
@@ -182,7 +182,7 @@ class VenueServiceTest {
 
             final VenueException exception = assertThrows(
                 VenueException.class,
-                () -> venueRetrievalService.getVenueVo(VENUE_ID)
+                () -> venueRetrievalService.getVenueResponse(VENUE_ID)
             );
 
             assertThat(exception.getCode()).isEqualTo("venue.not_found");

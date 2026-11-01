@@ -9,8 +9,8 @@ import lombok.Setter;
  * Describes the current crowd status and supporting reports for a venue.
  *
  * <p>
- * Without recent reports, crowd level and latest report time are null, and source is {@code
- * UNKNOWN}.
+ * Without recent eligible reports, the crowd-level score, crowd level, and latest report time are
+ * null, the report count is zero, and the source is {@code UNKNOWN}.
  *
  * @author Emily Wang, Claude Code, James Chen
  */

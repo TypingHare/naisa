@@ -111,7 +111,11 @@ class CrowdReportServiceTest {
             when(venueService.getVenue(VENUE_ID)).thenReturn(venue);
             mockSave();
 
-            final CrowdReport response = crowdReportService.reportCrowd(client, VENUE_ID, request);
+            final CrowdReport savedReport = crowdReportService.reportCrowd(
+                client,
+                VENUE_ID,
+                request
+            );
 
             final ArgumentCaptor<CrowdReport> captor = ArgumentCaptor.forClass(CrowdReport.class);
             verify(crowdReportRepository).saveAndFlush(captor.capture());
@@ -123,9 +127,9 @@ class CrowdReportServiceTest {
             assertEquals("BUSY", saved.getCrowdLevel());
             verify(venueService, never()).getVenueSport(any(), any());
 
-            assertEquals(100L, response.getId());
-            assertEquals("BUSY", response.getCrowdLevel());
-            assertEquals(Instant.parse("2026-10-24T12:00:00Z"), response.getCreatedAt());
+            assertEquals(100L, savedReport.getId());
+            assertEquals("BUSY", savedReport.getCrowdLevel());
+            assertEquals(Instant.parse("2026-10-24T12:00:00Z"), savedReport.getCreatedAt());
         }
 
         @Test

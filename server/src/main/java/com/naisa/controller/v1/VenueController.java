@@ -63,7 +63,9 @@ public class VenueController {
     /**
      * Creates the controller with its services.
      *
-     * @param venueService           service responsible for venue searches, creation, and reviews
+     * @param venueService           service for basic venue operations, creation, and reviews
+     * @param venueSearchService     service for venue searches and alternatives
+     * @param venueRetrievalService  service for assembling venue details
      * @param crowdReportService     service responsible for crowd reports
      * @param venueComparisonService service responsible for venue comparison
      * @author Vincent Lai, Codex, Emily Wang, Codex, Claude Code, Andrew Hsu, Codex
@@ -83,7 +85,7 @@ public class VenueController {
     }
 
     /**
-     * Returns a venue value object.
+     * Returns a venue's details, sports, and opening intervals.
      *
      * @param venueId identifier taken from the request path
      * @return HTTP 200 with the venue details inside a capsule
@@ -95,16 +97,16 @@ public class VenueController {
     public ResponseEntity<Capsule<VenueResponse>> getVenueInfo(
         @PathVariable("venueId") final Long venueId
     ) {
-        final VenueResponse venueVo = venueRetrievalService.getVenueVo(venueId);
-        return ResponseEntity.ok(new Capsule<>("Venue retrieved.", venueVo));
+        final VenueResponse venueResponse = venueRetrievalService.getVenueResponse(venueId);
+        return ResponseEntity.ok(new Capsule<>("Venue retrieved.", venueResponse));
     }
 
     /**
      * Finds open venues within the requested distance and hourly budget for one origin or a group.
      *
      * <p>
-     * Query parameters supply either latitude and longitude or indexed member locations. Both forms
-     * use the same service method and return results sorted by average member distance.
+     * Query parameters supply an indexed list of member coordinates, including a single coordinate
+     * for an individual search. Results have no guaranteed distance ordering.
      *
      * @param request validated search query parameters
      * @return HTTP 200 with matching venues, or an empty list when none match

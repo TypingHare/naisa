@@ -27,8 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>
  * Users can report the crowd level of a venue or a specific sport. Every submission is stored as a
- * new report so that historical data is kept. Get Venue Status counts only each reporter's most
- * recent report when estimating crowdedness.
+ * new report so that historical data is kept. Crowd status uses only each reporter's most recent
+ * report when estimating crowdedness.
  *
  * @author Emily Wang, Codex
  */
@@ -177,9 +177,9 @@ public class CrowdReportService {
 
             it.setLatestReportAt(orderedReports.getFirst().getCreatedAt());
 
-            final double crowdlevelScore = predictCrowdLevelScore(orderedReports);
-            it.setCrowdLevelScore(crowdlevelScore);
-            it.setCrowdLevel(CROWD_LEVEL_STRINGS_BY_SCORE.get((int) Math.round(crowdlevelScore)));
+            final double crowdLevelScore = predictCrowdLevelScore(orderedReports);
+            it.setCrowdLevelScore(crowdLevelScore);
+            it.setCrowdLevel(CROWD_LEVEL_STRINGS_BY_SCORE.get((int) Math.round(crowdLevelScore)));
         });
     }
 
@@ -210,26 +210,26 @@ public class CrowdReportService {
             return 0.0;
         }
 
-        double totalWeightedSum = 0.0;
+        double weightedScore = 0.0;
         double totalWeight = 0.0;
         final Instant now = Instant.now();
-        final double halfTimeInMinutes = Math.floor(CrowdConstant.CROWD_REPORT_CUTOFF_MINUTES / 2);
+        final double halfLifeInMinutes = Math.floor(CrowdConstant.CROWD_REPORT_CUTOFF_MINUTES / 2);
         for (final CrowdReport report : crowdReports) {
             final long minutes = Duration.between(report.getCreatedAt(), now).toMinutes();
-            final double weight = Math.pow(2, -minutes / halfTimeInMinutes);
+            final double weight = Math.pow(2, -minutes / halfLifeInMinutes);
             final double correctionFactor = report.getSport() == null ? 0.5 : 1.0;
-            final double reasonableWeight = weight * correctionFactor;
-            totalWeight += reasonableWeight;
-            totalWeightedSum += reasonableWeight * getCrowdLevelScore(report.getCrowdLevel());
+            final double adjustedWeight = weight * correctionFactor;
+            totalWeight += adjustedWeight;
+            weightedScore += adjustedWeight * getCrowdLevelScore(report.getCrowdLevel());
         }
-        totalWeightedSum /= totalWeight;
+        weightedScore /= totalWeight;
 
-        if (totalWeightedSum < 0.0 || totalWeightedSum > 4.0) {
+        if (weightedScore < 0.0 || weightedScore > 4.0) {
             // Normally, this should not happen if the algorithm above is correct.
             throw CrowdException.INVALID_CROWD_LEVEL_SCORE.clone();
         }
 
-        return totalWeightedSum;
+        return weightedScore;
     }
 
     /**

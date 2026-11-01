@@ -106,7 +106,7 @@ class VenueSubmissionServiceTest {
         }
 
         /**
-         * Checks the stored fields, attribution, and database-assigned response identifier.
+         * Checks the stored fields, attribution, and database-assigned venue identifier.
          *
          * @author Vincent Lai, Codex
          */

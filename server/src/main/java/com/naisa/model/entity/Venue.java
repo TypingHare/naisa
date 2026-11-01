@@ -28,10 +28,10 @@ import org.hibernate.generator.EventType;
  * name and location information.
  *
  * <p>
- * The {@code address} field is the venue's USPS address, which serves as its identifier on the map.
- * The {@code latitude} and {@code longitude} fields are used to calculate the distance between
- * users' locations and the venue's location. The {@code timeZone} field is necessary to check
- * whether the venue's opening hours accommodate users' proposed time range.
+ * The {@code address} field stores the venue's street address. The {@code latitude} and
+ * {@code longitude} fields are used to calculate the distance between users' locations and the
+ * venue's location. The {@code timezone} field identifies the time zone used to interpret the
+ * venue's local opening hours.
  *
  * <p>
  * Submitted venues record the authenticated client that created them. Venue submissions do not

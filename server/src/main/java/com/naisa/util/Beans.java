@@ -15,13 +15,14 @@ public final class Beans {
     }
 
     /**
-     * Creates a JavaBean instance by the given JavaBean class, which must be annotated by
-     * {@code JavaBean}.
+     * Creates an instance of the given class, which must be annotated with {@link JavaBean} and
+     * have a public no-argument constructor.
      *
      * <p>
      * This function passes the created instance to {@code initializer} before returning the
-     * instance. It catches all reflection-related exceptions and wraps wraps them with a
-     * {@code RuntimeException}, but it doesn't catch runtime exceptions.
+     * instance. Reflection failures and initialization errors caught by this method are wrapped in
+     * a {@code RuntimeException}. An {@code IllegalArgumentException} from the initializer is also
+     * wrapped; other runtime exceptions from the initializer propagate unchanged.
      *
      * <p>
      * This function should be used to create JavaBean instances throughout the codebase.
