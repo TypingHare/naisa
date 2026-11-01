@@ -1,0 +1,42 @@
+./mvnw checkstyle:check
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------------------< com.naisa:demo >---------------------------
+[INFO] Building  2026.1
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- checkstyle:3.3.1:check (default-cli) @ demo ---
+[INFO] Starting audit...
+Audit done.
+[INFO] You have 0 Checkstyle violations.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.669 s
+[INFO] Finished at: 2026-10-26T22:41:03-04:00
+[INFO] ------------------------------------------------------------------------
+./mvnw pmd:check -Dpmd.printFailingErrors=true
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------------------< com.naisa:demo >---------------------------
+[INFO] Building  2026.1
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> pmd:3.28.0:check (default-cli) > :pmd @ demo >>>
+[INFO] 
+[INFO] --- pmd:3.28.0:pmd (pmd) @ demo ---
+[INFO] PMD version: 7.17.0
+[INFO] Skipping org.apache.maven.plugins:maven-pmd-plugin:3.28.0:pmd report goal
+[INFO] 
+[INFO] <<< pmd:3.28.0:check (default-cli) < :pmd @ demo <<<
+[INFO] 
+[INFO] 
+[INFO] --- pmd:3.28.0:check (default-cli) @ demo ---
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.131 s
+[INFO] Finished at: 2026-10-26T22:41:05-04:00
+[INFO] ------------------------------------------------------------------------
