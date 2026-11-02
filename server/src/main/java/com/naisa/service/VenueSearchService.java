@@ -242,7 +242,7 @@ public class VenueSearchService {
         final LocalDate requestDate = request.getDate();
         final LocalTime requestTime = request.getTime();
 
-        final LocalDateTime now = LocalDateTime.now(ZoneId.of(VenueConstant.SEARCH_TIMEZONE));
+        final LocalDateTime now = LocalDateTime.now(ZoneId.of(VenueConstant.REQUEST_TIMEZONE));
         final Set<SearchConstraint> allowedChanges = request.getAllowedChanges();
         final int dateWindow = allowedChanges.contains(SearchConstraint.DATE)
             ? VenueConstant.ALTERNATIVE_DATE_WINDOW_DAYS

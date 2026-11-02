@@ -269,6 +269,24 @@ public class VenueService {
     }
 
     /**
+     * Checks whether a venue is open at the requested local date and time.
+     *
+     * <p>
+     * Retrieves the venue's opening intervals and checks whether any contains the requested time.
+     * No time-zone conversion is applied. Opening times are inclusive and closing times are
+     * exclusive; overnight intervals are supported. Returns false when no intervals are recorded.
+     * This method does not check whether the venue exists.
+     *
+     * @param venueId     the ID of the venue
+     * @param requestedAt the requested local date and time
+     * @return true if the requested time falls within any opening interval; false otherwise
+     * @author James Chen
+     */
+    public boolean isVenueOpenAt(final Long venueId, final LocalDateTime requestedAt) {
+        return isOpenAt(openingIntervalRepository.findByVenueId(venueId), requestedAt);
+    }
+
+    /**
      * Ensures a sport ID exists.
      *
      * @param sportId the sport ID to check
@@ -289,8 +307,7 @@ public class VenueService {
      * @author James Chen
      */
     public void validateSearchRequestTime(final LocalDateTime requestedAt) {
-        final ZoneId searchTimeZone = ZoneId.of(VenueConstant.SEARCH_TIMEZONE);
-        final LocalDateTime now = LocalDateTime.now(searchTimeZone);
+        final LocalDateTime now = LocalDateTime.now(ZoneId.of(VenueConstant.REQUEST_TIMEZONE));
         if (requestedAt.isBefore(now)) {
             throw VenueException.REQUEST_IN_PAST.clone();
         }

@@ -6,7 +6,11 @@ package com.naisa.constant;
  * @author Emily Wang, James Chen
  */
 public final class VenueConstant {
-    public static final String SEARCH_TIMEZONE = "America/New_York";
+    /**
+     * For any incoming requests, this service does not receive a timezone. It always assumes that
+     * the timezone is "America/New_York". This is intended.
+     */
+    public static final String REQUEST_TIMEZONE = "America/New_York";
 
     public static final int ALTERNATIVE_DATE_WINDOW_DAYS = 3;
     public static final int ALTERNATIVE_TIME_WINDOW_HOURS = 2;

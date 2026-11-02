@@ -6,10 +6,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Describes a venue comparison and identifies the nearest, cheapest, and least crowded venues.
+ * Contains venue details and separate ID rankings by distance, price, and crowd score.
  *
  * <p>
- * The least crowded venue ID is null when no venue has recent crowd reports.
+ * Details retain request order. Rankings are ascending, with ties broken by venue ID. The crowd
+ * ranking excludes unknown crowd levels and is empty when none are known.
  *
  * @author Emily Wang, Codex, James Chen
  */
@@ -17,8 +18,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CompareVenuesResponse {
-    private List<VenueComparisonResponse> venues;
-    private Long nearestVenueId;
-    private Long cheapestVenueId;
-    private Long leastCrowdedVenueId;
+    private List<VenueComparisonResponse> venueComparisonResponses;
+    private List<Long> nearestVenueIds;
+    private List<Long> cheapestVenueIds;
+    private List<Long> leastCrowdedVenueIds;
 }

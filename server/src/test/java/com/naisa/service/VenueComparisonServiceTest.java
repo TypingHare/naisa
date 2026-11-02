@@ -24,9 +24,8 @@ import com.naisa.repository.VenueSportRepository;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -66,7 +65,19 @@ class VenueComparisonServiceTest {
     private CrowdReportService crowdReportService;
 
     @InjectMocks
+    private VenueService venueService;
+
     private VenueComparisonService venueComparisonService;
+
+    /** Creates the comparison service with a real venue service backed by mocked repositories. */
+    @BeforeEach
+    void setUpServices() {
+        venueComparisonService = new VenueComparisonService(
+            sportRepository,
+            crowdReportService,
+            venueService
+        );
+    }
 
     /**
      * Creates a request using double-precision coordinates for the given venue IDs.
@@ -83,7 +94,7 @@ class VenueComparisonServiceTest {
     }
 
     /**
-     * Registers a venue in the mocked repositories.
+     * Registers a venue in the mocked repositories and supplies its crowd level and score.
      *
      * @param id         venue ID
      * @param latitude   venue latitude; larger values are farther from the user
@@ -117,6 +128,14 @@ class VenueComparisonServiceTest {
 
         final CrowdStatusResponse status = new CrowdStatusResponse();
         status.setCrowdLevel(crowdLevel);
+        status.setCrowdLevelScore(crowdLevel == null ? null : switch (crowdLevel) {
+        case "EMPTY" -> 0.0;
+        case "LIGHT" -> 1.0;
+        case "MODERATE" -> 2.0;
+        case "BUSY" -> 3.0;
+        case "PACKED" -> 4.0;
+        default -> throw new IllegalArgumentException("Unexpected test crowd level: " + crowdLevel);
+        });
         when(crowdReportService.getCrowdStatus(id, SPORT_ID)).thenReturn(status);
     }
 
@@ -142,12 +161,12 @@ class VenueComparisonServiceTest {
             .toList();
     }
 
-    /** Returns a fixed UTC time on Tuesday, 2026-10-27. */
-    private static ZonedDateTime tuesdayAt(final int hour, final int minute) {
-        return ZonedDateTime.of(2026, 10, 27, hour, minute, 0, 0, ZoneOffset.UTC);
+    /** Returns a fixed local time on Tuesday, 2026-10-27. */
+    private static LocalDateTime tuesdayAt(final int hour, final int minute) {
+        return LocalDateTime.of(2026, 10, 27, hour, minute);
     }
 
-    /** Tests for sorting and the nearest and cheapest venues. */
+    /** Tests for request-order details and separate distance and price rankings. */
     @Nested
     @DisplayName("distance and price")
     class DistanceAndPrice {
@@ -157,8 +176,8 @@ class VenueComparisonServiceTest {
         }
 
         @Test
-        @DisplayName("sorts venues by distance and picks the nearest and cheapest")
-        void sortsAndPicksNearestAndCheapest() {
+        @DisplayName("preserves venue order and ranks IDs by distance and price")
+        void preservesVenueOrderAndRanksIds() {
             mockVenue(1L, 40.10, "30.00", null, List.of());
             mockVenue(2L, 40.01, "25.00", null, List.of());
             mockVenue(3L, 40.05, "10.00", null, List.of());
@@ -168,11 +187,13 @@ class VenueComparisonServiceTest {
             );
 
             assertEquals(
-                List.of(2L, 3L, 1L),
-                response.getVenues().stream().map(VenueComparisonResponse::getVenueId).toList()
+                List.of(1L, 2L, 3L),
+                response.getVenueComparisonResponses().stream().map(
+                    VenueComparisonResponse::getVenueId
+                ).toList()
             );
-            assertEquals(2L, response.getNearestVenueId());
-            assertEquals(3L, response.getCheapestVenueId());
+            assertEquals(List.of(2L, 3L, 1L), response.getNearestVenueIds());
+            assertEquals(List.of(3L, 2L, 1L), response.getCheapestVenueIds());
         }
 
         @Test
@@ -183,11 +204,11 @@ class VenueComparisonServiceTest {
 
             final CompareVenuesResponse response = venueComparisonService.compare(request(5L, 2L));
 
-            assertEquals(2L, response.getCheapestVenueId());
+            assertEquals(List.of(2L, 5L), response.getCheapestVenueIds());
         }
     }
 
-    /** Tests for the least crowded venue. */
+    /** Tests for crowd-score rankings and exclusion of unknown crowd levels. */
     @Nested
     @DisplayName("crowd level")
     class CrowdLevel {
@@ -207,8 +228,8 @@ class VenueComparisonServiceTest {
                 request(1L, 2L, 3L)
             );
 
-            assertEquals(3L, response.getLeastCrowdedVenueId());
-            assertNull(response.getVenues().get(0).getCrowdLevel());
+            assertEquals(List.of(3L, 2L), response.getLeastCrowdedVenueIds());
+            assertNull(response.getVenueComparisonResponses().get(0).getCrowdLevel());
         }
 
         @Test
@@ -219,18 +240,18 @@ class VenueComparisonServiceTest {
 
             final CompareVenuesResponse response = venueComparisonService.compare(request(5L, 2L));
 
-            assertEquals(2L, response.getLeastCrowdedVenueId());
+            assertEquals(List.of(2L, 5L), response.getLeastCrowdedVenueIds());
         }
 
         @Test
-        @DisplayName("returns null when every venue is UNKNOWN")
-        void returnsNullWhenAllUnknown() {
+        @DisplayName("returns an empty ranking when every venue is UNKNOWN")
+        void returnsEmptyRankingWhenAllUnknown() {
             mockVenue(1L, 40.01, "10.00", null, List.of());
             mockVenue(2L, 40.02, "10.00", null, List.of());
 
             final CompareVenuesResponse response = venueComparisonService.compare(request(1L, 2L));
 
-            assertNull(response.getLeastCrowdedVenueId());
+            assertEquals(List.of(), response.getLeastCrowdedVenueIds());
         }
     }
 
@@ -244,12 +265,12 @@ class VenueComparisonServiceTest {
         }
 
         /**
-         * Checks open, closed, and unknown venues at a fixed time.
+         * Checks open and closed venues, including a venue without hours, at a fixed time.
          *
          * @author Emily Wang, Claude Code, Andrew Hsu, Codex
          */
         @Test
-        @DisplayName("reports open, closed, and unknown opening status")
+        @DisplayName("reports missing opening hours as closed")
         void reportsOpeningStatus() {
             mockVenue(1L, 40.01, "10.00", null, everyDay(LocalTime.NOON, LocalTime.NOON));
             mockVenue(
@@ -260,25 +281,27 @@ class VenueComparisonServiceTest {
                 List.of(interval(DayOfWeek.TUESDAY, LocalTime.of(14, 0), LocalTime.of(15, 0)))
             );
             mockVenue(3L, 40.03, "10.00", null, List.of());
-            final ZonedDateTime fixedTime = tuesdayAt(13, 0);
-            try (MockedStatic<ZonedDateTime> times = mockStatic(
-                ZonedDateTime.class,
+            final LocalDateTime fixedTime = tuesdayAt(13, 0);
+            try (MockedStatic<LocalDateTime> times = mockStatic(
+                LocalDateTime.class,
                 CALLS_REAL_METHODS
             )) {
-                times.when(() -> ZonedDateTime.now(ZoneId.of("UTC"))).thenReturn(fixedTime);
+                times.when(() -> LocalDateTime.now(ZoneId.of("America/New_York"))).thenReturn(
+                    fixedTime
+                );
                 final List<VenueComparisonResponse> venues = venueComparisonService.compare(
                     request(1L, 2L, 3L)
-                ).getVenues();
+                ).getVenueComparisonResponses();
                 assertTrue(venues.get(0).getOpenNow());
                 assertFalse(venues.get(1).getOpenNow());
-                assertNull(venues.get(2).getOpenNow());
+                assertFalse(venues.get(2).getOpenNow());
             }
         }
     }
 
     /**
-     * Tests for {@link VenueComparisonService#isOpenAt} with fixed times, so that the results do
-     * not depend on the real clock.
+     * Tests for {@link VenueService#isOpenAt(List, LocalDateTime)} with fixed times, so that the
+     * results do not depend on the real clock.
      */
     @Nested
     @DisplayName("isOpenAt")
@@ -304,40 +327,40 @@ class VenueComparisonServiceTest {
             final List<OpeningInterval> fullDay = List.of(
                 interval(DayOfWeek.TUESDAY, LocalTime.NOON, LocalTime.NOON)
             );
-            assertFalse(VenueComparisonService.isOpenAt(fullDay, tuesdayAt(11, 59)));
-            assertTrue(VenueComparisonService.isOpenAt(fullDay, tuesdayAt(12, 0)));
-            assertTrue(VenueComparisonService.isOpenAt(fullDay, tuesdayAt(11, 59).plusDays(1)));
-            assertFalse(VenueComparisonService.isOpenAt(fullDay, tuesdayAt(12, 0).plusDays(1)));
+            assertFalse(venueService.isOpenAt(fullDay, tuesdayAt(11, 59)));
+            assertTrue(venueService.isOpenAt(fullDay, tuesdayAt(12, 0)));
+            assertTrue(venueService.isOpenAt(fullDay, tuesdayAt(11, 59).plusDays(1)));
+            assertFalse(venueService.isOpenAt(fullDay, tuesdayAt(12, 0).plusDays(1)));
         }
 
         @Test
         @DisplayName("includes the opening time and excludes the closing time")
         void checksDaytimeBoundaries() {
-            assertFalse(VenueComparisonService.isOpenAt(daytime, tuesdayAt(8, 59)));
-            assertTrue(VenueComparisonService.isOpenAt(daytime, tuesdayAt(9, 0)));
-            assertTrue(VenueComparisonService.isOpenAt(daytime, tuesdayAt(16, 59)));
-            assertFalse(VenueComparisonService.isOpenAt(daytime, tuesdayAt(17, 0)));
+            assertFalse(venueService.isOpenAt(daytime, tuesdayAt(8, 59)));
+            assertTrue(venueService.isOpenAt(daytime, tuesdayAt(9, 0)));
+            assertTrue(venueService.isOpenAt(daytime, tuesdayAt(16, 59)));
+            assertFalse(venueService.isOpenAt(daytime, tuesdayAt(17, 0)));
         }
 
         @Test
         @DisplayName("keeps an overnight interval open after midnight")
         void checksOvernightAfterMidnight() {
-            assertTrue(VenueComparisonService.isOpenAt(mondayNight, tuesdayAt(1, 59)));
-            assertFalse(VenueComparisonService.isOpenAt(mondayNight, tuesdayAt(2, 0)));
+            assertTrue(venueService.isOpenAt(mondayNight, tuesdayAt(1, 59)));
+            assertFalse(venueService.isOpenAt(mondayNight, tuesdayAt(2, 0)));
         }
 
         @Test
         @DisplayName("opens an overnight interval on its own day")
         void checksOvernightBeforeMidnight() {
-            assertFalse(VenueComparisonService.isOpenAt(tuesdayNight, tuesdayAt(21, 59)));
-            assertTrue(VenueComparisonService.isOpenAt(tuesdayNight, tuesdayAt(22, 0)));
+            assertFalse(venueService.isOpenAt(tuesdayNight, tuesdayAt(21, 59)));
+            assertTrue(venueService.isOpenAt(tuesdayNight, tuesdayAt(22, 0)));
         }
 
         @Test
         @DisplayName("ignores intervals on other days")
         void ignoresOtherDays() {
-            assertFalse(VenueComparisonService.isOpenAt(daytime, tuesdayAt(12, 0).plusDays(1)));
-            assertFalse(VenueComparisonService.isOpenAt(mondayNight, tuesdayAt(1, 0).plusDays(1)));
+            assertFalse(venueService.isOpenAt(daytime, tuesdayAt(12, 0).plusDays(1)));
+            assertFalse(venueService.isOpenAt(mondayNight, tuesdayAt(1, 0).plusDays(1)));
         }
     }
 
