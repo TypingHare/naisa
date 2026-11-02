@@ -11,50 +11,43 @@ public final class VenueException extends ServiceException {
     public static final VenueException REQUEST_IN_PAST = new VenueException(
         "request.validation_failed",
         "The requested date and time must not be in the past in America/New_York.",
-        HttpStatus.BAD_REQUEST,
-        null
+        HttpStatus.BAD_REQUEST
     );
 
     public static final VenueException NO_NEARBY_VENUES = new VenueException(
         "venue.no_nearby_venues",
         "There are no venues for this sport nearby",
-        HttpStatus.NOT_FOUND,
-        null
+        HttpStatus.NOT_FOUND
     );
 
     public static final VenueException NOT_FOUND = new VenueException(
         "venue.not_found",
         "The requested venue does not exist.",
-        HttpStatus.NOT_FOUND,
-        null
+        HttpStatus.NOT_FOUND
     );
 
     public static final VenueException INVALID_TIMEZONE = new VenueException(
         "venue.invalid_timezone",
         "Timezone must identify a recognized region such as America/New_York.",
-        HttpStatus.BAD_REQUEST,
-        null
+        HttpStatus.BAD_REQUEST
     );
 
     public static final VenueException SPORT_NOT_OFFERED = new VenueException(
         "venue.sport_not_offered",
         "The requested sport is not registered at this venue.",
-        HttpStatus.BAD_REQUEST,
-        null
+        HttpStatus.BAD_REQUEST
     );
 
     public static final VenueException DUPLICATE_IDS = new VenueException(
         "request.validation_failed",
         "Venue IDs must be distinct.",
-        HttpStatus.BAD_REQUEST,
-        null
+        HttpStatus.BAD_REQUEST
     );
 
     public static final VenueException SPORT_NOT_FOUND = new VenueException(
         "sport.not_found",
         "Sport does not exist.",
-        HttpStatus.NOT_FOUND,
-        null
+        HttpStatus.NOT_FOUND
     );
 
     /**
@@ -73,6 +66,18 @@ public final class VenueException extends ServiceException {
         final Throwable cause
     ) {
         super(code, message, status, cause);
+    }
+
+    /**
+     * Creates an error description with its HTTP status.
+     *
+     * @param code    stable error code returned to clients
+     * @param message explanation of the failed business rule
+     * @param status  HTTP status associated with the failure
+     * @author Vincent Lai, Codex
+     */
+    private VenueException(final String code, final String message, final HttpStatus status) {
+        super(code, message, status, null);
     }
 
     /**
