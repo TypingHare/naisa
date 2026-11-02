@@ -49,15 +49,10 @@ public final class EarthCoordinates {
      * @author James Chen
      */
     public static EarthCoordinate calculateCenter(final Collection<EarthCoordinate> coordinates) {
-        final int size = coordinates.size();
-        final double sumOfLatitude = coordinates.stream().map(EarthCoordinate::getLatitude).reduce(
-            0.0,
-            Double::sum
+        return create(
+            Iters.average(coordinates, EarthCoordinate::getLatitude),
+            Iters.average(coordinates, EarthCoordinate::getLongitude)
         );
-        final double sumOfLongitude = coordinates.stream().map(EarthCoordinate::getLongitude)
-            .reduce(0.0, Double::sum);
-
-        return create(sumOfLatitude / size, sumOfLongitude / size);
     }
 
     /**

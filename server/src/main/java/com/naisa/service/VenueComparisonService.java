@@ -12,6 +12,7 @@ import com.naisa.repository.OpeningIntervalRepository;
 import com.naisa.repository.SportRepository;
 import com.naisa.repository.VenueRepository;
 import com.naisa.repository.VenueSportRepository;
+import com.naisa.util.Beans;
 import com.naisa.util.EarthCoordinates;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -148,12 +149,12 @@ public class VenueComparisonService {
                 ).thenComparing(VenueComparisonResponse::getVenueId)
             ).map(VenueComparisonResponse::getVenueId).orElse(null);
 
-        final CompareVenuesResponse response = new CompareVenuesResponse();
-        response.setVenues(items);
-        response.setNearestVenueId(items.get(0).getVenueId());
-        response.setCheapestVenueId(cheapestVenueId);
-        response.setLeastCrowdedVenueId(leastCrowdedVenueId);
-        return response;
+        return Beans.create(CompareVenuesResponse.class, (it) -> {
+            it.setVenues(items);
+            it.setNearestVenueId(items.get(0).getVenueId());
+            it.setCheapestVenueId(cheapestVenueId);
+            it.setLeastCrowdedVenueId(leastCrowdedVenueId);
+        });
     }
 
     private Boolean isOpenNow(final Venue venue) {
