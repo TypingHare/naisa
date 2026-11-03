@@ -42,12 +42,11 @@ public class VenueRetrievalService {
      * @author Andrew Hsu, Codex, Vincent Lai, Codex, James Chen
      */
     @Transactional(readOnly = true)
-    public VenueResponse getVenueVo(final Long venueId) {
+    public VenueResponse getVenueResponse(final Long venueId) {
         final Venue venue = venueService.getVenue(venueId);
-        final List<VenueSportResponse> sportVos = venueService.getSportVos(venueId);
-        final List<OpeningIntervalResponse> openIntervalVos = venueService.getOpeningIntervalVos(
-            venueId
-        );
+        final List<VenueSportResponse> sportResponses = venueService.getSportResponses(venueId);
+        final List<OpeningIntervalResponse> openingIntervalResponses = venueService
+            .getOpeningIntervalResponses(venueId);
         return Beans.create(VenueResponse.class, (it) -> {
             it.setVenueId(venue.getId());
             it.setName(venue.getName());
@@ -55,8 +54,8 @@ public class VenueRetrievalService {
             it.setLatitude(venue.getLatitude());
             it.setLongitude(venue.getLongitude());
             it.setTimezone(venue.getTimezone());
-            it.setSports(sportVos);
-            it.setOpeningIntervals(openIntervalVos);
+            it.setSports(sportResponses);
+            it.setOpeningIntervals(openingIntervalResponses);
         });
     }
 }

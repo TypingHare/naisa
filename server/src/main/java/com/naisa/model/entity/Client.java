@@ -14,6 +14,8 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
+import com.naisa.util.Resources.WithId;
+
 /**
  * Represents a client entity.
  *
@@ -21,8 +23,8 @@ import org.hibernate.generator.EventType;
  * A client refers to a company or organization that uses this service, instead of an end user.
  *
  * <p>
- * Some operations in this service requires API key. This service will check if the provided API key
- * exists in this table. If the API key does not exist, it will be considered invalid.
+ * Some operations require an API key. The service checks whether the supplied key exists in this
+ * table. A key that does not exist is considered invalid.
  *
  * @author James Chen
  */
@@ -31,7 +33,7 @@ import org.hibernate.generator.EventType;
 @Table(name = "clients")
 @Getter
 @Setter
-public class Client {
+public class Client implements WithId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)

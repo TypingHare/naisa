@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -35,7 +37,7 @@ public class GlobalExceptionHandler {
     public static final String ERROR_CODE_REQUEST_VALIDATION_FAILED = "request.validation_failed";
 
     /**
-     * Handles unexpected exception.
+     * Handles unexpected exceptions.
      *
      * @param exception the exception caught
      * @return a response entity
@@ -54,7 +56,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles service exception.
+     * Handles service exceptions.
      *
      * @param exception the service exception caught
      * @return a response entity
@@ -69,7 +71,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles undreadable body.
+     * Handles an unreadable request body.
      *
      * @param exception the exception caught
      * @return a response entity
@@ -124,5 +126,48 @@ public class GlobalExceptionHandler {
                 "request.invalid_parameter"
             )
         );
+    }
+
+    /**
+     * Handles requests using an unsupported HTTP method, preserving the allowed-method headers.
+     *
+     * @param exception the unsupported-method exception
+     * @return HTTP 405 with the error code {@code request.method_not_allowed}
+     * @author James Chen, Codex
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Capsule<Object>> handleUnsupportedMethod(
+        final HttpRequestMethodNotSupportedException exception
+    ) {
+        return ResponseEntity.status(exception.getStatusCode()).headers(exception.getHeaders())
+            .body(
+                new Capsule<>(
+                    "This HTTP method is not supported.",
+                    null,
+                    "request.method_not_allowed"
+                )
+            );
+    }
+
+    /**
+     * Handles requests with an unsupported content type, preserving the exception's response
+     * headers.
+     *
+     * @param exception the unsupported-media-type exception
+     * @return HTTP 415 with the error code {@code request.unsupported_media_type}
+     * @author James Chen, Codex
+     */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<Capsule<Object>> handleUnsupportedMediaType(
+        final HttpMediaTypeNotSupportedException exception
+    ) {
+        return ResponseEntity.status(exception.getStatusCode()).headers(exception.getHeaders())
+            .body(
+                new Capsule<>(
+                    "This request content type is not supported.",
+                    null,
+                    "request.unsupported_media_type"
+                )
+            );
     }
 }

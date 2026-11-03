@@ -126,16 +126,16 @@ total_tokens                : 107852864
 
 ## Vincent Lai: Operations 8-9 tests and documentation (Oct. 26, 2026)
 
-Tool: OpenAI Codex desktop app, obtained from https://openai.com/codex/.
-Codex generated the submission unit tests, Postman collection, supplemental SQL
-assertions, and documentation updates, and helped reproduce and verify a database
-uniqueness defect. AI-assisted Java and SQL files identify their authors; the
-Postman collection identifies AI use in its description. Existing migration V3
-was reused from Andrew Hsu's `test/all-endpoint-api-tests` branch with its original
-author attribution during development. The final submission branch reuses the
-review constraint fix already merged as migration V4 in PR #39; it adds no
-duplicate migration. Numeric changes and tests from PR #34 are likewise inherited
-from main, with their original attribution preserved.
+Tool: OpenAI Codex desktop app, obtained from https://openai.com/codex/. Codex
+generated the submission unit tests, Postman collection, supplemental SQL
+assertions, and documentation updates, and helped reproduce and verify a
+database uniqueness defect. AI-assisted Java and SQL files identify their
+authors; the Postman collection identifies AI use in its description. Existing
+migration V3 was reused from Andrew Hsu's `test/all-endpoint-api-tests` branch
+with its original author attribution during development. The final submission
+branch reuses the review constraint fix already merged as migration V4 in PR
+#39; it adds no duplicate migration. Numeric changes and tests from PR #34 are
+likewise inherited from main, with their original attribution preserved.
 
 Prompt:
 
@@ -144,8 +144,8 @@ Prompt:
 
 Follow-up prompt:
 
-> For our operations, longtitude and latitude need to be doubles, and rating should
-> be smallint. how do we fix this prs
+> For our operations, longtitude and latitude need to be doubles, and rating
+> should be smallint. how do we fix this prs
 
 Codex aligned the submission fixtures and API error expectations with Java
 `Double` coordinates and `Short` ratings, updated the operation documentation,
@@ -156,8 +156,8 @@ Submission follow-up prompt:
 
 > check and push our operation PRs, finish style-checking evidence, for document
 > team contributions, can you look through the code base, find all the @author
-> tags, and for each person, document what they worked on, and add these to a new
-> doc on the docs/ folder
+> tags, and for each person, document what they worked on, and add these to a
+> new doc on the docs/ folder
 
 Codex reconciled the focused tests/documentation with current main, enabled
 Checkstyle on Java test sources, generated verification reports and source
@@ -174,11 +174,11 @@ Jupiter/Mockito, Checkstyle, and JaCoCo. Reports are in
 Token usage below is the difference between this chat's cumulative usage before
 that request and the recorded snapshot at 2026-10-26 22:26:47 America/New_York
 (2026-10-27 02:26:47 UTC). It includes the intervening PR reviews, numeric
-compatibility fixes, and submission preparation. It replaces the earlier
-19:18 snapshot; do not add the two snapshots together. It excludes the preceding
+compatibility fixes, and submission preparation. It replaces the earlier 19:18
+snapshot; do not add the two snapshots together. It excludes the preceding
 requirements audit and any work after that snapshot; it is not a final session
-total. Cached input is a subset of input, and reasoning
-output is a subset of output, so neither is added again to the total.
+total. Cached input is a subset of input, and reasoning output is a subset of
+output, so neither is added again to the total.
 
 ```text
 input_tokens            : 14417506
@@ -194,16 +194,16 @@ Source: local Codex session token-count events. Update this snapshot from the
 completed session before the team's final submission; do not estimate missing
 usage or count this snapshot again as a separate session.
 
-
 ### Retrospective task tracking follow-up
 
-Vincent Lai used Codex to create and assign 13 retrospective completed-task issues
-from the contributions document and merged source/PR evidence, close those issues
-as completed, and link them from the README. Shared credits were preserved and
-course-staff access was not assumed. The issue bodies identify this AI assistance.
-This later follow-up is outside the timestamped usage snapshot above.
+Vincent Lai used Codex to create and assign 13 retrospective completed-task
+issues from the contributions document and merged source/PR evidence, close
+those issues as completed, and link them from the README. Shared credits were
+preserved and course-staff access was not assumed. The issue bodies identify
+this AI assistance. This later follow-up is outside the timestamped usage
+snapshot above.
 
 Prompt:
 
-> can you create GitHub issues for each team member's completed tasks based on the
-> contributions doc, assign them, and link them in the README?
+> can you create GitHub issues for each team member's completed tasks based on
+> the contributions doc, assign them, and link them in the README?

@@ -87,13 +87,13 @@ public class VenueService {
     }
 
     /**
-     * Retrieves all sports ({@code SportVo} instances) that a specific venue supports.
+     * Retrieves all sports ({@link VenueSportResponse} instances) that a specific venue supports.
      *
      * @param venueId the ID of the venue
-     * @return a list of sports ({@code SportVo} instances) supported by the venue
+     * @return a list of sports ({@link VenueSportResponse} instances) supported by the venue
      * @author James Chen
      */
-    public List<VenueSportResponse> getSportVos(final Long venueId) {
+    public List<VenueSportResponse> getSportResponses(final Long venueId) {
         final List<VenueSport> venueSports = venueSportRepository.findByVenueId(venueId);
         final List<VenueSportResponse> sports = new ArrayList<>();
         for (final VenueSport venueSport : venueSports) {
@@ -113,24 +113,24 @@ public class VenueService {
      * Retrieves all opening intervals associated with a specified venue.
      *
      * @param venueId the ID of the venue
-     * @return a list of opening intervals ({@code OpeningIntervalVo} instances) associated with the
-     *         venue
+     * @return a list of opening intervals ({@link OpeningIntervalResponse} instances) associated
+     *         with the venue
      * @author James Chen
      */
-    public List<OpeningIntervalResponse> getOpeningIntervalVos(final Long venueId) {
-        final List<OpeningIntervalResponse> openingIntervalVos = new ArrayList<>();
+    public List<OpeningIntervalResponse> getOpeningIntervalResponses(final Long venueId) {
+        final List<OpeningIntervalResponse> openingIntervalResponses = new ArrayList<>();
         final List<OpeningInterval> openingIntervals = openingIntervalRepository.findByVenueId(
             venueId
         );
         for (final OpeningInterval openingInterval : openingIntervals) {
-            openingIntervalVos.add(Beans.create(OpeningIntervalResponse.class, (it) -> {
+            openingIntervalResponses.add(Beans.create(OpeningIntervalResponse.class, (it) -> {
                 it.setDayOfWeek(openingInterval.getDayOfWeek());
                 it.setOpensAt(openingInterval.getOpensAt());
                 it.setClosesAt(openingInterval.getClosesAt());
             }));
         }
 
-        return openingIntervalVos;
+        return openingIntervalResponses;
     }
 
     /**
@@ -145,7 +145,7 @@ public class VenueService {
      * @return a list of affordable venues ({@code VenueSport} instances) that support the sport
      * @author James Chen
      */
-    public List<VenueSport> getAffordableVenueSupportingSport(
+    public List<VenueSport> getAffordableVenuesSupportingSport(
         final long sportId,
         final BigDecimal budget
     ) {
@@ -216,7 +216,9 @@ public class VenueService {
      * @return a table mapping venue IDs to opening intervals ({@code OpeningInterval} instances)
      * @author James Chen
      */
-    public Map<Long, List<OpeningInterval>> getIntervalListsByVenueId(final List<Long> venueIds) {
+    public Map<Long, List<OpeningInterval>> getOpeningIntervalsByVenueId(
+        final List<Long> venueIds
+    ) {
         return openingIntervalRepository.findByVenueIdIn(venueIds).stream().collect(
             Collectors.groupingBy(interval -> interval.getVenue().getId())
         );
@@ -267,6 +269,24 @@ public class VenueService {
     }
 
     /**
+     * Checks whether a venue is open at the requested local date and time.
+     *
+     * <p>
+     * Retrieves the venue's opening intervals and checks whether any contains the requested time.
+     * No time-zone conversion is applied. Opening times are inclusive and closing times are
+     * exclusive; overnight intervals are supported. Returns false when no intervals are recorded.
+     * This method does not check whether the venue exists.
+     *
+     * @param venueId     the ID of the venue
+     * @param requestedAt the requested local date and time
+     * @return true if the requested time falls within any opening interval; false otherwise
+     * @author James Chen
+     */
+    public boolean isVenueOpenAt(final Long venueId, final LocalDateTime requestedAt) {
+        return isOpenAt(openingIntervalRepository.findByVenueId(venueId), requestedAt);
+    }
+
+    /**
      * Ensures a sport ID exists.
      *
      * @param sportId the sport ID to check
@@ -287,8 +307,7 @@ public class VenueService {
      * @author James Chen
      */
     public void validateSearchRequestTime(final LocalDateTime requestedAt) {
-        final ZoneId searchTimeZone = ZoneId.of(VenueConstant.SEARCH_TIMEZONE);
-        final LocalDateTime now = LocalDateTime.now(searchTimeZone);
+        final LocalDateTime now = LocalDateTime.now(ZoneId.of(VenueConstant.REQUEST_TIMEZONE));
         if (requestedAt.isBefore(now)) {
             throw VenueException.REQUEST_IN_PAST.clone();
         }
@@ -308,7 +327,7 @@ public class VenueService {
      *
      * @param client  authenticated client submitting the venue
      * @param request validated venue information
-     * @return the identifier assigned to the created venue
+     * @return the saved venue with its generated identifier
      * @throws VenueException if the timezone is not recognized
      * @author Vincent Lai, Codex, James Chen
      */
@@ -350,7 +369,7 @@ public class VenueService {
      * @param client  authenticated client submitting the review
      * @param venueId identifier of the venue being reviewed
      * @param request validated rating, comment, external user identifier, and optional sport
-     * @return the identifier of the created or updated review
+     * @return the saved review with its identifier
      * @throws VenueException if the venue does not exist or does not offer the requested sport
      * @author Vincent Lai, Codex, James Chen
      */
@@ -386,11 +405,11 @@ public class VenueService {
     }
 
     /**
-     * Gets a sport instance by a venue ID and a sport ID.
+     * Gets the offering that connects a venue to a sport.
      *
      * @param venueId the ID of the venue to search for
      * @param sportId the ID of the sport to search for
-     * @return the sport instance that matches both given IDs; result must not be {@code null}
+     * @return the venue-sport offering that matches both IDs; never {@code null}
      * @throws VenueException if the sport isn't offered by the venue
      * @author James Chen.
      */

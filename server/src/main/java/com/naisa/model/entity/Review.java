@@ -19,19 +19,20 @@ import lombok.Setter;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
+import com.naisa.util.Resources.WithId;
+
 /**
  * Represents a review entity.
  *
  * <p>
- * The {@value reviews} table records reviews from end users.
+ * The {@code reviews} table records reviews from end users.
  *
  * <p>
- * The {@code sport} field is optional; records having a missing sport are considered as reviews for
- * the venue.
+ * The {@code sport} field is optional; records with no sport are treated as reviews for the venue.
  *
  * <p>
- * Each report is provided by the end user, ID of whom is provided a validated client. This service
- * doesn't maintain any user data.
+ * Each review is submitted by an end user whose ID is supplied by an authenticated client. This
+ * service does not maintain user accounts.
  *
  * @author James Chen, Vincent Lai
  */
@@ -40,7 +41,7 @@ import org.hibernate.generator.EventType;
 @Table(name = "reviews")
 @Getter
 @Setter
-public class Review {
+public class Review implements WithId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)

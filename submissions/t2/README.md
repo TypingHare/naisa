@@ -11,9 +11,11 @@ Total: **100 points**.
 
 ### MVP functionality (20 points)
 
-- [x] Make a reasonable subset of the proposed API entry points operational and ready to demonstrate.
+- [x] Make a reasonable subset of the proposed API entry points operational and
+      ready to demonstrate.
 - [x] Verify that multiple entry points work correctly.
-- [x] Verify that their behavior matches the proposal, or explain reasonable changes from the proposal.
+- [x] Verify that their behavior matches the proposal, or explain reasonable
+      changes from the proposal.
 - [x] Prepare a clear demonstration of the working entry points.
 
 ### Repository hygiene (10 points)
@@ -21,7 +23,8 @@ Total: **100 points**.
 - [x] Verify that the correct release tag is present.
 - [x] Use meaningful commit messages throughout the repository history.
 - [x] Show review by another team member on pull requests.
-- [x] Use branch protection where the team's plan allows it; explain any limitations.
+- [x] Use branch protection where the team's plan allows it; explain any
+      limitations.
 - [x] Verify that the repository history shows work and review by the team.
 
 ## 3. Style Checking and Self-Documenting Code (10 points)
@@ -45,7 +48,8 @@ readability.
 - [x] Cover all major units with unit tests.
 - [x] Use test doubles where needed.
 - [x] Organize the unit tests into clear groups.
-- [x] Name the test runner and provide a single command or action to run the tests.
+- [x] Name the test runner and provide a single command or action to run the
+      tests.
 - [x] Fix most bugs found by unit tests.
 
 ### API testing (15 points)
@@ -80,22 +84,28 @@ The README or linked documentation must cover these items:
 
 ### Third-party code disclosure (5 points)
 
-- [x] Identify any third-party code in the README, with its location and source URL; if no third-party code is used, state this clearly.
+- [x] Identify any third-party code in the README, with its location and source
+      URL; if no third-party code is used, state this clearly.
 
 ### Project management documentation (5 points)
 
-- [x] Track tasks for each team member in GitHub Projects, GitHub Issues, or an equivalent tool.
+- [x] Track tasks for each team member in GitHub Projects, GitHub Issues, or an
+      equivalent tool.
 - [x] Link the task tracker from the README.
-- [ ] Give the Mentor and Instructor access if the task tracker is an external tool; otherwise, verify that they can access the repository's tracker.
+- [ ] Give the Mentor and Instructor access if the task tracker is an external
+      tool; otherwise, verify that they can access the repository's tracker.
 
-Task evidence: [13 assigned, completed retrospective issues](../../README.md#project-management).
+Task evidence:
+[13 assigned, completed retrospective issues](../../README.md#project-management).
 Course-staff access remains unverified above.
 
 ## 6. AI Documentation (5 points)
 
 - [x] AI tool usage clearly documented
-- [x] Clearly mark AI-generated or AI-debugged code in the codebase, including test code.
+- [x] Clearly mark AI-generated or AI-debugged code in the codebase, including
+      test code.
 
 ## 7. Submission
 
-- [x] Have one team member submit a URL that points to the team's GitHub repository.
+- [x] Have one team member submit a URL that points to the team's GitHub
+      repository.

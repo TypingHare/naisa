@@ -21,10 +21,10 @@ readability and maintainability of the codebase.
 #### Database and Persistence Layer
 
 We use [PostgreSQL][postgres], a free and open-source relational database
-management system (DBMS), to store data in this project.
-
-We use [JPA (Jakarta Persistence)][jpa] to manage [object-relational mapping
-(ORM)][orm] between the relational database and Java objects.
+management system (DBMS), to store data in this project. More detailed
+information can be found [here](./database.md). On the code side, we use [JPA
+(Jakarta Persistence)][jpa] to manage [object-relational mapping (ORM)][orm]
+between the relational database and Java objects.
 
 Don't worry if these terms feel unfamiliar. Let's take a look at a simple class,
 `com.naisa.model.entity.Client`:
@@ -195,6 +195,22 @@ Therefore, when this rule is violated (i.e., client is null), we throw a service
 exception (in this case, `ClientException.INVALID_API_KEY.clone()`), which will
 be discussed in the upcoming sections.
 
+A service class can depend on another service class. However, two service
+classes cannot depend on each other in Spring, as this would create a circular
+dependency. Therefore, we need to carefully examine and design service classes.
+
+A **basic service class** contains basic, simple, and reusable methods. For
+example, `getVenueSport()` in `VenueService` retrieves a `VenueSport` record
+using the specified venue ID and sport ID and throws an exception if the record
+does not exist, indicating that the venue either does not exist or does not
+support the sport. A basic service class should depend only on repositories, not
+on other service classes.
+
+An **advanced service class**, on the other hand, contains methods with more
+complicated business logic and is allowed to depend on other service classes. An
+advanced service class can depend on another advanced service class, but the
+dependency must not be mutual.
+
 #### Controller Layer
 
 A decade ago, the [MVC architectural pattern][mvc] was a hit. But later, people
@@ -313,6 +329,16 @@ exception instance instead of throwing one of the shared static exception
 instances defined in other exception classes. If the service exception has a
 cause, use `causedBy()` to create a new exception with the specified cause.
 
+When creating a new concrete service exception class that extends
+`ServiceException`, you must define the two constructors and override `clone()`
+and `causedBy()`. For example, `VenueException` defines the following
+constructors and methods:
+
+- `VenueException(String, String, HttpStatus, Throwable)`
+- `VenueException(String, String, HttpStatus)`
+- `clone()`
+- `causedBy(Throwable)`
+
 #### Controller Advice
 
 The `com.naisa.controller.GlobalExceptionHandler` class defines exception
@@ -327,10 +353,11 @@ HTTP 400 with error code `request.invalid_body`. The `handleValidationFailure`
 handler maps `MethodArgumentNotValidException` to HTTP 400 with error code
 `request.validation_failed`.
 
-Other exceptions reaching this advice are handled by
-`handleUnexpectedException`, which logs the exception and returns HTTP 500 with
-error code `server.internal_error`. This fallback currently also covers request
-errors for which no more specific handler has been defined.
+There are also other exception handlers. Exceptions that don't match any of
+these handlers fall back to a handler called `handleUnexpectedException`, which
+logs the exception and returns HTTP 500 with the error code
+`server.internal_error`. This fallback currently also covers request errors for
+which no more specific handler has been defined.
 
 This class is very important, and it is worth reading its source code carefully.
 
@@ -368,12 +395,16 @@ returns an error response without invoking the controller method.
 In this project, models refer to JavaBean classes that are specific to a
 particular operation and used in the controller, service, and repository layers.
 Model types include the aforementioned entities, DTOs (data transfer objects),
-and VOs (view objects). DTOs are used to transfer data between the controller
-and service layers, while VOs define the data in API responses.
+and VOs (view objects). DTOs are used to define the data in API requests, while
+VOs define the data in API responses. For consistency, DTO class names must end
+with `Request`, and VO class names must end with `Response`.
 
-Model classes should be placed in the `com.naisa.model` package.
+This architecture places small, reusable models that are independent of business
+logic in `com.naisa.model.common`. For example, `EarthCoordinate` only contains
+`latitude` and `longitude` and can be understood without knowing anything about
+this project. Therefore, it should be placed in `com.naisa.model.common`.
 
-<!-- TODO: Add some examples about request DTOs and response VOs -->
+All model classes must be properly placed in the `com.naisa.model` package.
 
 #### Logging
 
@@ -388,11 +419,20 @@ private static final Logger LOGGER = LoggerFactory.getLogger(MyClass.class);
 
 Replace `MyClass.class` with the actual class name followed by `.class`.
 
-#### Unit Tests
+#### Unit Testing
 
 <!-- TODO: complete this -->
 
-#### Integration Tests
+#### API Testing
+
+For API tests, use [MockMvc][mock-mvc] to send simulated HTTP requests through
+Spring MVC and assert the responses without starting an HTTP server.
+
+<!-- TODO: complete this -->
+
+#### Integration Testing
+
+An integration test checks whether multiple components work together correctly.
 
 <!-- TODO: complete this -->
 
@@ -415,3 +455,5 @@ Replace `MyClass.class` with the actual class name followed by `.class`.
     https://docs.spring.io/spring-boot/reference/features/logging.html
 [lombok]: https://projectlombok.org
 [flyway]: https://github.com/flyway/flyway
+[mock-mvc]:
+    https://www.geeksforgeeks.org/springboot/spring-boot-mockmvc-example/

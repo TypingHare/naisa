@@ -63,3 +63,6 @@ no-argument constructor (which does not have to be declared explicitly). Use
 `Beans.create()` (see `com.naisa.util.Beans`) to create JavaBean instances. Name
 the `initializer` parameter `it`, and place the setter calls inside it. Keep
 business logic inside the `initializer` to a minimum.
+
+The files in [../submissions/] are all outdated. They are the files submitted to
+the professor.

@@ -11,12 +11,12 @@ import com.naisa.model.dto.ReportCrowdRequest;
 import com.naisa.model.dto.SearchAlternativeVenuesRequest;
 import com.naisa.model.dto.SearchVenuesRequest;
 import com.naisa.model.entity.Client;
+import com.naisa.model.entity.CrowdReport;
 import com.naisa.model.entity.Review;
 import com.naisa.model.entity.Venue;
 import com.naisa.model.vo.AlternativeVenueResponse;
 import com.naisa.model.vo.CompareVenuesResponse;
 import com.naisa.model.vo.CrowdStatusResponse;
-import com.naisa.model.vo.ReportCrowdResponse;
 import com.naisa.model.vo.ResourceIdResponse;
 import com.naisa.model.vo.VenueResponse;
 import com.naisa.model.vo.VenueSearchResultResponse;
@@ -25,7 +25,8 @@ import com.naisa.service.VenueComparisonService;
 import com.naisa.service.VenueRetrievalService;
 import com.naisa.service.VenueSearchService;
 import com.naisa.service.VenueService;
-import com.naisa.util.Beans;
+import com.naisa.util.Resources;
+
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -62,7 +63,9 @@ public class VenueController {
     /**
      * Creates the controller with its services.
      *
-     * @param venueService           service responsible for venue searches, creation, and reviews
+     * @param venueService           service for basic venue operations, creation, and reviews
+     * @param venueSearchService     service for venue searches and alternatives
+     * @param venueRetrievalService  service for assembling venue details
      * @param crowdReportService     service responsible for crowd reports
      * @param venueComparisonService service responsible for venue comparison
      * @author Vincent Lai, Codex, Emily Wang, Codex, Claude Code, Andrew Hsu, Codex
@@ -82,7 +85,7 @@ public class VenueController {
     }
 
     /**
-     * Returns a venue value object.
+     * Returns a venue's details, sports, and opening intervals.
      *
      * @param venueId identifier taken from the request path
      * @return HTTP 200 with the venue details inside a capsule
@@ -94,16 +97,16 @@ public class VenueController {
     public ResponseEntity<Capsule<VenueResponse>> getVenueInfo(
         @PathVariable("venueId") final Long venueId
     ) {
-        final VenueResponse venueVo = venueRetrievalService.getVenueVo(venueId);
-        return ResponseEntity.ok(new Capsule<>("Venue retrieved.", venueVo));
+        final VenueResponse venueResponse = venueRetrievalService.getVenueResponse(venueId);
+        return ResponseEntity.ok(new Capsule<>("Venue retrieved.", venueResponse));
     }
 
     /**
      * Finds open venues within the requested distance and hourly budget for one origin or a group.
      *
      * <p>
-     * Query parameters supply either latitude and longitude or indexed member locations. Both forms
-     * use the same service method and return results sorted by average member distance.
+     * Query parameters supply an indexed list of member coordinates, including a single coordinate
+     * for an individual search. Results have no guaranteed distance ordering.
      *
      * @param request validated search query parameters
      * @return HTTP 200 with matching venues, or an empty list when none match
@@ -164,11 +167,8 @@ public class VenueController {
         @Valid @RequestBody final CreateVenueRequest request
     ) {
         final Venue venue = venueService.addVenue(client, request);
-        final ResourceIdResponse result = Beans.create(ResourceIdResponse.class, (it) -> {
-            it.setId(venue.getId());
-        });
         return ResponseEntity.status(HttpStatus.CREATED).body(
-            new Capsule<>("Venue created.", result)
+            new Capsule<>("Venue created.", Resources.createResponseFrom(venue))
         );
     }
 
@@ -195,10 +195,9 @@ public class VenueController {
         @Valid @RequestBody final RateVenueRequest request
     ) {
         final Review review = venueService.rateVenue(client, venueId, request);
-        final ResourceIdResponse result = Beans.create(ResourceIdResponse.class, (it) -> {
-            it.setId(review.getId());
-        });
-        return ResponseEntity.ok(new Capsule<>("Review saved.", result));
+        return ResponseEntity.ok(
+            new Capsule<>("Review saved.", Resources.createResponseFrom(review))
+        );
     }
 
     /**
@@ -210,24 +209,20 @@ public class VenueController {
      * @param client  authenticated client attached by the authorization interceptor
      * @param venueId identifier of the venue
      * @param request validated crowd report request
-     * @return HTTP 201 with the created report
+     * @return HTTP 201 with the created report's ID
      * @throws VenueException if the venue does not exist or does not offer the sport
      * @author Emily Wang, Codex
      */
     @AuthorizationRequired
     @PostMapping("/{venueId}/crowd-reports")
-    public ResponseEntity<Capsule<ReportCrowdResponse>> reportCrowd(
+    public ResponseEntity<Capsule<ResourceIdResponse>> reportCrowd(
         @RequestAttribute(AuthorizationInterceptor.REQUEST_ATTRIBUTE_CLIENT) final Client client,
         @PathVariable("venueId") final Long venueId,
         @Valid @RequestBody final ReportCrowdRequest request
     ) {
-        final ReportCrowdResponse response = crowdReportService.reportCrowd(
-            client,
-            venueId,
-            request
-        );
+        final CrowdReport crowdReport = crowdReportService.reportCrowd(client, venueId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
-            new Capsule<>("Crowd report saved.", response)
+            new Capsule<>("Crowd report created.", Resources.createResponseFrom(crowdReport))
         );
     }
 

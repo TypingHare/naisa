@@ -128,12 +128,7 @@ class VenueSearchTest {
         assertThat(result.getName()).isEqualTo("Venue 7");
         assertThat(result.getHourlyPrice()).isEqualByComparingTo("20.00");
         assertThat(result.getIsIndoor()).isFalse();
-        // Removed response field:
-        // assertThat(result.isAvailable()).isTrue();
-        // A latitude difference of 0.01 degrees is about 1.112 km at this longitude.
         assertThat(result.getMemberDistancesKm().getFirst()).isCloseTo(1.111949, within(0.000001));
-        // Removed response field:
-        // assertThat(result.getAverageDistanceKm()).isEqualTo(result.getDistanceKm());
         assertThat(result.getMemberDistancesKm()).hasSize(1);
     }
 
@@ -258,52 +253,6 @@ class VenueSearchTest {
 
         assertThat(results).extracting(VenueSearchResultResponse::getVenueId).containsExactly(1L);
     }
-
-    // /**
-    // * Sorts by distance first and by venue ID when distances are equal.
-    // *
-    // * @author Andrew Hsu, Codex, James Chen, Codex
-    // */
-    // @Test
-    // void sortsByDistanceThenVenueId() {
-    // final List<VenueSport> offerings =
-    // List.of(offering(1L, 40.01), offering(9L, 40.00), offering(3L, 40.00));
-    // mockOfferings(offerings);
-    // when(openingIntervalRepository.findByVenueIdIn(List.of(1L, 9L, 3L)))
-    // .thenReturn(
-    // offerings.stream()
-    // .map(offering -> interval(offering, DayOfWeek.TUESDAY, "09:00", "17:00"))
-    // .toList());
-    //
-    // final List<FindVenueResponse> results =
-    // venueSearchService.findVenues(request);
-    //
-    // assertThat(results).extracting(FindVenueResponse::getVenueId).containsExactly(3L,
-    // 9L, 1L);
-    // }
-
-    // Disabled: Sport validation now precedes time validation.
-    // /**
-    // * Rejects past dates and earlier times today before consulting repositories.
-    // *
-    // * @author Andrew Hsu, Codex
-    // */
-    // @ParameterizedTest
-    // @CsvSource({"2026-10-18, 12:00", "2026-10-19, 11:59:59.999999999"})
-    // void rejectsPastRequest(final LocalDate date, final LocalTime time) {
-    // request.setDate(date);
-    // request.setTime(time);
-    //
-    // assertThatExceptionOfType(VenueException.class)
-    // .isThrownBy(() -> venueSearchService.findVenues(request))
-    // .satisfies(
-    // exception -> {
-    // assertThat(exception.getCode()).isEqualTo("request.validation_failed");
-    // assertThat(exception.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-    // });
-    // verifyNoInteractions(sportRepository, venueSportRepository,
-    // openingIntervalRepository);
-    // }
 
     /**
      * Accepts a request exactly at the fixed current time.

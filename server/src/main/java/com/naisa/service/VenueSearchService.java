@@ -73,7 +73,7 @@ public class VenueSearchService {
         // Find nearby venues that support the given sport and are within the requested budget.
         final List<EarthCoordinate> memberCoordinates = request.getCoordinates();
         final double maxDistance = request.getMaxDistance();
-        final List<VenueSport> affordableVenues = venueService.getAffordableVenueSupportingSport(
+        final List<VenueSport> affordableVenues = venueService.getAffordableVenuesSupportingSport(
             sportId,
             request.getBudget()
         );
@@ -94,7 +94,7 @@ public class VenueSearchService {
             VenueSearchResultResponse::getVenueId
         );
         final Map<Long, List<OpeningInterval>> intervalsByVenueId = venueService
-            .getIntervalListsByVenueId(nearbyVenueIds);
+            .getOpeningIntervalsByVenueId(nearbyVenueIds);
 
         // Filter out nearby venues that are not open at the requested time.
         final List<VenueSearchResultResponse> openNearbyVenues = new ArrayList<>();
@@ -138,7 +138,7 @@ public class VenueSearchService {
         final BigDecimal extendedBudget = allowedChanges.contains(SearchConstraint.BUDGET) ? budget
             .add(BigDecimal.valueOf(VenueConstant.ALTERNATIVE_BUDGET_INCREASE)) : budget;
 
-        final List<VenueSport> affordableVenues = venueService.getAffordableVenueSupportingSport(
+        final List<VenueSport> affordableVenues = venueService.getAffordableVenuesSupportingSport(
             sportId,
             extendedBudget
         );
@@ -157,7 +157,7 @@ public class VenueSearchService {
             VenueSearchResultResponse::getVenueId
         );
         final Map<Long, List<OpeningInterval>> intervalsByVenueId = venueService
-            .getIntervalListsByVenueId(nearbyVenueIds);
+            .getOpeningIntervalsByVenueId(nearbyVenueIds);
 
         // We iterate over all nearby venues and check whether each venue is open at each suggested
         // date and time. For each available date and time, we add the venue along with that date
@@ -242,7 +242,7 @@ public class VenueSearchService {
         final LocalDate requestDate = request.getDate();
         final LocalTime requestTime = request.getTime();
 
-        final LocalDateTime now = LocalDateTime.now(ZoneId.of(VenueConstant.SEARCH_TIMEZONE));
+        final LocalDateTime now = LocalDateTime.now(ZoneId.of(VenueConstant.REQUEST_TIMEZONE));
         final Set<SearchConstraint> allowedChanges = request.getAllowedChanges();
         final int dateWindow = allowedChanges.contains(SearchConstraint.DATE)
             ? VenueConstant.ALTERNATIVE_DATE_WINDOW_DAYS
@@ -253,18 +253,18 @@ public class VenueSearchService {
         final LocalDate earliestDate = requestDate.minusDays(dateWindow);
         final LocalDate latestDate = requestDate.plusDays(dateWindow);
 
-        final Set<LocalDateTime> suggestedDateTime = new TreeSet<>();
+        final Set<LocalDateTime> suggestedDateTimes = new TreeSet<>();
         for (int dayOffset = -dateWindow; dayOffset <= dateWindow; dayOffset++) {
             final LocalDateTime anchor = request.getDate().plusDays(dayOffset).atTime(requestTime);
             for (int hourOffset = -timeWindow; hourOffset <= timeWindow; hourOffset++) {
                 final LocalDateTime suggestion = anchor.plusHours(hourOffset);
                 if (!suggestion.isBefore(now) && !suggestion.toLocalDate().isBefore(earliestDate)
                     && !suggestion.toLocalDate().isAfter(latestDate)) {
-                    suggestedDateTime.add(suggestion);
+                    suggestedDateTimes.add(suggestion);
                 }
             }
         }
-        return List.copyOf(suggestedDateTime);
+        return List.copyOf(suggestedDateTimes);
     }
 
     /**
