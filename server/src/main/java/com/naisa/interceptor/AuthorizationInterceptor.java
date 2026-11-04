@@ -1,17 +1,21 @@
 package com.naisa.interceptor;
 
+import java.io.IOException;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerInterceptor;
+
 import com.naisa.common.Capsule;
 import com.naisa.common.annotation.AuthorizationRequired;
 import com.naisa.exception.ClientException;
 import com.naisa.model.entity.Client;
 import com.naisa.service.ClientService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
-import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.HandlerInterceptor;
+
 import tools.jackson.databind.ObjectMapper;
 
 /**

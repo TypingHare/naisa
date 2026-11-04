@@ -1,35 +1,35 @@
 package com.naisa.service;
 
-import com.naisa.exception.VenueException;
-import com.naisa.model.common.EarthCoordinate;
-import com.naisa.model.dto.SearchVenuesRequest;
-import com.naisa.model.entity.OpeningInterval;
-import com.naisa.model.entity.VenueSport;
-import com.naisa.model.vo.VenueSearchResultResponse;
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.math.Stats;
 import com.naisa.constant.VenueConstant;
+import com.naisa.exception.VenueException;
+import com.naisa.model.common.EarthCoordinate;
 import com.naisa.model.dto.SearchAlternativeVenuesRequest;
 import com.naisa.model.dto.SearchAlternativeVenuesRequest.SearchConstraint;
+import com.naisa.model.dto.SearchVenuesRequest;
+import com.naisa.model.entity.OpeningInterval;
+import com.naisa.model.entity.VenueSport;
 import com.naisa.model.vo.AlternativeVenueResponse;
+import com.naisa.model.vo.VenueSearchResultResponse;
 import com.naisa.util.Beans;
 import com.naisa.util.Iters;
-
-import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Service that handles venue search.

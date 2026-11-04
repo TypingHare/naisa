@@ -1,7 +1,8 @@
 package com.naisa.exception;
 
-import com.naisa.common.Capsule;
 import org.springframework.http.HttpStatus;
+
+import com.naisa.common.Capsule;
 
 /**
  * Represents a service exception.

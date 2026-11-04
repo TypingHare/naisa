@@ -3,6 +3,7 @@ package com.naisa.model.vo;
 import java.beans.JavaBean;
 import java.math.BigDecimal;
 import java.util.List;
+
 import lombok.Getter;
 import lombok.Setter;
 

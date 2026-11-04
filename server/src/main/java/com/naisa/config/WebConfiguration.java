@@ -1,10 +1,11 @@
 package com.naisa.config;
 
-import com.naisa.interceptor.AuthorizationInterceptor;
-import com.naisa.interceptor.LoggingInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import com.naisa.interceptor.AuthorizationInterceptor;
+import com.naisa.interceptor.LoggingInterceptor;
 
 /**
  * Represents general web configuration.

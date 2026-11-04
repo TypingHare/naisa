@@ -1,13 +1,14 @@
 package com.naisa.controller.v1;
 
-import com.naisa.common.Capsule;
-import com.naisa.model.entity.Client;
-import com.naisa.service.ClientService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.naisa.common.Capsule;
+import com.naisa.model.entity.Client;
+import com.naisa.service.ClientService;
 
 /**
  * Represents the client controller.

@@ -1,13 +1,15 @@
 package com.naisa.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.naisa.model.entity.Venue;
 import com.naisa.model.vo.OpeningIntervalResponse;
 import com.naisa.model.vo.VenueResponse;
 import com.naisa.model.vo.VenueSportResponse;
 import com.naisa.util.Beans;
-import java.util.List;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service that handles advanced venue retrieval.
