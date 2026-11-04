@@ -1,12 +1,14 @@
 package com.naisa.repository;
 
-import com.naisa.model.entity.VenueSport;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.naisa.model.entity.VenueSport;
 
 /**
  * Provides persistence access to the sports offered at individual venues.

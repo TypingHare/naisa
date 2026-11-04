@@ -1,7 +1,8 @@
 package com.naisa.util;
 
-import com.naisa.model.common.EarthCoordinate;
 import java.util.Collection;
+
+import com.naisa.model.common.EarthCoordinate;
 
 /**
  * A utility class containing a collection of helper functions for {@link EarthCoordinate}.

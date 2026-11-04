@@ -1,5 +1,16 @@
 package com.naisa.service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.function.Predicate;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.naisa.constant.VenueConstant;
 import com.naisa.exception.VenueException;
 import com.naisa.model.common.EarthCoordinate;
@@ -12,16 +23,6 @@ import com.naisa.model.vo.VenueComparisonResponse;
 import com.naisa.repository.SportRepository;
 import com.naisa.util.Beans;
 import com.naisa.util.EarthCoordinates;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.function.Predicate;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Compares venues offering the same sport using location, price, opening hours, and crowd level.

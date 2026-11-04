@@ -1,11 +1,13 @@
 package com.naisa.repository;
 
-import com.naisa.model.entity.OpeningInterval;
 import java.util.Collection;
 import java.util.List;
+
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.naisa.model.entity.OpeningInterval;
 
 /**
  * Provides access to opening hours for each venue.

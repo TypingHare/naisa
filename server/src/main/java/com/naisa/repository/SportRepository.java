@@ -1,8 +1,9 @@
 package com.naisa.repository;
 
-import com.naisa.model.entity.Sport;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.naisa.model.entity.Sport;
 
 /**
  * Provides access to registered sports.

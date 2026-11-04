@@ -1,10 +1,12 @@
 package com.naisa.model.dto;
 
+import java.beans.JavaBean;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import java.beans.JavaBean;
+
 import lombok.Getter;
 import lombok.Setter;
 

@@ -1,12 +1,15 @@
 package com.naisa.repository;
 
-import com.naisa.model.entity.Review;
-import jakarta.annotation.Nullable;
 import java.util.Optional;
+
+import jakarta.annotation.Nullable;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import com.naisa.model.entity.Review;
 
 /**
  * Provides persistence access to ratings and comments submitted by external users.

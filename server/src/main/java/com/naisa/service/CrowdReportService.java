@@ -1,5 +1,16 @@
 package com.naisa.service;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.naisa.constant.CrowdConstant;
 import com.naisa.exception.CrowdException;
 import com.naisa.exception.VenueException;
@@ -11,16 +22,6 @@ import com.naisa.model.entity.Venue;
 import com.naisa.model.vo.CrowdStatusResponse;
 import com.naisa.repository.CrowdReportRepository;
 import com.naisa.util.Beans;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Handles crowd reports submitted by clients.
@@ -259,6 +260,7 @@ public class CrowdReportService {
      * @deprecated Crowd status now uses a weighted score instead of the most frequent level.
      */
     @SuppressWarnings("unused")
+    @Deprecated
     private String findMostFrequentLevel(final List<CrowdReport> reports) {
         final Map<String, Integer> counts = new HashMap<>();
         for (final CrowdReport report : reports) {

@@ -1,8 +1,10 @@
 package com.naisa.common;
 
+import java.beans.JavaBean;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.naisa.exception.ServiceException;
-import java.beans.JavaBean;
+
 import lombok.Getter;
 import lombok.Setter;
 

@@ -1,9 +1,11 @@
 package com.naisa.repository;
 
-import com.naisa.model.entity.Client;
 import jakarta.annotation.Nullable;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.naisa.model.entity.Client;
 
 /**
  * Represents a client repository.

@@ -423,6 +423,33 @@ Replace `MyClass.class` with the actual class name followed by `.class`.
 
 <!-- TODO: complete this -->
 
+#### Integration Testing
+
+An integration test checks whether multiple components work together correctly.
+
+In this architecture, a test environment refers to an environment designed to
+thoroughly test the application using seed data. It can be activated by setting
+the Spring Boot active profile (`spring-boot.run.profiles`) to "test". The
+`run-test` command in the Makefile starts the application with the "test"
+profile active.
+
+The `TestDatabaseConfiguration` configuration class changes the behavior of
+database migrations during application startup. Spring beans defined in this
+class are used only when the "test" profile is active because the class is
+annotated with `@Profile("test")`.
+
+By overriding the default Flyway migration strategy, this configuration drops
+the test database and creates a new one during initialization. After Spring Boot
+initialization, the `seedTestDatabase` bean is invoked. It retrieves all Spring
+beans that are instances of `DatabaseSeeder` or its subclasses, sorts them based
+on the values specified by `@Priority`, and calls their `seed()` methods in
+sequence.
+
+The `seed()` method in a database seeder should insert initial data into the
+database. If seeder A depends on seed data from seeder B, then A's priority
+value should be higher than B's so that A runs after B (lower priority values
+run first).
+
 #### API Testing
 
 For API tests, use [MockMvc][mock-mvc] to send simulated HTTP requests through
@@ -430,11 +457,7 @@ Spring MVC and assert the responses without starting an HTTP server.
 
 <!-- TODO: complete this -->
 
-#### Integration Testing
-
-An integration test checks whether multiple components work together correctly.
-
-<!-- TODO: complete this -->
+<!-- Below are links. -->
 
 [java-web-project]: ../posts/java_web_project.md
 [postgres]: https://www.postgresql.org/about/

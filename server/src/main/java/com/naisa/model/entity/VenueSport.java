@@ -1,5 +1,8 @@
 package com.naisa.model.entity;
 
+import java.beans.JavaBean;
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -13,8 +16,6 @@ import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
-import java.beans.JavaBean;
-import java.math.BigDecimal;
 
 import com.naisa.util.Resources.WithId;
 
