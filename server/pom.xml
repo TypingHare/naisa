@@ -73,6 +73,11 @@
       <artifactId>guava</artifactId>
       <version>33.7.2-jre</version>
     </dependency>
+    <dependency>
+      <groupId>net.datafaker</groupId>
+      <artifactId>datafaker</artifactId>
+      <version>2.7.0</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

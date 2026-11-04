@@ -8,6 +8,10 @@ import java.sql.Statement;
 import java.util.Comparator;
 import java.util.List;
 
+import jakarta.annotation.Priority;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.flyway.autoconfigure.FlywayMigrationStrategy;
@@ -17,11 +21,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import com.naisa.test.seed.DatabaseSeeder;
-
-import jakarta.annotation.Priority;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Recreates and seeds the local test database during startup.
@@ -98,12 +97,20 @@ public class TestDatabaseConfiguration {
      * Seeders run sequentially in ascending priority order (lower values run first). Seeders with
      * the same priority run in alphabetical order of their fully qualified class names.
      *
+     * <p>
+     * Each seeder receives the same seed from {@code test.seed}, which defaults to 471 when the
+     * property is absent.
+     *
+     * @param seed    the seed passed to each database seeder for repeatable data generation
      * @param seeders the database seeders supplied by Spring
      * @return an application runner that invokes each seeder during startup
      * @author James Chen, Codex
      */
     @Bean
-    private ApplicationRunner seedTestDatabase(final List<DatabaseSeeder> seeders) {
+    private ApplicationRunner seedTestDatabase(
+        @Value("${test.seed:471}") final long seed,
+        final List<DatabaseSeeder> seeders
+    ) {
         return args -> {
             for (final DatabaseSeeder seeder : seeders) {
                 final Class<? extends DatabaseSeeder> seederClass = seeder.getClass();
@@ -124,7 +131,7 @@ public class TestDatabaseConfiguration {
                 ).thenComparing(seeder -> seeder.getClass().getName())
             ).toList();
             for (final DatabaseSeeder seeder : orderedSeeders) {
-                seeder.seed();
+                seeder.seed(seed);
             }
         };
     }
