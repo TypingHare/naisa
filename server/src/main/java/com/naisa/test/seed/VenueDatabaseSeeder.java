@@ -2,8 +2,6 @@ package com.naisa.test.seed;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Random;
 
 import jakarta.annotation.Priority;
 
@@ -59,7 +57,7 @@ public final class VenueDatabaseSeeder extends DatabaseSeeder {
     @Override
     public void seed(final long seed) {
         final List<Client> clients = clientRepository.findAll(Sort.by("id"));
-        final Faker faker = new Faker(Locale.US, new Random(seed));
+        final Faker faker = getFaker(seed);
 
         final List<Venue> venues = new ArrayList<>();
         for (int i = 0; i < 100; i++) {

@@ -1,5 +1,10 @@
 package com.naisa.test.seed;
 
+import java.util.Locale;
+import java.util.Random;
+
+import net.datafaker.Faker;
+
 /**
  * Represents a database seeder.
  *
@@ -20,6 +25,18 @@ public abstract class DatabaseSeeder {
      * controlled by this seed.
      *
      * @param seed the seed to use for random data generation
+     * @author James Chen
      */
     public abstract void seed(long seed);
+
+    /**
+     * Creates a faker object with a specified random seed.
+     *
+     * @param seed the seed to use for random data generation
+     * @return a faker object created by the seed
+     * @author James Chen
+     */
+    protected Faker getFaker(final long seed) {
+        return new Faker(Locale.US, new Random(seed));
+    }
 }

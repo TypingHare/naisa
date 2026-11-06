@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.annotation.Priority;
+import net.datafaker.Faker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,14 +33,17 @@ public final class ClientDatabaseSeeder extends DatabaseSeeder {
     /**
      * Inserts 100 clients with generated API keys into the database.
      *
-     * @param seed the seed to use for random data generation; currently unused
+     * @param seed the seed to use for random data generation
      * @author James Chen
      */
     @Override
     public void seed(final long seed) {
+        final Faker faker = getFaker(seed);
         final List<Client> clients = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
-            clients.add(Beans.create(Client.class));
+            clients.add(Beans.create(Client.class, it -> {
+                it.setApiKey(faker.regexify("[a-zA-Z0-9]{36}"));
+            }));
         }
 
         clientRepository.saveAll(clients);
