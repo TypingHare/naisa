@@ -36,16 +36,16 @@ Don't worry if these terms feel unfamiliar. Let's take a look at a simple class,
 @Getter
 @Setter
 public class Client {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "id", nullable = false, updatable = false)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, updatable = false)
+    private Long id;
 
-  @Generated(event = EventType.INSERT)
-  @ColumnDefault("gen_random_uuid()::text")
-  @Column(name = "api_key", length = 36, nullable = false, unique = true)
-  @Size(max = 36, message = "API key must not exceed 36 characters.")
-  private String apiKey;
+    @Generated(event = EventType.INSERT)
+    @ColumnDefault("gen_random_uuid()::text")
+    @Column(name = "api_key", length = 36, nullable = false, unique = true)
+    @Size(max = 36, message = "API key must not exceed 36 characters.")
+    private String apiKey;
 }
 ```
 
@@ -130,19 +130,19 @@ method.
 
 ```java
 @Query(value = """
-  SELECT u.*
-  FROM users u
-  WHERE u.status = :status
-    AND EXISTS (
-      SELECT 1
-      FROM orders o
-      WHERE o.user_id = u.id
-        AND o.total > :minTotal
-    );
+    SELECT u.*
+    FROM users u
+    WHERE u.status = :status
+      AND EXISTS (
+        SELECT 1
+        FROM orders o
+        WHERE o.user_id = u.id
+          AND o.total > :minTotal
+      );
 """, nativeQuery = true)
 List<User> findUsersWithLargeOrders(
-  @Param("status") String status,
-  @Param("minTotal") BigDecimal minTotal
+    @Param("status") String status,
+    @Param("minTotal") BigDecimal minTotal
 );
 ```
 
@@ -165,23 +165,23 @@ be annotated with `@Service`. For example:
 ```java
 @Service
 public final class ClientService {
-  private final ClientRepository clientRepository;
+    private final ClientRepository clientRepository;
 
-  private ClientService(final ClientRepository clientRepository) {
-    this.clientRepository = clientRepository;
-  }
-
-  @NotNull
-  public Client getClientByApiKey(final String apiKey) {
-    final Client client = this.clientRepository.findClientByApiKey(apiKey);
-    if (client == null) {
-      throw ClientException.INVALID_API_KEY.clone();
+    private ClientService(final ClientRepository clientRepository) {
+        this.clientRepository = clientRepository;
     }
 
-    return client;
-  }
+    @NotNull
+    public Client getClientByApiKey(final String apiKey) {
+        final Client client = this.clientRepository.findClientByApiKey(apiKey);
+        if (client == null) {
+            throw ClientException.INVALID_API_KEY.clone();
+        }
 
-  // other methods...
+        return client;
+    }
+
+    // other methods...
 }
 ```
 
@@ -228,18 +228,18 @@ treated as view names.
 @RestController
 @RequestMapping("/v1/clients")
 public class ClientController {
-  private final ClientService clientService;
+    private final ClientService clientService;
 
-  public ClientController(final ClientService clientService) {
-    this.clientService = clientService;
-  }
+    public ClientController(final ClientService clientService) {
+        this.clientService = clientService;
+    }
 
-  @PostMapping
-  public ResponseEntity<Capsule<Client>> issueApiKey() {
+    @PostMapping
+    public ResponseEntity<Capsule<Client>> issueApiKey() {
     final Client createdClient = clientService.createClient();
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(new Capsule<>("API key has been issued.", createdClient));
-  }
+    }
 }
 ```
 
@@ -288,6 +288,11 @@ response** must not. The `data` field is optional for both response types.
 `Capsule` uses `@JsonInclude(JsonInclude.Include.NON_NULL)` to omit fields whose
 values are null. The health endpoint returns HTTP 204 (No Content), so clients
 should not expect a JSON body from it.
+
+An error code is a string consisting of two parts separated by a dot (`.`). The
+first part identifies a module (e.g., `request`, `client`, or `venue`) and
+should be as general as possible. The second part is a descriptive phrase
+indicating the specific reason for the error.
 
 #### Configurations
 
@@ -338,6 +343,11 @@ constructors and methods:
 - `VenueException(String, String, HttpStatus)`
 - `clone()`
 - `causedBy(Throwable)`
+
+An exception class should contain a collection of public static instances of
+itself. The first part of each instance's error code should correspond to the
+class name. For example, all error codes in `ClientException` should start with
+`client.`.
 
 #### Controller Advice
 
@@ -423,6 +433,44 @@ Replace `MyClass.class` with the actual class name followed by `.class`.
 
 <!-- TODO: complete this -->
 
+#### Integration Testing
+
+An integration test checks whether multiple components work together correctly.
+
+In this architecture, a test environment refers to an environment designed to
+thoroughly test the application using seed data. It can be activated by setting
+the Spring Boot active profile (`spring-boot.run.profiles`) to "test". The
+`run-test` command in the Makefile starts the application with the "test"
+profile active.
+
+The `TestDatabaseConfiguration` configuration class changes the behavior of
+database migrations during application startup. Spring beans defined in this
+class are used only when the "test" profile is active because the class is
+annotated with `@Profile("test")`.
+
+By overriding the default Flyway migration strategy, this configuration drops
+the test database and creates a new one during initialization. After Spring Boot
+initialization, the `seedTestDatabase` bean is invoked. It retrieves all Spring
+beans that are instances of `DatabaseSeeder` or its subclasses, sorts them based
+on the values specified by `@Priority`, and calls their `seed()` methods in
+sequence.
+
+The `seed()` method in a database seeder should insert initial data into the
+database. If seeder A depends on seed data from seeder B, then A's priority
+value should be higher than B's so that A runs after B (lower priority values
+run first).
+
+The `seed()` method takes a `seed` parameter. Implementations should use this
+parameter to generate deterministic seed data. The [DataFaker][data-faker]
+library must be used whenever possible to generate seed data, such as numbers,
+names, and addresses. For example:
+
+```java
+final Faker faker = new Faker(Locale.US, new Random(seed));
+final int randomNumber = faker.number().numberBetween(1, 101);
+final String randomAddress = faker.address().streetAddress();
+```
+
 #### API Testing
 
 For API tests, use [MockMvc][mock-mvc] to send simulated HTTP requests through
@@ -430,11 +478,7 @@ Spring MVC and assert the responses without starting an HTTP server.
 
 <!-- TODO: complete this -->
 
-#### Integration Testing
-
-An integration test checks whether multiple components work together correctly.
-
-<!-- TODO: complete this -->
+<!-- Below are links. -->
 
 [java-web-project]: ../posts/java_web_project.md
 [postgres]: https://www.postgresql.org/about/
@@ -457,3 +501,4 @@ An integration test checks whether multiple components work together correctly.
 [flyway]: https://github.com/flyway/flyway
 [mock-mvc]:
     https://www.geeksforgeeks.org/springboot/spring-boot-mockmvc-example/
+[data-faker]: https://www.datafaker.net/documentation/usage/

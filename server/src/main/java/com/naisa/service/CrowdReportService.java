@@ -259,6 +259,7 @@ public class CrowdReportService {
      * @deprecated Crowd status now uses a weighted score instead of the most frequent level.
      */
     @SuppressWarnings("unused")
+    @Deprecated
     private String findMostFrequentLevel(final List<CrowdReport> reports) {
         final Map<String, Integer> counts = new HashMap<>();
         for (final CrowdReport report : reports) {

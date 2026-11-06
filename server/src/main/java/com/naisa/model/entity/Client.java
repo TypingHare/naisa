@@ -11,8 +11,7 @@ import java.beans.JavaBean;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
+import org.hibernate.annotations.DynamicInsert;
 
 import com.naisa.util.Resources.WithId;
 
@@ -26,6 +25,9 @@ import com.naisa.util.Resources.WithId;
  * Some operations require an API key. The service checks whether the supplied key exists in this
  * table. A key that does not exist is considered invalid.
  *
+ * <p>
+ * With {@code @DynamicInsert}, the generated SQL statement only includes non-null values.
+ *
  * @author James Chen
  */
 @JavaBean
@@ -33,13 +35,13 @@ import com.naisa.util.Resources.WithId;
 @Table(name = "clients")
 @Getter
 @Setter
+@DynamicInsert
 public class Client implements WithId {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
-    @Generated(event = EventType.INSERT)
     @ColumnDefault("gen_random_uuid()::text")
     @Column(name = "api_key", length = 36, nullable = false, unique = true)
     @Size(max = 36, message = "API key must not exceed 36 characters.")
