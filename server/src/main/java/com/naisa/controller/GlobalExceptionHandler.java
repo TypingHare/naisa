@@ -1,7 +1,5 @@
 package com.naisa.controller;
 
-import com.naisa.common.Capsule;
-import com.naisa.exception.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -13,6 +11,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import com.naisa.common.Capsule;
+import com.naisa.exception.ServiceException;
 
 /**
  * This global exception handler handles exceptions caught during request handling.

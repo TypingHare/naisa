@@ -1,12 +1,12 @@
 package com.naisa.service;
 
-import com.naisa.exception.ClientException;
-import com.naisa.model.entity.Client;
-import com.naisa.repository.ClientRepository;
-
 import jakarta.validation.constraints.NotNull;
 
 import org.springframework.stereotype.Service;
+
+import com.naisa.exception.ClientException;
+import com.naisa.model.entity.Client;
+import com.naisa.repository.ClientRepository;
 
 /**
  * Represents a client service.

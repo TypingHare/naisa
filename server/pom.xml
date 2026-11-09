@@ -135,6 +135,10 @@
         <version>3.10.4</version>
         <configuration>
           <java>
+            <importOrder>
+              <order>java,javax,jakarta,org,com,,\#</order>
+            </importOrder>
+            <removeUnusedImports />
             <eclipse>
               <version>4.31</version>
               <file>${project.basedir}/.eclipse-formatter.xml</file>

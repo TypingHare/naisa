@@ -1,5 +1,8 @@
 package com.naisa.model.entity;
 
+import java.beans.JavaBean;
+import java.time.Instant;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,15 +12,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Size;
-import java.beans.JavaBean;
-import java.time.Instant;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
 import com.naisa.util.Resources.WithId;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Represents a crowd report entity.

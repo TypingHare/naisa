@@ -1,10 +1,13 @@
 package com.naisa.model.common;
 
-import com.naisa.util.EarthCoordinates.WithLatitudeAndLongitude;
+import java.beans.JavaBean;
+
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
-import java.beans.JavaBean;
+
+import com.naisa.util.EarthCoordinates.WithLatitudeAndLongitude;
+
 import lombok.Getter;
 import lombok.Setter;
 

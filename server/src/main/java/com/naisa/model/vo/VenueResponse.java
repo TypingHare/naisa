@@ -2,6 +2,7 @@ package com.naisa.model.vo;
 
 import java.beans.JavaBean;
 import java.util.List;
+
 import lombok.Getter;
 import lombok.Setter;
 

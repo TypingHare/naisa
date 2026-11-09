@@ -1,7 +1,7 @@
 package com.naisa.model.entity;
 
-import com.naisa.util.EarthCoordinates.WithLatitudeAndLongitude;
-import com.naisa.util.Resources.WithId;
+import java.beans.JavaBean;
+import java.time.Instant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,12 +13,15 @@ import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
-import java.beans.JavaBean;
-import java.time.Instant;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
+
+import com.naisa.util.EarthCoordinates.WithLatitudeAndLongitude;
+import com.naisa.util.Resources.WithId;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Represents a venue entity.

@@ -2,6 +2,7 @@ package com.naisa.model.vo;
 
 import java.beans.JavaBean;
 import java.time.Instant;
+
 import lombok.Getter;
 import lombok.Setter;
 

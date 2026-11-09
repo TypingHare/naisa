@@ -3,6 +3,7 @@ package com.naisa.model.vo;
 import java.beans.JavaBean;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+
 import lombok.Getter;
 import lombok.Setter;
 
