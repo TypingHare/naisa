@@ -3,7 +3,6 @@ package com.naisa.service;
 import com.naisa.exception.ClientException;
 import com.naisa.model.entity.Client;
 import com.naisa.repository.ClientRepository;
-import com.naisa.util.Beans;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -42,7 +41,7 @@ public final class ClientService {
      */
     @NotNull
     public Client getClientByApiKey(final String apiKey) {
-        final Client client = this.clientRepository.findClientByApiKey(apiKey);
+        final Client client = clientRepository.findClientByApiKey(apiKey);
         if (client == null) {
             throw ClientException.INVALID_API_KEY.clone();
         }
@@ -61,6 +60,6 @@ public final class ClientService {
      */
     @NotNull
     public Client createClient() {
-        return this.clientRepository.save(Beans.create(Client.class));
+        return clientRepository.insertClient(null);
     }
 }

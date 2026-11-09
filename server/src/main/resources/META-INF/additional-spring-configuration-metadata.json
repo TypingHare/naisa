@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "test.seed",
+      "type": "java.lang.Long",
+      "description": "Seed used to generate repeatable test data.",
+      "defaultValue": 471
+    }
+  ]
+}
