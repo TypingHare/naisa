@@ -5,86 +5,31 @@ on Google Cloud Platform (GCP).
 
 All group members have been given Owner access to the GCP project. To access,
 go to `https://console.cloud.google.com`. In the top left, select columbia.edu
-as the resource, and then in the **All** tab, select **Naisa** as the project. Our team
-mentor Ankit has also been given Viewer role access to the project.
+as the resource, and then in the **All** tab, select **Naisa** as the project. 
+Our team mentor Ankit has also been given Viewer role access to the project.
 
 > [!WARNING]
 > Whenever not in use, PLEASE make sure to stop the VM to avoid wasting credits.
 
-#### Setup
+#### Setup from Scratch
 
-To run and connect to the server, select **Compute Engine** and **VM instances**
-from the GCP dashboard. Then, connect via **SSH** in the **Connect** column.
+##### GCP VM Configuration
 
-##### Building and Uploading new JAR files
+In the GCP project, open the Navigation Menu in the top left corner and select
+Compute Engine. Then, select Create instance. Choose a name and region for the
+instance. Our server uses us-east4 (Northern Virginia) with Any zone.
 
-Build the project locally and then upload the executable JAR to the VM. To
-build the JAR, follow these steps from the Naisa repo root:
-
-**On Mac:**
-
-```bash
-build_dir=$(mktemp -d)
-git archive HEAD server | tar -x -C "$build_dir"
-cd "$build_dir/server"
-./mvnw -DskipTests package
-
-sed '/^spring.config.import=/d' src/main/resources/application.properties \
-  > target/naisa-application.properties
-
-open target
-```
-
-The above command builds the current commit in a temp directory. This prepares
-a server config file from the project defaults and opens the folder.
-
-The build names the JAR `demo-<version>.jar`. In Finder, rename the file that
-ends in `.jar` to `naisa.jar` before you upload it.
-
-In the SSH-in-browser, press the **Upload File** button in the top right and
-upload `naisa.jar`. This puts the JAR into the home directory of the VM. Use
-`ls` within the VM terminal to verify successful upload.
-
-##### Start the app in the server
-
-One the JAR file is uploaded onto the VM, use the following command to start
-the server:
-
-```bash
-java -jar ~/naisa.jar \
-  --spring.config.location="file:$HOME/naisa-application.properties"
-```
-
-In a separate SSH-in-browser, use `curl -i http://127.0.0.1:8080/v1/health` and
-verify an HTTP 204 response to make sure the service is online.
-
-##### Update the app after changes to GitHub
-
-After new changes are merged into `main`, run these commands from the Naisa
-repo root on Mac:
-
-```bash
-git switch main
-git pull --ff-only origin main
-```
-
-Follow the Mac build steps above through `./mvnw -DskipTests package`. After
-Maven reports `BUILD SUCCESS`, run `open target`. For a routine update, keep
-the existing `naisa-application.properties` on the VM.
-
-If the app is running, press **Ctrl+C** in the SSH window where it is running
-to stop it. Use the upload steps above to replace `naisa.jar`. Then use
-the same start command and check that `/v1/health` returns HTTP 204.
-
-#### VM Configuration
-
-The server uses the followinig machine configuration: e2-medium with 2 vCPU,
-1 core, and 4GB of memory.
+For Machine type, we recommend a minimum requirement server of e2-medium, which 
+has  the following specs: 2 shared vCPUs, 1 core, and 4GB of RAM.
 
 For OS and storage, we are using Ubuntu 24.04 LTS Minimal x86/64 with a
-Balanced persistent disk.
+Balanced persistent disk with a size of 10GB.
 
-#### Configuring Internet Access
+In Network settings, make sure External IPv4 Address is set to None.
+
+All other settings are left default.
+
+##### Configuring Internet Access
 
 Use the below steps to reproduce Cloud NAT setup within the GCP console:
 
@@ -94,7 +39,7 @@ Use the below steps to reproduce Cloud NAT setup within the GCP console:
     - **gateway name:** naisa-nat
     - **NAT type:** Public
     - **Network:** default
-    - **Region:** us-east-4 (Northern Virginia)
+    - **Region:** us-east4 (Northern Virginia)
 4. Under "**Cloud Router**":
     - **name:** naisa-router
     - everything else left default
@@ -109,57 +54,94 @@ Use the below steps to reproduce Cloud NAT setup within the GCP console:
     - **Network Service Tier:** Standard
     - Leave all other settings at default and create
 
-#### One-time Environment Setup Commands
+These Cloud NAT settings allow the VM to make outbound connections only. 
+It does not allow inbound connections.
+
+##### Connecting to the Server
+
+Once the above GCP setup steps are completed, run and connect to the server.
+Select **Compute Engine** and **VM instances** from the GCP dashboard. Then, 
+connect via **SSH** in the **Connect** column.
+
+##### One-time Environment Setup Commands
 
 For reference, these commands were run on the VM to setup the environment.
 
-**Update apt:**
-
 ```bash
+# Update apt
 sudo apt-get update
 sudo apt-get -y upgrade
-```
 
-**PostgreSQL:**
-
-```bash
+# Install PostgreSQL 18
 sudo apt install -y postgresql-common
 sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
 sudo apt-get install -y postgresql-18
-```
 
-**Java:**
+# Install Java 21
+sudo apt-get install -y openjdk-21-jdk-headless
 
-```bash
-sudo apt install -y openjdk-21-jre-headless
-```
+# Install git, make, and curl
+sudo apt-get install -y git make curl
 
-**Neovim:**
-
-```bash
-sudo apt install neovim
-```
-
-**Configuring Naisa on the VM:**
-
-```bash
+# Configuring the Naisa database on the VM:
 sudo -u postgres createuser --pwprompt naisa
 sudo -u postgres createdb --owner=naisa naisa
+
+# Clone and configure the Naisa service
+git clone --branch main https://github.com/TypingHare/naisa.git ~/naisa
+cd ~/naisa
+install -m 600 server/src/main/resources/database.example.properties \
+  server/src/main/resources/database.properties
 ```
 
-To protect the config file and then open it for editing:
-
-```bash
-chmod 600 ~/naisa-application.properties
-nvim ~/naisa-application.properties
-```
-
-Then, the below lines were added into the file, replacing
-"YOUR_DATABASE_PASSWORD" with the password set for the db login.
+On the VM, open `server/src/main/resources/database.properties` in a text
+editor. Set the datasource URL to `jdbc:postgresql://127.0.0.1:5432/naisa`
+and the username to `naisa`. Add `spring.datasource.password` with the password
+set when creating the `naisa` login. Then add the `server.address` line
+below.
 
 ```properties
-spring.datasource.url=jdbc:postgresql://127.0.0.1:5432/naisa
-spring.datasource.username=naisa
-spring.datasource.password=YOUR_DATABASE_PASSWORD
 server.address=127.0.0.1
 ```
+
+#### Starting the app in the server
+
+Start the service while in the `~/naisa` directory using the following command:
+
+```bash
+make -C server run
+```
+
+In a separate SSH-in-browser, use `curl -i http://127.0.0.1:8080/v1/health` and
+verify an HTTP 204 response to make sure the service is online.
+
+### Stopping the app in the server
+
+If on the SSH window where the server is being run, press CTRL+C to stop.
+If you cannot find the window running the server, use the below to stop it:
+
+```
+# Find what is listening on the port:
+sudo ss -ltnp 'sport = :8080'
+
+# Use the PID from the above command for the following.
+# Check that the process is the correct Naisa server
+ps -fp PID
+
+# Kill the process 
+kill -TERM PID
+```
+Then, start the app again using the above instructions.
+
+##### Update the app after changes to GitHub
+
+To run the latest changes into `main` on the server, stop the app if it's
+currently running, and then run the following commands from `~/naisa` in the
+VM:
+
+```bash
+git pull --ff-only origin main
+```
+
+After updating, use the instructions in **Starting the app in the server** to
+restart the app.
