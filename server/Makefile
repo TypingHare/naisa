@@ -1,6 +1,6 @@
 MVN = ./mvnw
 
-.PHONY: all lint test coverage api-test run run-test download-sources
+.PHONY: all lint test coverage api-test run run-test download-sources clean
 
 all:
 	$(MVN) package
@@ -40,3 +40,6 @@ unit:
 
 unit-coverage:
 	$(MVN) '-Dtest=$(UNIT_TESTS)' clean jacoco:prepare-agent test jacoco:report
+
+clean:
+	rm -rf target
