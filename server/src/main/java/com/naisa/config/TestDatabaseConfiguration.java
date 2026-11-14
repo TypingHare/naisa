@@ -39,14 +39,9 @@ public class TestDatabaseConfiguration {
      * Replaces Spring Boot's default Flyway startup behavior with database recreation and
      * migration.
      *
-     * <p>
-     * The returned strategy performs the following steps in sequence:
-     *
-     * <ol>
-     * <li>Recreates the test database by forcibly dropping the existing database and creating a new
-     * one.</li>
-     * <li>Executes all Flyway migration files against the newly created database.</li>
-     * </ol>
+     * The returned strategy performs the following steps: (1) recreates the test database by
+     * forcibly dropping the existing database and creating a new one, and (2) executes all Flyway
+     * migration files against the newly created database.
      *
      * <p>
      * PostgreSQL passwords should be stored in {@code .pgpass} for security. If the database
@@ -91,29 +86,35 @@ public class TestDatabaseConfiguration {
      *
      * <p>
      * Every registered {@link DatabaseSeeder} must be annotated with {@link Priority}. The runner
-     * checks all seeders before inserting any data and fails if an annotation is missing.
+     * checks all seeders before inserting any data and fails if an annotation is missing. Seeders
+     * run sequentially in ascending priority order (lower values run first). Seeders with the same
+     * priority run in alphabetical order of their fully qualified class names.
      *
      * <p>
-     * Seeders run sequentially in ascending priority order (lower values run first). Seeders with
-     * the same priority run in alphabetical order of their fully qualified class names.
+     * The {@code generateEntities()} method of each seeder receives the same base seed from
+     * {@code test.seeder.seed}, which defaults to 471 when the property is absent.
      *
      * <p>
-     * Each seeder receives the same seed from {@code test.seed}, which defaults to 471 when the
-     * property is absent.
+     * For each seeder, the runner calls {@code generateAndSeed()} with the count from
+     * {@code test.seeder.count}, which defaults to 100 when the property is absent.
      *
-     * @param seed    the seed passed to each database seeder for repeatable data generation
+     * @param seed    the base seed passed to each database seeder for repeatable data generation
+     * @param count   the number of entities requested from each database seeder
      * @param seeders the database seeders supplied by Spring
      * @return an application runner that invokes each seeder during startup
+     * @throws RuntimeException if any {@link DatabaseSeeder} subclass lacks a {@link Priority}
+     *                          annotation
      * @author James Chen, Codex
      */
     @Bean
     private ApplicationRunner seedTestDatabase(
-        @Value("${test.seed:471}") final long seed,
-        final List<DatabaseSeeder> seeders
+        @Value("${test.seeder.seed:471}") final long seed,
+        @Value("${test.seeder.count:100}") final int count,
+        final List<DatabaseSeeder<?>> seeders
     ) {
         return args -> {
-            for (final DatabaseSeeder seeder : seeders) {
-                final Class<? extends DatabaseSeeder> seederClass = seeder.getClass();
+            for (final DatabaseSeeder<?> seeder : seeders) {
+                final Class<?> seederClass = seeder.getClass();
                 if (seederClass.getAnnotation(Priority.class) == null) {
                     throw new RuntimeException(
                         String.format(
@@ -125,13 +126,13 @@ public class TestDatabaseConfiguration {
                 }
             }
 
-            final List<DatabaseSeeder> orderedSeeders = seeders.stream().sorted(
+            final List<DatabaseSeeder<?>> orderedSeeders = seeders.stream().sorted(
                 Comparator.comparingInt(
                     seeder -> seeder.getClass().getAnnotation(Priority.class).value()
                 ).thenComparing(seeder -> seeder.getClass().getName())
             ).toList();
-            for (final DatabaseSeeder seeder : orderedSeeders) {
-                seeder.seed(seed);
+            for (final DatabaseSeeder<?> seeder : orderedSeeders) {
+                seeder.generateAndSeed(seed, count);
             }
         };
     }
