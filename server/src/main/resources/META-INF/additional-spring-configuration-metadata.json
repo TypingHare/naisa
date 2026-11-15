@@ -1,10 +1,16 @@
 {
   "properties": [
     {
-      "name": "test.seed",
+      "name": "test.seeder.seed",
       "type": "java.lang.Long",
-      "description": "Seed used to generate repeatable test data.",
+      "description": "Base seed passed to each database seeder for repeatable test data generation.",
       "defaultValue": 471
+    },
+    {
+      "name": "test.seeder.count",
+      "type": "java.lang.Integer",
+      "description": "Number of entities requested from each database seeder.",
+      "defaultValue": 100
     }
   ]
 }

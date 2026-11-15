@@ -26,7 +26,7 @@ import net.datafaker.Faker;
  */
 @Component
 @Priority(200)
-public final class VenueDatabaseSeeder extends DatabaseSeeder {
+public final class VenueDatabaseSeeder extends DatabaseSeeder<Venue> {
     private static final Logger LOGGER = LoggerFactory.getLogger(VenueDatabaseSeeder.class);
     private static final List<String> VENUE_NAMES = List.of(
         "Sports Center",
@@ -49,18 +49,20 @@ public final class VenueDatabaseSeeder extends DatabaseSeeder {
     }
 
     /**
-     * Inserts 100 venues into the database.
+     * Generates venues for the database.
      *
-     * @param seed the seed for random data generation
+     * @param seed  the seed to use for random data generation
+     * @param count the number of venues to generate
+     * @return the generated venues
      * @author James Chen
      */
     @Override
-    public void seed(final long seed) {
+    public List<Venue> generateEntities(final long seed, final int count) {
         final List<Client> clients = clientRepository.findAll(Sort.by("id"));
         final Faker faker = getFaker(seed);
 
         final List<Venue> venues = new ArrayList<>();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < count; i++) {
             final Client client = faker.options().nextElement(clients);
             venues.add(Beans.create(Venue.class, (it) -> {
                 final String venueName = faker.options().nextElement(VENUE_NAMES) + " " + faker
@@ -81,7 +83,19 @@ public final class VenueDatabaseSeeder extends DatabaseSeeder {
             }));
         }
 
-        venueRepository.saveAll(venues);
-        LOGGER.info("Inserted {} seed venues into the database.", venues.size());
+        return venues;
+
+    }
+
+    /**
+     * Inserts the generated venues into the database and logs the insertion.
+     *
+     * @param entities the venues to insert
+     * @author James Chen
+     */
+    @Override
+    public void seed(final List<Venue> entities) {
+        venueRepository.saveAll(entities);
+        LOGGER.info("Inserted {} seed venues into the database.", entities.size());
     }
 }
