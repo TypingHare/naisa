@@ -47,6 +47,6 @@ public class Client implements WithId {
 
     @ColumnDefault("gen_random_uuid()::text")
     @Column(name = "api_key", length = 36, nullable = false, unique = true)
-    @Size(max = 36, message = "API key must not exceed 36 characters.")
+    @Size(min = 36, max = 36, message = "API key must be exactly 36 characters.")
     private String apiKey;
 }
