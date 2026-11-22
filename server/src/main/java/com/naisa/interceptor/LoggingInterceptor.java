@@ -47,8 +47,14 @@ import org.springframework.web.servlet.ModelAndView;
 @Component
 public class LoggingInterceptor implements HandlerInterceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingInterceptor.class);
-
     private static final String KEY_REQUEST_RECEIVED_TIMESTAMP = "requestReceivedTimestamp";
+
+    /**
+     * Whether or not to log every request and the handling result. This can be set to false on
+     * testing. Currently, this interceptor only logs requests and their handling results, so if
+     * this is set to false, then this interceptor will do nothing.
+     */
+    private Boolean logRequestAndResult = true;
 
     @Override
     public boolean preHandle(
@@ -56,7 +62,7 @@ public class LoggingInterceptor implements HandlerInterceptor {
         final HttpServletResponse response,
         final Object handler
     ) throws Exception {
-        if (handler instanceof HandlerMethod method) {
+        if (logRequestAndResult && handler instanceof HandlerMethod method) {
             LOGGER.info(
                 "{} {} handled by {}:{}",
                 request.getMethod().toUpperCase(),
@@ -78,8 +84,7 @@ public class LoggingInterceptor implements HandlerInterceptor {
         final Object handler,
         @Nullable final ModelAndView modelAndView
     ) throws Exception {
-
-        if (handler instanceof HandlerMethod) {
+        if (logRequestAndResult && handler instanceof HandlerMethod) {
             final Instant requestReceivedInstant = (Instant) request.getAttribute(
                 KEY_REQUEST_RECEIVED_TIMESTAMP
             );
@@ -94,5 +99,9 @@ public class LoggingInterceptor implements HandlerInterceptor {
         }
 
         HandlerInterceptor.super.postHandle(request, response, handler, modelAndView);
+    }
+
+    public void setLogRequestAndResult(final boolean logRequestAndResult) {
+        this.logRequestAndResult = logRequestAndResult;
     }
 }
