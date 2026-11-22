@@ -46,6 +46,15 @@ jobs:
           spring.jpa.open-in-view=false
           EOF
 
+      - name: Configure integration test database
+        run: |
+          sed 's|localhost:5432/naisa$|localhost:5432/naisa_test|' \
+            src/main/resources/database.properties \
+            > src/main/resources/database-test.properties
+
+          umask 077
+          printf '%s\n' 'localhost:5432:postgres:naisa:ci_password' > "$HOME/.pgpass"
+
       - name: Build and test
         run: ./mvnw --batch-mode verify
 

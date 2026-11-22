@@ -18,7 +18,7 @@ the steps below to set it up:
    your username, which you can obtain by running
    `psql -d naisa -Atc 'SELECT current_user;'`.
 
-In the `server` workspace, run `make run` (which uses the configuration in
+In the `server` workspace, run `make start` (which uses the configuration in
 `database.properties`) or `make run-test` (which uses the configuration in
 `database-test.properties`). If the service starts successfully, the setup is
 complete. If the service fails to start, the setup may still be complete. Check
