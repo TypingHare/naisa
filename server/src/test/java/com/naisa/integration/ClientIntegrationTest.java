@@ -16,7 +16,14 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
  */
 @Order(50)
 class ClientIntegrationTest extends IntegrationTest {
-    private String getApiKey() throws Exception {
+    /**
+     * Creates a client with {@code POST /v1/clients} and verifies that the endpoint returns HTTP
+     * 201.
+     *
+     * @return the newly issued API key
+     * @author James Chen
+     */
+    protected String getApiKey() throws Exception {
         final MvcResult issueResult = mvc.perform(MockMvcRequestBuilders.post("/v1/clients"))
             .andExpect(MockMvcResultMatchers.status().isCreated()).andReturn();
         final String content = issueResult.getResponse().getContentAsString();
