@@ -1,15 +1,15 @@
 ### Deployment on GCP
 
-This document explains, step by step, how to reproduce the server deployment
-on Google Cloud Platform (GCP).
+This document explains, step by step, how to reproduce the server deployment on
+Google Cloud Platform (GCP).
 
-All group members have been given Owner access to the GCP project. To access,
-go to `https://console.cloud.google.com`. In the top left, select columbia.edu
-as the resource, and then in the **All** tab, select **Naisa** as the project. 
-Our team mentor Ankit has also been given Viewer role access to the project.
+All group members have been given Owner access to the GCP project. To access the project, go
+to `https://console.cloud.google.com`. In the upper-left corner, select columbia.edu as
+the resource, and then in the **All** tab, select **Naisa** as the project. Our
+team mentor, Ankit, also has Viewer access to the project.
 
 > [!WARNING]
-> Whenever not in use, PLEASE make sure to stop the VM to avoid wasting credits.
+> Stop the VM when you are not using it to avoid wasting credits.
 
 #### Setup from Scratch
 
@@ -19,11 +19,11 @@ In the GCP project, open the Navigation Menu in the top left corner and select
 Compute Engine. Then, select Create instance. Choose a name and region for the
 instance. Our server uses us-east4 (Northern Virginia) with Any zone.
 
-For Machine type, we recommend a minimum requirement server of e2-medium, which 
-has  the following specs: 2 shared vCPUs, 1 core, and 4GB of RAM.
+For Machine type, we recommend at least an e2-medium instance, which has
+2 shared vCPUs, 1 core, and 4 GB of RAM.
 
-For OS and storage, we are using Ubuntu 24.04 LTS Minimal x86/64 with a
-Balanced persistent disk with a size of 10GB.
+For OS and storage, we are using Ubuntu 24.04 LTS Minimal x86/64 with a 10 GB
+Balanced persistent disk.
 
 In Network settings, make sure External IPv4 Address is set to None.
 
@@ -31,7 +31,7 @@ All other settings are left default.
 
 ##### Configuring Internet Access
 
-Use the below steps to reproduce Cloud NAT setup within the GCP console:
+Follow these steps to reproduce the Cloud NAT setup within the GCP console:
 
 1. Go to **Network Services** -> **Cloud NAT**
 2. Click "**Get Started**" or "**Create Cloud NAT gateway**"
@@ -52,15 +52,14 @@ Use the below steps to reproduce Cloud NAT setup within the GCP console:
 6. Finally, select:
     - **Cloud NAT IP addresses:** Automatic
     - **Network Service Tier:** Standard
-    - Leave all other settings at default and create
+    - Leave all other settings at their default values and create the gateway
 
-These Cloud NAT settings allow the VM to make outbound connections only. 
-It does not allow inbound connections.
+These Cloud NAT settings allow the VM to make outbound connections only.
 
 ##### Connecting to the Server
 
 Once the above GCP setup steps are completed, run and connect to the server.
-Select **Compute Engine** and **VM instances** from the GCP dashboard. Then, 
+Select **Compute Engine** and **VM instances** from the GCP dashboard. Then,
 connect via **SSH** in the **Connect** column.
 
 ##### One-time Environment Setup Commands
@@ -95,30 +94,29 @@ install -m 600 server/src/main/resources/database.example.properties \
 ```
 
 On the VM, open `server/src/main/resources/database.properties` in a text
-editor. Set the datasource URL to `jdbc:postgresql://127.0.0.1:5432/naisa`
-and the username to `naisa`. Add `spring.datasource.password` with the password
-set when creating the `naisa` login. Then add the `server.address` line
-below.
+editor. Set the datasource URL to `jdbc:postgresql://127.0.0.1:5432/naisa` and
+the username to `naisa`. Add `spring.datasource.password` with the password set
+when creating the `naisa` login. Then add the `server.address` line below.
 
 ```properties
 server.address=127.0.0.1
 ```
 
-#### Starting the app in the server
+#### Starting the app on the server
 
-Start the service while in the `~/naisa` directory using the following command:
+Start the service in the `server` workspace using the following command:
 
 ```bash
-make -C server run
+make start
 ```
 
-In a separate SSH-in-browser, use `curl -i http://127.0.0.1:8080/v1/health` and
-verify an HTTP 204 response to make sure the service is online.
+In a separate browser-based SSH session, use `curl -i http://127.0.0.1:8080/v1/health` and
+verify that the service returns HTTP 204 to make sure the service is online.
 
-### Stopping the app in the server
+### Stopping the app on the server
 
-If on the SSH window where the server is being run, press CTRL+C to stop.
-If you cannot find the window running the server, use the below to stop it:
+If the server is running in the foreground in your SSH session, press Ctrl+C to
+stop it. To stop a background process, use the commands below.
 
 ```
 # Find what is listening on the port:
@@ -128,20 +126,20 @@ sudo ss -ltnp 'sport = :8080'
 # Check that the process is the correct Naisa server
 ps -fp PID
 
-# Kill the process 
+# Kill the process
 kill -TERM PID
 ```
+
 Then, start the app again using the above instructions.
 
 ##### Update the app after changes to GitHub
 
-To run the latest changes into `main` on the server, stop the app if it's
-currently running, and then run the following commands from `~/naisa` in the
-VM:
+To deploy the latest changes from `main`, stop the app if it is running. Then
+run the following command from `~/naisa` on the VM.
 
 ```bash
 git pull --ff-only origin main
 ```
 
-After updating, use the instructions in **Starting the app in the server** to
+After updating, use the instructions in **Starting the app on the server** to
 restart the app.
